@@ -47,7 +47,7 @@
   color: #ffd66b;
   text-align: center;
   pointer-events: none;
-  max-width: 86%;
+  max-width: 60%;
   line-height: 1.35;
   z-index: 6;
   background: rgba(0, 0, 0, 0.72);
@@ -55,6 +55,13 @@
   border-radius: 14px;
   border: 1px solid rgba(255, 214, 107, 0.4);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.turn-banner-sub {
+  display: block;
+  font-size: 0.72em;
+  font-weight: 600;
+  color: #ffe9a8;
+  margin-top: 2px;
 }
 
 /* A hand shown as four large suit rows (used for dummy and Show Cards) */
@@ -88,18 +95,34 @@
   max-width: 30vw;
 }
 
-/* Played cards form a diagonal cluster so all four stay visible */
+/* Played cards sit at the compass point of whoever played them, like a
+   real bridge table. In landscape the box is short, so North and South
+   are nudged off-center to keep both fully visible. */
 .played-card {
   position: absolute;
 }
-.played-card.N { top: 2%; left: 56%; }
-.played-card.S { bottom: 14%; left: 34%; }
-.played-card.E { right: 8%; top: 22%; }
-.played-card.W { left: 8%; top: 22%; }
+.played-card.N { top: 0; left: 50%; transform: translateX(-92%); }
+.played-card.S { bottom: 12%; left: 50%; transform: translateX(-8%); }
+.played-card.E { right: 5%; top: 50%; transform: translateY(-50%); }
+.played-card.W { left: 5%; top: 50%; transform: translateY(-50%); }
 
 .played-card .card {
   width: clamp(84px, 10vw, 140px);
   height: clamp(126px, 15vw, 210px);
+}
+
+/* Name tag under each played card so it's always clear who played it */
+.played-card-label {
+  margin: 4px auto 0;
+  width: fit-content;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffd66b;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 8px;
+  padding: 2px 10px;
+  white-space: nowrap;
 }
 .played-card .card-top-left,
 .played-card .card-bottom-right {
@@ -158,18 +181,31 @@
   }
 
   /* Portrait: the table box is tall, so lay the dummy inside its top
-     edge instead of on top of the North name panel, and drop the trick
-     cluster below it */
+     edge instead of on top of the North name panel, and use a full
+     compass cross for the trick — one card per side, no overlap */
+  .table-center {
+    height: 56%;
+    margin-bottom: clamp(60px, 10vh, 120px);
+  }
   .dummy-hand-container {
     bottom: auto;
     top: 10px;
   }
-  .played-card.N { top: 34%; }
-  .played-card.E, .played-card.W { top: 44%; }
-  .played-card.S { bottom: 8%; }
+  .played-card.N { top: 5%; left: 50%; transform: translateX(-50%); }
+  .played-card.S { bottom: 5%; left: 50%; transform: translateX(-50%); }
+  .played-card.E { right: 5%; top: 50%; transform: translateY(-50%); }
+  .played-card.W { left: 5%; top: 50%; transform: translateY(-50%); }
   .turn-banner {
-    top: 66%;
+    top: 50%;
+    max-width: 52%;
   }
+
+  /* When North's dummy cards occupy the top of the box, push the
+     North played card and the middle row down below them */
+  .has-north-dummy .played-card.N { top: 30%; }
+  .has-north-dummy .played-card.E,
+  .has-north-dummy .played-card.W { top: 58%; }
+  .has-north-dummy .turn-banner { top: 64%; }
 }
 
 /* The player's hand at the bottom */

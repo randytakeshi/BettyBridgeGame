@@ -96,19 +96,21 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
     return '';
   };
 
-  // Big status line so it's always obvious whose turn it is
-  let turnBanner = '';
+  // Big status line so it's always obvious whose turn it is.
+  // Kept to a short headline + small sub-line so the pill never
+  // covers the played cards around it.
+  let turnBanner = null;
   if (isPlaying && currentTrick.length < 4) {
     if (declarer === 'N') {
       turnBanner = currentTurn === 'S'
-        ? 'Sarah is playing your cards — you are the dummy this hand'
-        : `${PLAYER_NAMES[currentTurn]} is thinking…`;
+        ? { main: 'Sarah is playing this hand', sub: 'your cards are the dummy' }
+        : { main: `${PLAYER_NAMES[currentTurn]} is thinking…` };
     } else if (currentTurn === 'S') {
-      turnBanner = 'YOUR TURN — tap a card, tap again to play it';
+      turnBanner = { main: 'YOUR TURN', sub: 'tap a card, tap again to play' };
     } else if (humanControls('N') && currentTurn === 'N') {
-      turnBanner = "YOUR TURN — play from Sarah's cards above";
+      turnBanner = { main: 'YOUR TURN', sub: "play from Sarah's cards above" };
     } else {
-      turnBanner = `${PLAYER_NAMES[currentTurn]} is thinking…`;
+      turnBanner = { main: `${PLAYER_NAMES[currentTurn]} is thinking…` };
     }
   }
 
@@ -133,14 +135,20 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
       </div>
 
 
-      <div className="table-center">
+      <div className={`table-center ${northShownInCenter ? 'has-north-dummy' : ''}`}>
         {/* Whose turn is it? */}
-        {turnBanner && <div className="turn-banner">{turnBanner}</div>}
+        {turnBanner && (
+          <div className="turn-banner">
+            {turnBanner.main}
+            {turnBanner.sub && <span className="turn-banner-sub">{turnBanner.sub}</span>}
+          </div>
+        )}
 
-        {/* Render current trick here */}
+        {/* Render current trick here — each card labeled with who played it */}
         {currentTrick.map((play, index) => (
           <div key={index} className={`played-card ${play.player}`} style={{ zIndex: index }}>
             <Card suit={play.card.suit} rank={play.card.rank} simplified={true} />
+            <div className="played-card-label">{PLAYER_NAMES[play.player]}</div>
           </div>
         ))}
 
