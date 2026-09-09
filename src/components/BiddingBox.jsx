@@ -3,9 +3,8 @@ import './BiddingBox.css';
 
 const SUITS = ['C', 'D', 'H', 'S', 'NT'];
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
-const SUIT_COLORS = { C: 'black', D: 'red', H: 'red', S: 'black', NT: 'black' };
 
-export default function BiddingBox({ onBid, currentHighestBid, activeHint }) {
+export default function BiddingBox({ onBid, currentHighestBid, activeHint, canDouble = false, canRedouble = false }) {
   
   const handleBidClick = (level, suit) => {
     onBid({ type: 'bid', level, suit });
@@ -33,8 +32,15 @@ export default function BiddingBox({ onBid, currentHighestBid, activeHint }) {
 
   return (
     <div className="bidding-box">
-      <div className="bidding-header">ACTIVE BIDDING</div>
-      
+      <div className="bidding-header">CHOOSE YOUR BID</div>
+
+      {/* PASS first — it's the most common action */}
+      <div className="special-bids">
+        <button className={`bid-btn btn-pass ${isHintPass() ? 'hint-highlight' : ''}`} onClick={handlePass}>PASS</button>
+        <button className="bid-btn btn-double" onClick={handleDouble} disabled={!canDouble}>DOUBLE</button>
+        <button className="bid-btn btn-redouble" onClick={handleRedouble} disabled={!canRedouble}>REDOUBLE</button>
+      </div>
+
       <div className="bids-grid">
         {[1, 2, 3, 4, 5, 6, 7].map(level => (
           <React.Fragment key={level}>
@@ -54,12 +60,6 @@ export default function BiddingBox({ onBid, currentHighestBid, activeHint }) {
             })}
           </React.Fragment>
         ))}
-      </div>
-
-      <div className="special-bids">
-        <button className={`bid-btn btn-pass ${isHintPass() ? 'hint-highlight' : ''}`} onClick={handlePass}>PASS</button>
-        <button className="bid-btn btn-double" onClick={handleDouble} disabled={!currentHighestBid}>DOUBLE</button>
-        <button className="bid-btn btn-redouble" onClick={handleRedouble} disabled={true}>REDOUBLE</button>
       </div>
     </div>
   );

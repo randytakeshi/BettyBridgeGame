@@ -8,7 +8,7 @@
 }
 
 .table-center {
-  width: 50%;
+  width: 54%;
   height: 50%;
   position: relative;
   display: flex;
@@ -16,6 +16,8 @@
   align-items: center;
   border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 20px;
+  /* Lift the trick area up out from behind the player's hand fan */
+  margin-bottom: clamp(80px, 18vh, 160px);
 }
 
 .compass-container {
@@ -34,18 +36,70 @@
 .compass-E { right: -60px; }
 .compass-W { left: -60px; }
 
-/* Played cards in the middle of the table */
+/* Big status line in the middle of the table — always says whose turn it is */
+.turn-banner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+  font-weight: 800;
+  color: #ffd66b;
+  text-align: center;
+  pointer-events: none;
+  max-width: 86%;
+  line-height: 1.35;
+  z-index: 6;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 10px 24px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 107, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* A hand shown as four large suit rows (used for dummy and Show Cards) */
+.suit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  align-items: flex-start;
+  text-align: left;
+}
+.suit-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-weight: 700;
+}
+.suit-row-symbol {
+  font-size: 1.6rem;
+  width: 1.7rem;
+  color: #ffffff;
+  line-height: 1.2;
+}
+.suit-row-symbol.red {
+  color: #ff8585;
+}
+.suit-row-ranks {
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  color: #ffffff;
+  max-width: 30vw;
+}
+
+/* Played cards form a diagonal cluster so all four stay visible */
 .played-card {
   position: absolute;
 }
-.played-card.N { top: 5%; }
-.played-card.S { bottom: 5%; }
-.played-card.E { right: 15%; }
-.played-card.W { left: 15%; }
+.played-card.N { top: 2%; left: 56%; }
+.played-card.S { bottom: 14%; left: 34%; }
+.played-card.E { right: 8%; top: 22%; }
+.played-card.W { left: 8%; top: 22%; }
 
 .played-card .card {
-  width: clamp(90px, 12vw, 160px);
-  height: clamp(135px, 18vw, 240px);
+  width: clamp(84px, 10vw, 140px);
+  height: clamp(126px, 15vw, 210px);
 }
 .played-card .card-top-left,
 .played-card .card-bottom-right {
@@ -70,7 +124,7 @@
 }
 
 .player-info .name {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: bold;
 }
 .player-info .cards-left {
@@ -79,8 +133,8 @@
 }
 
 .info-N { top: 4px; left: 50%; transform: translateX(-50%); }
-.info-E { right: 20px; top: 45%; transform: translateY(-50%); }
-.info-W { left: 20px; top: 45%; transform: translateY(-50%); }
+.info-E { right: 20px; top: 38%; transform: translateY(-50%); }
+.info-W { left: 20px; top: 38%; transform: translateY(-50%); }
 
 @media (max-width: 900px), (orientation: portrait) {
   .info-W { left: 10px; top: 70px; transform: none; }
@@ -90,10 +144,17 @@
     padding: 8px 12px;
   }
   .player-info .name {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .player-info .cards-left {
     font-size: 1.2rem;
+  }
+  .suit-row-symbol {
+    font-size: 1.3rem;
+  }
+  .suit-row-ranks {
+    font-size: 1.15rem;
+    letter-spacing: 1px;
   }
 }
 
@@ -147,26 +208,6 @@
 .dummy-card-wrapper.selected {
   transform: translateY(-30px) scale(1.1);
   z-index: 50;
-}
-
-/* Show All Cards UI */
-.opponent-revealed-cards {
-  display: flex;
-  margin-top: 8px;
-}
-.opp-card-mini .card {
-  width: clamp(25px, 3vw, 45px);
-  height: clamp(37px, 4.5vw, 67px);
-  padding: 2px;
-}
-.opp-card-mini .card-top-left, .opp-card-mini .card-bottom-right {
-  font-size: clamp(0.7rem, 1vw, 1rem);
-}
-.opp-card-mini .card-suit {
-  font-size: clamp(0.6rem, 0.8vw, 0.9rem);
-}
-.opp-card-mini .card-center {
-  display: none; /* Too small for center symbol */
 }
 
 /* Enhanced playable card hover */

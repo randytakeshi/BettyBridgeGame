@@ -1,10 +1,10 @@
-import { GameEngine, RANKS, PLAYERS } from './src/GameEngine.js';
+import { GameEngine } from './src/GameEngine.js';
 
 globalThis.TEST_MODE = true;
 
 console.log("Starting automated playability test...");
 
-const engine = new GameEngine((state) => {
+const engine = new GameEngine(() => {
   // We can track state changes here if needed
 });
 
@@ -35,6 +35,17 @@ while (engine.phase === 'bidding' && bids < 10) {
   bids++;
 }
 
+if (engine.phase === 'finished' && engine.declarer === 'N') {
+  // Sarah declared, so she auto-played the whole hand (human is dummy)
+  console.log(`Contract was ${engine.contract.level}${engine.contract.suit} by N — Sarah played the hand herself.`);
+  if (engine.tricksWon['N/S'] + engine.tricksWon['E/W'] === 13) {
+    console.log("SUCCESS: Exactly 13 tricks were played and scored.");
+    process.exit(0);
+  }
+  console.error("Test Failed: Incorrect number of tricks scored.");
+  process.exit(1);
+}
+
 if (engine.phase !== 'playing') {
   console.error("Test Failed: Game did not enter playing phase after bidding.");
   process.exit(1);
@@ -48,9 +59,10 @@ console.log("Starting trick-taking simulation...");
 
 let moves = 0;
 while (engine.phase === 'playing' && moves < 100) {
-  if (engine.currentTurn === 'S') {
-    // Human turn. Must pick a valid card.
-    const hand = engine.hands['S'];
+  // The human controls South, and also North when N/S win the contract
+  if (engine.humanControlsSeat(engine.currentTurn)) {
+    const seat = engine.currentTurn;
+    const hand = engine.hands[seat];
     let validIndices = [];
     if (engine.currentTrick.length > 0) {
       const ledSuit = engine.currentTrick[0].card.suit;
@@ -64,8 +76,8 @@ while (engine.phase === 'playing' && moves < 100) {
     
     const playIdx = validIndices[0];
     const cardToPlay = hand[playIdx];
-    console.log(`Human (S) plays ${cardToPlay.rank}${cardToPlay.suit}`);
-    const success = engine.playCard('S', playIdx);
+    console.log(`Human (${seat}) plays ${cardToPlay.rank}${cardToPlay.suit}`);
+    const success = engine.playCard(seat, playIdx);
     if (!success) {
       console.error("Test Failed: Human played an invalid card.");
       process.exit(1);

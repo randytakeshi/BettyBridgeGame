@@ -1,6 +1,14 @@
 export const SUITS = ['C', 'D', 'H', 'S', 'NT'];
 export const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 export const PLAYERS = ['N', 'E', 'S', 'W'];
+export const PLAYER_NAMES = { N: 'Sarah', E: 'Robert', S: 'You', W: 'David' };
+
+const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
+const rankWord = (r) => ({ A: 'Ace', K: 'King', Q: 'Queen', J: 'Jack' }[r] || r);
+
+// Display order alternates suit colors (Spades, Hearts, Clubs, Diamonds) so
+// two red suits never sit next to each other — easier for low-vision players.
+const DISPLAY_SUIT_ORDER = { S: 3, H: 2, C: 1, D: 0 };
 
 export class GameEngine {
   constructor(updateCallback, pbnDatabase = null, announceCallback = null) {
@@ -9,7 +17,26 @@ export class GameEngine {
     this.announceCallback = announceCallback;
     this.boardNumber = 1;
     this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
+    this.aiTimer = null;
+    this.trickTimer = null;
     this.resetGame();
+  }
+
+  destroy() {
+    this.clearTimers();
+    this.updateCallback = null;
+    this.announceCallback = null;
+  }
+
+  clearTimers() {
+    if (this.aiTimer) {
+      clearTimeout(this.aiTimer);
+      this.aiTimer = null;
+    }
+    if (this.trickTimer) {
+      clearTimeout(this.trickTimer);
+      this.trickTimer = null;
+    }
   }
 
   announce(text) {
@@ -41,6 +68,7 @@ export class GameEngine {
   }
 
   resetGame() {
+    this.clearTimers();
     this.deck = this.createDeck();
     this.hands = { N: [], E: [], S: [], W: [] };
     this.phase = 'dealing'; // 'dealing', 'bidding', 'playing', 'finished'
@@ -49,20 +77,30 @@ export class GameEngine {
     this.declarer = null;
     this.dummy = null;
     this.currentTurn = this.getDealer();
-    
+
     // Play state
     this.currentTrick = []; // Array of { player, card }
     this.tricksWon = { 'N/S': 0, 'E/W': 0 };
     this.leader = null;
     this.trumpSuit = null;
-    
+
     // Scoring state
     this.doubledStatus = 'none'; // 'none', 'doubled', 'redoubled'
-    this.duplicateScore = null; 
-    
+    this.duplicateScore = null;
+
     // Undo state
     this.historyStack = [];
-    this.aiTimer = null;
+  }
+
+  // The human sits South. When South declares, she also plays North's
+  // cards (declarer runs the dummy). When Sarah (N) wins the contract,
+  // Sarah plays the whole hand herself — including the human's cards,
+  // which are the dummy — just like real bridge.
+  humanControlsSeat(seat) {
+    if (this.phase === 'playing' && this.declarer === 'N') return false;
+    if (seat === 'S') return true;
+    if (seat === 'N' && this.phase === 'playing' && this.declarer === 'S') return true;
+    return false;
   }
 
   saveState() {
@@ -84,20 +122,23 @@ export class GameEngine {
   }
 
   undo() {
-    if (this.aiTimer) {
-      clearTimeout(this.aiTimer);
-      this.aiTimer = null;
-    }
-    
-    // Pop states until it is South's turn, or the stack is empty
+    this.clearTimers();
+
+    const isHumanTurnState = (st) => {
+      if (st.phase === 'playing' && st.declarer === 'N') return false;
+      return st.currentTurn === 'S' ||
+        (st.currentTurn === 'N' && st.phase === 'playing' && st.declarer === 'S');
+    };
+
+    // Pop states until it is a human-controlled turn, or the stack is empty
     let lastState = null;
     while (this.historyStack.length > 0) {
       lastState = this.historyStack.pop();
-      if (lastState.currentTurn === 'S') {
+      if (isHumanTurnState(lastState)) {
         break;
       }
     }
-    
+
     if (lastState) {
       this.phase = lastState.phase;
       this.hands = lastState.hands;
@@ -113,6 +154,8 @@ export class GameEngine {
       this.doubledStatus = lastState.doubledStatus;
       this.duplicateScore = lastState.duplicateScore;
       this.notifyUpdate();
+      // If we somehow landed on an AI turn (e.g. stack ran out), keep the game moving
+      this.checkAITurn();
     }
   }
 
@@ -138,27 +181,27 @@ export class GameEngine {
       // Historical mode!
       const idx = (this.boardNumber - 1) % this.pbnDatabase.length;
       const gameData = this.pbnDatabase[idx];
-      
+
       this.hands = JSON.parse(JSON.stringify(gameData.deal)); // Deep copy the hands
     } else {
       // Random mode
       this.shuffle(this.deck);
       let currentPlayerIndex = 0;
-      
+
       for (const card of this.deck) {
         this.hands[PLAYERS[currentPlayerIndex]].push(card);
         currentPlayerIndex = (currentPlayerIndex + 1) % 4;
       }
     }
-    
+
     // Sort hands (works for both modes)
     for (const p of PLAYERS) {
       this.hands[p].sort((a, b) => {
-        if (a.suit !== b.suit) return SUITS.indexOf(b.suit) - SUITS.indexOf(a.suit);
+        if (a.suit !== b.suit) return DISPLAY_SUIT_ORDER[b.suit] - DISPLAY_SUIT_ORDER[a.suit];
         return RANKS.indexOf(b.rank) - RANKS.indexOf(a.rank);
       });
     }
-    
+
     this.phase = 'bidding';
     this.notifyUpdate();
     this.checkAITurn();
@@ -182,7 +225,7 @@ export class GameEngine {
       const idx = (this.boardNumber - 1) % this.pbnDatabase.length;
       historicalData = this.pbnDatabase[idx];
     }
-    
+
     return {
       boardNumber: this.boardNumber,
       vulnerability: this.getVulnerability(),
@@ -207,33 +250,67 @@ export class GameEngine {
 
   // --- BIDDING LOGIC ---
 
+  isLegalCall(bid) {
+    if (bid.type === 'pass') return true;
+
+    let highest = null;
+    let lastAction = null;
+    for (const b of this.bids) {
+      if (b.type === 'bid') highest = b;
+      if (b.type !== 'pass') lastAction = b;
+    }
+
+    if (bid.type === 'bid') {
+      if (!bid.level || bid.level < 1 || bid.level > 7 || !SUITS.includes(bid.suit)) return false;
+      if (!highest) return true;
+      if (bid.level > highest.level) return true;
+      return bid.level === highest.level && SUITS.indexOf(bid.suit) > SUITS.indexOf(highest.suit);
+    }
+
+    const opponents = lastAction &&
+      (PLAYERS.indexOf(lastAction.player) % 2) !== (PLAYERS.indexOf(this.currentTurn) % 2);
+
+    if (bid.type === 'double') {
+      return !!lastAction && lastAction.type === 'bid' && opponents;
+    }
+    if (bid.type === 'redouble') {
+      return !!lastAction && lastAction.type === 'double' && opponents;
+    }
+    return false;
+  }
+
   placeBid(bid) {
-    if (this.phase !== 'bidding') return;
+    if (this.phase !== 'bidding') return false;
+    if (!this.isLegalCall(bid)) return false;
     this.saveState();
 
-    this.bids.push({ player: this.currentTurn, ...bid });
-    
-    // Announce bid
-    let bidText = 'Pass';
+    const player = this.currentTurn;
+    this.bids.push({ player, ...bid });
+
+    // Announce the call with the caller's name so it's clear who did what
+    const name = PLAYER_NAMES[player];
+    let bidText;
     if (bid.type === 'bid') {
-      const suitName = bid.suit === 'NT' ? 'No Trump' : (bid.suit === 'S' ? 'Spades' : (bid.suit === 'H' ? 'Hearts' : (bid.suit === 'D' ? 'Diamonds' : 'Clubs')));
-      bidText = `${bid.level} ${suitName}`;
+      bidText = `${name} ${player === 'S' ? 'bid' : 'bids'} ${bid.level} ${SUIT_WORDS[bid.suit]}`;
     } else if (bid.type === 'double') {
-      bidText = 'Double';
+      bidText = `${name} ${player === 'S' ? 'double' : 'doubles'}`;
     } else if (bid.type === 'redouble') {
-      bidText = 'Redouble';
+      bidText = `${name} ${player === 'S' ? 'redouble' : 'redoubles'}`;
+    } else {
+      bidText = `${name} ${player === 'S' ? 'pass' : 'passes'}`;
     }
     this.announce(bidText);
-    
+
     if (this.checkBiddingFinished()) {
       this.startPlayingPhase();
     } else if (this.phase === 'finished') {
       // Passed out
-      return;
+      return true;
     } else {
       this.advanceTurn();
       this.checkAITurn();
     }
+    return true;
   }
 
   checkBiddingFinished() {
@@ -243,7 +320,7 @@ export class GameEngine {
         // Find highest bid
         let highest = null;
         let doubledStatus = 'none';
-        
+
         for (const b of this.bids) {
           if (b.type === 'bid') {
             highest = b;
@@ -254,14 +331,20 @@ export class GameEngine {
             doubledStatus = 'redoubled';
           }
         }
-        
+
         if (highest) {
           this.contract = { level: highest.level, suit: highest.suit };
           this.doubledStatus = doubledStatus;
           this.trumpSuit = highest.suit === 'NT' ? null : highest.suit;
-          
-          // Determine declarer (simplified: just the highest bidder for now)
-          this.declarer = highest.player;
+
+          // Declarer is the first player of the winning partnership
+          // who named the contract suit
+          const winningSide = PLAYERS.indexOf(highest.player) % 2;
+          const firstOfSide = this.bids.find(b =>
+            b.type === 'bid' && b.suit === highest.suit &&
+            PLAYERS.indexOf(b.player) % 2 === winningSide
+          );
+          this.declarer = firstOfSide ? firstOfSide.player : highest.player;
           const declarerIdx = PLAYERS.indexOf(this.declarer);
           this.dummy = PLAYERS[(declarerIdx + 2) % 4];
           this.currentTurn = PLAYERS[(declarerIdx + 1) % 4]; // Left of declarer leads
@@ -271,6 +354,7 @@ export class GameEngine {
           // Passed out
           this.phase = 'finished';
           this.duplicateScore = { side: 'None', points: 0, made: null };
+          this.announce('Everyone passed. No contract this time.');
           this.notifyUpdate();
           return false;
         }
@@ -281,6 +365,16 @@ export class GameEngine {
 
   startPlayingPhase() {
     this.phase = 'playing';
+    const c = this.contract;
+    const dbl = this.doubledStatus === 'doubled' ? ', doubled,' : (this.doubledStatus === 'redoubled' ? ', redoubled,' : '');
+    const leader = this.currentTurn;
+    let announcement =
+      `The contract is ${c.level} ${SUIT_WORDS[c.suit]}${dbl} played by ${PLAYER_NAMES[this.declarer]}. ` +
+      `${PLAYER_NAMES[leader]} ${leader === 'S' ? 'lead' : 'leads'} the first card.`;
+    if (this.declarer === 'N') {
+      announcement += ' Your hand is the dummy — Sarah will play both hands for your side.';
+    }
+    this.announce(announcement);
     this.notifyUpdate();
     this.checkAITurn();
   }
@@ -290,10 +384,11 @@ export class GameEngine {
   playCard(player, cardIndex) {
     if (this.phase !== 'playing') return false;
     if (player !== this.currentTurn) return false;
-    
+
     const hand = this.hands[player];
-    const card = hand[cardIndex];
-    
+    const card = hand && hand[cardIndex];
+    if (!card) return false;
+
     // Validate follow suit
     if (this.currentTrick.length > 0) {
       const ledSuit = this.currentTrick[0].card.suit;
@@ -308,19 +403,23 @@ export class GameEngine {
     // Play it
     hand.splice(cardIndex, 1);
     this.currentTrick.push({ player, card });
-    
-    // Announce card
-    const rankName = card.rank === 'A' ? 'Ace' : (card.rank === 'K' ? 'King' : (card.rank === 'Q' ? 'Queen' : (card.rank === 'J' ? 'Jack' : card.rank)));
-    const suitName = card.suit === 'S' ? 'Spades' : (card.suit === 'H' ? 'Hearts' : (card.suit === 'D' ? 'Diamonds' : 'Clubs'));
-    this.announce(`${rankName} of ${suitName}`);
-    
+
+    // Announce card with the player's name
+    if (player === 'S' && this.declarer === 'N') {
+      // Sarah is running the hand and just played one of the human's dummy cards
+      this.announce(`Sarah plays your ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`);
+    } else {
+      const name = PLAYER_NAMES[player];
+      this.announce(`${name} ${player === 'S' ? 'play' : 'plays'} the ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`);
+    }
+
     if (this.currentTrick.length === 4) {
       // Trick complete
       this.notifyUpdate();
       if (globalThis.TEST_MODE) {
         this.resolveTrick();
       } else {
-        setTimeout(() => this.resolveTrick(), 1500); // 1.5s delay to see the trick
+        this.trickTimer = setTimeout(() => this.resolveTrick(), 2500); // Pause so the full trick can be seen
       }
     } else {
       this.advanceTurn();
@@ -330,6 +429,9 @@ export class GameEngine {
   }
 
   resolveTrick() {
+    this.trickTimer = null;
+    if (this.currentTrick.length < 4) return;
+
     const ledSuit = this.currentTrick[0].card.suit;
     let winningPlay = this.currentTrick[0];
 
@@ -353,6 +455,8 @@ export class GameEngine {
       this.tricksWon['E/W']++;
     }
 
+    this.announce(`${PLAYER_NAMES[winner]} ${winner === 'S' ? 'win' : 'wins'} the trick.`);
+
     this.currentTrick = [];
     this.currentTurn = winner;
     this.leader = winner;
@@ -360,6 +464,14 @@ export class GameEngine {
     if (this.hands.S.length === 0 && this.hands.N.length === 0) {
       this.phase = 'finished';
       this.calculateDuplicateScore();
+      if (this.duplicateScore) {
+        const ds = this.duplicateScore;
+        if (ds.made) {
+          this.announce(`${ds.side === 'N/S' ? 'Your side' : 'They'} made the contract! ${ds.points} points.`);
+        } else {
+          this.announce(`The contract went down. ${ds.points} points to ${ds.side === 'N/S' ? 'your side' : 'them'}.`);
+        }
+      }
     }
 
     this.notifyUpdate();
@@ -368,29 +480,12 @@ export class GameEngine {
     }
   }
 
-  claimRest() {
-    if (this.phase !== 'playing') return;
-    
-    // N/S gets the remaining tricks
-    const remaining = this.hands[this.currentTurn].length;
-    this.tricksWon['N/S'] += remaining;
-    
-    // Empty hands
-    for (const p of PLAYERS) {
-      this.hands[p] = [];
-    }
-    
-    this.phase = 'finished';
-    this.calculateDuplicateScore();
-    this.notifyUpdate();
-  }
-
   calculateDuplicateScore() {
     if (!this.contract) return;
-    
+
     const declarerSide = (this.declarer === 'N' || this.declarer === 'S') ? 'N/S' : 'E/W';
     const defendersSide = declarerSide === 'N/S' ? 'E/W' : 'N/S';
-    
+
     const tricksTaken = this.tricksWon[declarerSide];
     const tricksContracted = 6 + this.contract.level;
     const vul = this.getVulnerability();
@@ -398,13 +493,13 @@ export class GameEngine {
     const isDbl = this.doubledStatus === 'doubled';
     const isRedbl = this.doubledStatus === 'redoubled';
     const mult = isRedbl ? 4 : (isDbl ? 2 : 1);
-    
+
     let score = 0;
-    
+
     if (tricksTaken >= tricksContracted) {
       // Made!
       const overtricks = tricksTaken - tricksContracted;
-      
+
       // 1. Contract Points (Base)
       let basePoints = 0;
       if (this.contract.suit === 'C' || this.contract.suit === 'D') {
@@ -414,28 +509,28 @@ export class GameEngine {
       } else {
         basePoints = 40 + 30 * (this.contract.level - 1);
       }
-      
+
       const contractPoints = basePoints * mult;
       score += contractPoints;
-      
+
       // 2. Game/Part Score Bonus
       if (contractPoints >= 100) {
         score += isVul ? 500 : 300; // Game bonus
       } else {
         score += 50; // Part score bonus
       }
-      
+
       // 3. Slam Bonus
       if (this.contract.level === 6) {
         score += isVul ? 750 : 500;
       } else if (this.contract.level === 7) {
         score += isVul ? 1500 : 1000;
       }
-      
+
       // 4. Insult Bonus
       if (isDbl) score += 50;
       if (isRedbl) score += 100;
-      
+
       // 5. Overtricks
       if (overtricks > 0) {
         if (!isDbl && !isRedbl) {
@@ -446,15 +541,15 @@ export class GameEngine {
            score += overtricks * (isVul ? 400 : 200);
         }
       }
-      
-      this.duplicateScore = { side: declarerSide, points: score, made: true, tricks: tricksTaken, contract: this.contract, doubled: this.doubledStatus };
+
+      this.duplicateScore = { side: declarerSide, points: score, made: true, tricks: tricksTaken, overtricks, contract: this.contract, doubled: this.doubledStatus };
       this.cumulativeScore[declarerSide] += score;
-      
+
     } else {
       // Failed (Undertricks)
       const undertricks = tricksContracted - tricksTaken;
       let penalty = 0;
-      
+
       if (!isDbl && !isRedbl) {
         penalty = undertricks * (isVul ? 100 : 50);
       } else {
@@ -468,11 +563,11 @@ export class GameEngine {
           if (undertricks === 1) penalty = 200;
           else penalty = 200 + (undertricks - 1) * 300;
         }
-        
+
         if (isRedbl) penalty *= 2;
       }
-      
-      this.duplicateScore = { side: defendersSide, points: penalty, made: false, tricks: tricksTaken, contract: this.contract, doubled: this.doubledStatus };
+
+      this.duplicateScore = { side: defendersSide, points: penalty, made: false, tricks: tricksTaken, undertricks, contract: this.contract, doubled: this.doubledStatus };
       this.cumulativeScore[defendersSide] += penalty;
     }
   }
@@ -484,23 +579,32 @@ export class GameEngine {
   }
 
   // --- AI LOGIC ---
-  
-  checkAITurn() {
-    if (this.currentTurn === 'S') return; 
 
-    // For now, AI controls N, E, W unconditionally in Phase 2
+  checkAITurn() {
+    // Always clear any stale timer first so two AI actions can never race
+    if (this.aiTimer) {
+      clearTimeout(this.aiTimer);
+      this.aiTimer = null;
+    }
+    if (this.humanControlsSeat(this.currentTurn)) return;
+
     const aiAction = () => {
+      this.aiTimer = null;
+      // Re-check at fire time: the situation may have changed
+      if (this.humanControlsSeat(this.currentTurn)) return;
       if (this.phase === 'bidding') {
         this.makeAIBid();
       } else if (this.phase === 'playing') {
         this.makeAIPlay();
       }
     };
-    
+
     if (globalThis.TEST_MODE) {
       aiAction();
     } else {
-      this.aiTimer = setTimeout(aiAction, 1000); // 1 second AI thinking time
+      // Slower during play so the spoken card names have time to finish
+      const delay = this.phase === 'playing' ? 2000 : 1500;
+      this.aiTimer = setTimeout(aiAction, delay);
     }
   }
 
@@ -508,7 +612,7 @@ export class GameEngine {
     const hand = this.hands[player];
     let hcp = 0;
     const suitCounts = { C: 0, D: 0, H: 0, S: 0 };
-    
+
     for (const card of hand) {
       suitCounts[card.suit]++;
       if (card.rank === 'A') hcp += 4;
@@ -531,48 +635,114 @@ export class GameEngine {
   determineAIBid(player) {
     const { hcp, suitCounts } = this.evaluateHand(player);
     const partner = PLAYERS[(PLAYERS.indexOf(player) + 2) % 4];
-    
-    let partnerBid = null;
+
     let highestBid = null;
+    let partnerLastBid = null;
+    let myCalls = 0;
     for (const b of this.bids) {
-      if (b.type === 'bid') highestBid = b;
-      if (b.player === partner && b.type === 'bid') partnerBid = b;
+      if (b.type === 'bid') {
+        highestBid = b;
+        if (b.player === partner) partnerLastBid = b;
+      }
+      if (b.player === player && b.type !== 'pass') myCalls++;
     }
 
-    const currentLevel = highestBid ? highestBid.level : 0;
-    
-    if (!partnerBid) {
-      if (hcp >= 13) {
-        let longestSuit = 'C';
-        for (const s of ['D', 'H', 'S']) {
-          if (suitCounts[s] > suitCounts[longestSuit]) longestSuit = s;
-        }
-        if (suitCounts[longestSuit] >= 5) {
-          const newLevel = currentLevel + 1;
-          if (newLevel <= 7) return { type: 'bid', level: newLevel, suit: longestSuit, explanation: `${hcp}+ HCP, 5+ ${longestSuit}` };
-        } else if (hcp >= 15 && hcp <= 17) {
-          const newLevel = currentLevel + 1;
-          if (newLevel <= 7) return { type: 'bid', level: newLevel, suit: 'NT', explanation: '15-17 HCP, Balanced hand' };
-        } else {
-           const newLevel = currentLevel + 1;
-           if (newLevel <= 7) return { type: 'bid', level: newLevel, suit: longestSuit, explanation: `${hcp}+ HCP, Longest suit` };
-        }
+    // Each player describes their hand at most twice — keeps auctions
+    // short and guarantees the bidding always ends
+    if (myCalls >= 2) {
+      return { type: 'pass', explanation: 'Already bid twice — nothing more to say' };
+    }
+
+    // Cheapest level at which `suit` can legally be bid
+    const cheapestLevel = (suit) => {
+      if (!highestBid) return 1;
+      return SUITS.indexOf(suit) > SUITS.indexOf(highestBid.suit)
+        ? highestBid.level
+        : highestBid.level + 1;
+    };
+
+    // "Even distribution": no void or singleton, at most one doubleton
+    const counts = ['C', 'D', 'H', 'S'].map(s => suitCounts[s]);
+    const isBalanced = counts.every(c => c >= 2) && counts.filter(c => c === 2).length <= 1;
+
+    // 1. Nobody has bid yet: decide whether to open
+    if (!highestBid) {
+      if (hcp < 13) return { type: 'pass', explanation: `${hcp} points — too weak to open` };
+      if (hcp >= 16 && hcp <= 18 && isBalanced && suitCounts.S < 5 && suitCounts.H < 5) {
+        return { type: 'bid', level: 1, suit: 'NT', explanation: '16-18 points, even distribution' };
       }
-    } else {
-      if (hcp >= 6) {
-         if (suitCounts[partnerBid.suit] >= 3) {
-            const newLevel = highestBid.level + 1;
-            if (newLevel <= 7 && highestBid.suit === partnerBid.suit) {
-              return { type: 'bid', level: newLevel, suit: partnerBid.suit, explanation: `6+ HCP, 3+ support for ${partnerBid.suit}` };
-            }
-         }
+      if (suitCounts.S >= 5 && suitCounts.S >= suitCounts.H) {
+        return { type: 'bid', level: 1, suit: 'S', explanation: `${hcp} points, 5+ Spades` };
+      }
+      if (suitCounts.H >= 5) {
+        return { type: 'bid', level: 1, suit: 'H', explanation: `${hcp} points, 5+ Hearts` };
+      }
+      const minor = suitCounts.D > suitCounts.C ? 'D' : 'C';
+      return { type: 'bid', level: 1, suit: minor, explanation: `${hcp} points, no 5-card major — opening a minor` };
+    }
+
+    // 2. Partner has bid: raise with support, but never past game level
+    if (partnerLastBid) {
+      if (hcp < 6) return { type: 'pass', explanation: `${hcp} points — too weak to respond` };
+
+      const pSuit = partnerLastBid.suit;
+      if (pSuit !== 'NT' && suitCounts[pSuit] >= 3) {
+        // With a strong balanced hand and only a minor fit, prefer 3 No Trump
+        // (the standard game contract) over the harder 5-of-a-minor
+        if ((pSuit === 'C' || pSuit === 'D') && hcp >= 13 && isBalanced && cheapestLevel('NT') <= 3) {
+          return { type: 'bid', level: 3, suit: 'NT', explanation: `${hcp} points, balanced — going for 3 No Trump` };
+        }
+        const gameLevel = (pSuit === 'H' || pSuit === 'S') ? 4 : 5;
+        const target = hcp >= 13
+          ? gameLevel
+          : Math.min(gameLevel, partnerLastBid.level + (hcp >= 10 ? 2 : 1));
+        const needed = cheapestLevel(pSuit);
+        if (needed <= target) {
+          return { type: 'bid', level: target, suit: pSuit, explanation: `${hcp} points, ${suitCounts[pSuit]}-card support — raising ${SUIT_WORDS[pSuit]}` };
+        }
+        return { type: 'pass', explanation: 'Bidding higher would be too risky' };
+      }
+      if (hcp <= 9) {
+        if (cheapestLevel('NT') === 1) {
+          return { type: 'bid', level: 1, suit: 'NT', explanation: '6-9 points, no fit — 1 No Trump' };
+        }
+        return { type: 'pass', explanation: '6-9 points, no fit for partner' };
+      }
+      // 10+ points, no fit: show own best suit if it's cheap enough
+      let best = 'C';
+      for (const s of ['D', 'H', 'S']) {
+        if (suitCounts[s] > suitCounts[best]) best = s;
+      }
+      const lvl = cheapestLevel(best);
+      if (lvl <= 2) {
+        return { type: 'bid', level: lvl, suit: best, explanation: `${hcp} points — showing my ${SUIT_WORDS[best]}` };
+      }
+      return { type: 'pass', explanation: 'No safe bid available' };
+    }
+
+    // 3. Opponents opened and partner is silent: simple overcall
+    if (hcp >= 13) {
+      let best = null;
+      for (const s of ['S', 'H', 'D', 'C']) {
+        if (suitCounts[s] >= 5 && (!best || suitCounts[s] > suitCounts[best])) best = s;
+      }
+      if (best) {
+        const lvl = cheapestLevel(best);
+        if (lvl <= 2) {
+          return { type: 'bid', level: lvl, suit: best, explanation: `${hcp} points, 5+ ${SUIT_WORDS[best]} — overcall` };
+        }
       }
     }
-    return { type: 'pass', explanation: hcp < 6 ? '< 6 HCP, Too weak to bid' : 'No valid bid' };
+    return { type: 'pass', explanation: hcp < 6 ? `${hcp} points — too weak to bid` : 'Nothing useful to bid' };
   }
 
   makeAIBid() {
-    this.placeBid(this.determineAIBid(this.currentTurn));
+    const bid = this.determineAIBid(this.currentTurn);
+    // Safety net: if the AI ever produces an illegal call, pass instead
+    // so the auction can never stall
+    if (!this.placeBid(bid)) {
+      this.placeBid({ type: 'pass', explanation: 'Pass' });
+    }
   }
 
   determineAIPlay(player) {
@@ -581,20 +751,20 @@ export class GameEngine {
 
     let validIndices = [];
     const ledSuit = this.currentTrick.length > 0 ? this.currentTrick[0].card.suit : null;
-    
+
     if (ledSuit) {
       for (let i = 0; i < hand.length; i++) {
         if (hand[i].suit === ledSuit) validIndices.push(i);
       }
     }
-    
+
     if (validIndices.length === 0) {
       for (let i = 0; i < hand.length; i++) validIndices.push(i);
     }
-    
+
     validIndices.sort((a, b) => RANKS.indexOf(hand[a].rank) - RANKS.indexOf(hand[b].rank));
-    
-    let cardIndexToPlay = validIndices[0]; 
+
+    let cardIndexToPlay = validIndices[0];
 
     if (!ledSuit) {
       const { suitCounts } = this.evaluateHand(player);
@@ -630,7 +800,7 @@ export class GameEngine {
       }
 
       winningIsPartner = winningPlay.player === PLAYERS[(PLAYERS.indexOf(player) + 2) % 4];
-      
+
       if (!winningIsPartner) {
          const winningRankValue = winningPlay.card.suit === ledSuit ? RANKS.indexOf(winningPlay.card.rank) : (winningPlay.card.suit === this.trumpSuit ? RANKS.indexOf(winningPlay.card.rank) : -1);
          for (const idx of validIndices) {
@@ -645,7 +815,7 @@ export class GameEngine {
          }
       }
     }
-    
+
     return cardIndexToPlay;
   }
 

@@ -28,7 +28,7 @@
 
 .bidding-header {
   text-align: center;
-  font-size: clamp(1.2rem, 2vh, 1.5rem);
+  font-size: clamp(1.3rem, 2.2vh, 1.7rem);
   font-weight: bold;
   color: var(--ui-text);
   margin-bottom: 4px;
@@ -44,8 +44,9 @@
   background-color: #2d333b;
   border: 1px solid #444c56;
   border-radius: 8px;
-  padding: clamp(6px, 1.2vh, 14px) clamp(4px, 1vw, 8px);
-  font-size: clamp(1.1rem, 2.5vh, 1.8rem);
+  padding: clamp(10px, 1.6vh, 16px) clamp(4px, 1vw, 8px);
+  min-height: 52px; /* Comfortable touch target */
+  font-size: clamp(1.3rem, 2.8vh, 2rem);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -76,14 +77,16 @@
 
 .special-bids {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 1fr 1fr; /* PASS gets the biggest button */
   gap: 12px;
-  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .btn-pass {
   background-color: var(--ui-success);
   color: white;
+  font-size: clamp(1.5rem, 3vh, 2.2rem) !important;
+  letter-spacing: 2px;
 }
 .btn-double {
   background-color: var(--ui-danger);
