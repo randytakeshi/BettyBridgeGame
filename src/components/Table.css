@@ -160,8 +160,10 @@
 .info-W { left: 20px; top: 38%; transform: translateY(-50%); }
 
 @media (max-width: 900px), (orientation: portrait) {
-  .info-W { left: 10px; top: 70px; transform: none; }
-  .info-E { right: 10px; top: 70px; transform: none; }
+  /* West and East sit midway up the sides, like at a real table,
+     right beside where their played cards land */
+  .info-W { left: 10px; top: 50%; transform: translateY(-50%); }
+  .info-E { right: 10px; top: 50%; transform: translateY(-50%); }
   
   .player-info {
     padding: 8px 12px;
