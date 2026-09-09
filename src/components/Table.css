@@ -156,6 +156,20 @@
     font-size: 1.15rem;
     letter-spacing: 1px;
   }
+
+  /* Portrait: the table box is tall, so lay the dummy inside its top
+     edge instead of on top of the North name panel, and drop the trick
+     cluster below it */
+  .dummy-hand-container {
+    bottom: auto;
+    top: 10px;
+  }
+  .played-card.N { top: 34%; }
+  .played-card.E, .played-card.W { top: 44%; }
+  .played-card.S { bottom: 8%; }
+  .turn-banner {
+    top: 66%;
+  }
 }
 
 /* The player's hand at the bottom */

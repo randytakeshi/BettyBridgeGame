@@ -50,6 +50,7 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
 
   const handleCardClick = (player, index) => {
     if (!isPlaying) return;
+    if (currentTrick.length >= 4) return; // wait for the trick to clear
     if (currentTurn !== player || !humanControls(player)) return;
 
     if (selectedCard && selectedCard.player === player && selectedCard.index === index) {

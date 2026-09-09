@@ -137,6 +137,8 @@ function App() {
   // Auto-Play Logic
   useEffect(() => {
     if (!isAutoPlaying || !gameState) return;
+    // Never act while a completed trick is waiting to be cleared
+    if (gameState.phase === 'playing' && gameState.currentTrick.length >= 4) return;
 
     let timer1, timer2;
     const { currentTurn } = gameState;

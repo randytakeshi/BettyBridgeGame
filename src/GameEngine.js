@@ -384,6 +384,10 @@ export class GameEngine {
   playCard(player, cardIndex) {
     if (this.phase !== 'playing') return false;
     if (player !== this.currentTurn) return false;
+    // A completed trick must resolve before anyone plays again — without
+    // this, a play during the display pause stuffs a 5th card into the
+    // trick and that card vanishes when the trick resolves
+    if (this.currentTrick.length >= 4) return false;
 
     const hand = this.hands[player];
     const card = hand && hand[cardIndex];
