@@ -1,0 +1,1 @@
+{"name":"BettyBridge","short_name":"BettyBridge","description":"An accessible Duplicate Bridge game","start_url":"/BettyBridgeGame/","display":"standalone","background_color":"#0d381c","theme_color":"#1b6a38","lang":"en","scope":"/BettyBridgeGame/","icons":[{"src":"icon.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}

@@ -1,0 +1,3400 @@
+[Event "Bermuda Bowl 2007"]
+[Site "Shanghai, CHN"]
+[Date "2007.10.13"]
+[Board "1"]
+[West "Meckstroth J"]
+[North "Helness"]
+[East "Rodwell E"]
+[South "Helgemo"]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:AKQJ9.765.2.AQ92 43.T98.K9876.J64 8762.KQJ43.T53.8 T5.A2.AQJ4.KT753"]
+[Declarer "S"]
+[Contract "4S"]
+[Result "11"]
+
+[Event "Bermuda Bowl 2007"]
+[Site "Shanghai, CHN"]
+[Date "2007.10.13"]
+[Board "2"]
+[West "Meckstroth J"]
+[North "Helness"]
+[East "Rodwell E"]
+[South "Helgemo"]
+[Dealer "E"]
+[Vulnerable "N/S"]
+[Deal "E:965.753.AJ4.AT62 T843.K2.KQ95.Q73 KQJ72.A864.6.KJ9 A.QJT9.T8732.854"]
+[Declarer "W"]
+[Contract "4S"]
+[Result "9"]
+
+[Event "Vanderbilt 2018"]
+[Site "Philadelphia, PA"]
+[Date "2018.03.15"]
+[Board "3"]
+[Dealer "S"]
+[Vulnerable "E/W"]
+[Deal "S:KJ76.AQJ4.86.K95 AT95.K8.T9543.T7 843.7652.A2.J842 Q2.T93.KQJ7.AQ63"]
+[Declarer "E"]
+[Contract "1NT"]
+[Result "8"]
+% PBN 2.1
+% EXPORT
+%Content-type: text/pbn; charset=ISO-8859-1
+%Creator: Dealmaster Pro
+%PaperSize 1,2159,2794
+%Margins 1000,1000,1000,1000
+%Font:Event "Times New Roman",12,400,0
+%Font:Diagram "Times New Roman",12,400,0
+%Font:CardTable "Arial",11,400,0
+%Font:Commentary "Times New Roman",12,400,0
+%Font:FixedPitch "Courier New",10,400,0
+%Font:HandRecord "Arial",11,400,0
+%PageOrientation 0
+%BoardsPerPage 1
+%GutterSize 500,500
+%GutterLines 0
+%PageHeader 0
+%EventSpacing 0
+%center 0
+%float 0
+%JustifyText 0
+%PlayFormat 0
+%ScoreTable Border Shade
+%PipColors #000000,#ff0000,#ff0000,#000000
+%CardTableColors #008000,#ffffff,#aaaaaa
+%UseCardTableFontSize 0
+%ScoreTableColors #e6e6e6,#000000
+%HtmlSpades entity,"http://bridgecomposer.com/suitimg/s.gif"
+%HtmlHearts entity,"http://bridgecomposer.com/suitimg/h.gif"
+%HtmlDiamonds entity,"http://bridgecomposer.com/suitimg/d.gif"
+%HtmlClubs entity,"http://bridgecomposer.com/suitimg/c.gif"
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "1"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:JT6.AK95.J9.KJ72 Q5.QJ4.K72.AQ964 K98732.72.T85.T8 A4.T863.AQ643.53"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1811118111819a8819a8"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  8
+N  H  1
+N  D  1
+N  C  1
+N NT  1
+E  S  1
+E  H  9
+E  D 10
+E  C  8
+E NT  8
+S  S  8
+S  H  1
+S  D  1
+S  C  1
+S NT  1
+W  S  1
+W  H  9
+W  D 10
+W  C  8
+W NT  8
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "2"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:Q2.J43.AJ932.K92 T763.QT.87.T8754 AKJ954.96.K6.AJ6 8.AK8752.QT54.Q3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11111111117b7987b798"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  1
+N  C  1
+N NT  1
+E  S 11
+E  H  7
+E  D  9
+E  C  8
+E NT  7
+S  S  1
+S  H  1
+S  D  1
+S  C  1
+S NT  1
+W  S 11
+W  H  7
+W  D  9
+W  C  8
+W NT  7
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "3"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:9.QJ54.J9843.K62 KJ87.AT3.AK62.43 AQ54.K86.QT.AJ87 T632.972.75.QT95"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "819a8819a81111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  9
+N  D 10
+N  C  8
+N NT  8
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S  1
+S  H  9
+S  D 10
+S  C  8
+S NT  8
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "4"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "W:AJ97.QT5.976.652 862.J74.543.K983 Q43.K863.QT2.AJ4 KT5.A92.AKJ8.QT7"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11177111777777111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  7
+N  C  7
+N NT  1
+E  S  7
+E  H  7
+E  D  7
+E  C  1
+E NT  7
+S  S  1
+S  H  1
+S  D  7
+S  C  7
+S NT  1
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "5"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:AJ864.6.JT92.QJT K53.JT975.73.A94 QT72.Q42.Q65.752 9.AK83.AK84.K863"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1111111111a7b9ba7b9b"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  1
+N  C  1
+N NT  1
+E  S  7
+E  H 11
+E  D  9
+E  C 11
+E NT 10
+S  S  1
+S  H  1
+S  D  1
+S  C  1
+S NT  1
+W  S  7
+W  H 11
+W  D  9
+W  C 11
+W NT 10
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "6"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "E:AJT7.T2.AT.AQ963 3.Q764.QJ9643.T4 K942.KJ8.K8.KJ87 Q865.A953.752.52"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1111111111cc87ccc87c"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  1
+N  C  1
+N NT  1
+E  S 12
+E  H  8
+E  D  7
+E  C 12
+E NT 12
+S  S  1
+S  H  1
+S  D  1
+S  C  1
+S NT  1
+W  S 12
+W  H  8
+W  D  7
+W  C 12
+W NT 12
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "7"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "All"]
+[Deal "S:832.J83.AJ4.K854 Q.KQ962.QT6.J932 AJ97.AT54.32.QT7 KT654.7.K9875.A6"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11717717171718117181"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  7
+N  D  1
+N  C  7
+N NT  1
+E  S  7
+E  H  1
+E  D  8
+E  C  1
+E NT  1
+S  S  1
+S  H  7
+S  D  1
+S  C  7
+S NT  7
+W  S  7
+W  H  1
+W  D  8
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "8"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "None"]
+[Deal "W:Q983.KQ84.AJ7.A3 K764.T96.642.874 J5.A2.QT98.JT965 AT2.J753.K53.KQ2"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1111111111999aa999aa"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  1
+N  C  1
+N NT  1
+E  S  9
+E  H  9
+E  D 10
+E  C 10
+E NT  9
+S  S  1
+S  H  1
+S  D  1
+S  C  1
+S NT  1
+W  S  9
+W  H  9
+W  D 10
+W  C 10
+W NT  9
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "9"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "EW"]
+[Deal "N:76.JT8754..Q9876 A984.932.J754.54 JT2.AQ.AT9832.KT KQ53.K6.KQ6.AJ32"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11817118178818189181"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  8
+N  D  1
+N  C  7
+N NT  1
+E  S  8
+E  H  1
+E  D  8
+E  C  1
+E NT  8
+S  S  1
+S  H  8
+S  D  1
+S  C  7
+S NT  1
+W  S  9
+W  H  1
+W  D  8
+W  C  1
+W NT  8
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "10"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "All"]
+[Deal "E:AJ82.AJ432.K3.K4 97.T86.A9542.AQ5 K653.K95.QJT.932 QT4.Q7.876.JT876"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1111711117abb817aa11"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  1
+N  C  7
+N NT  1
+E  S 11
+E  H 11
+E  D  8
+E  C  1
+E NT 10
+S  S  1
+S  H  1
+S  D  1
+S  C  7
+S NT  1
+W  S 10
+W  H 10
+W  D  1
+W  C  1
+W NT  7
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "11"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "None"]
+[Deal "S:AJ52.A87.Q92.T87 6.KQJ52.A.Q96542 K97.964.K8765.AJ QT843.T3.JT43.K3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "78181781811191a1181a"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  8
+N  H  1
+N  D  8
+N  C  1
+N NT  7
+E  S  1
+E  H  9
+E  D  1
+E  C 10
+E NT  1
+S  S  8
+S  H  1
+S  D  8
+S  C  1
+S NT  7
+W  S  1
+W  H  8
+W  D  1
+W  C 10
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "12"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "NS"]
+[Deal "W:A8.Q52.T983.K743 QT52.A.74.AQJ652 J9.J843.KQJ2.T98 K7643.KT976.A65."]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "8c8898c8891111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S 12
+N  H  8
+N  D  8
+N  C  9
+N NT  8
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S 12
+S  H  8
+S  D  8
+S  C  9
+S NT  8
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "13"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "All"]
+[Deal "N:A984.87.QT2.Q962 KT3.53.J85.AJ875 Q.AQJT2.AK43.KT4 J7652.K964.976.3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "91aa991aa91111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H 10
+N  D 10
+N  C  9
+N NT  9
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S  1
+S  H 10
+S  D 10
+S  C  9
+S NT  9
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "14"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "None"]
+[Deal "E:KQ963.AJ.QJ85.97 A87.762.K942.863 JT52.KT84.6.AQT5 4.Q953.AT73.KJ42"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11171111718a7178a717"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  7
+N  C  1
+N NT  1
+E  S 10
+E  H  7
+E  D  1
+E  C  7
+E NT  8
+S  S  1
+S  H  1
+S  D  7
+S  C  1
+S NT  1
+W  S 10
+W  H  7
+W  D  1
+W  C  7
+W NT  8
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "15"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "NS"]
+[Deal "S:8.987.AQT65432.Q QT54.A62.KJ.9864 AKJ3.Q54.8.AT732 9762.KJT3.97.KJ5"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11197111977111171111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D  9
+N  C  7
+N NT  1
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  7
+S  S  1
+S  H  1
+S  D  9
+S  C  7
+S NT  1
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  7
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "16"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "EW"]
+[Deal "W:.8764.Q876532.72 AKT42.AJ2.T9.Q84 QJ65.T95.AJ.AJT6 9873.KQ3.K4.K953"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "99718997181118111181"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  9
+N  H  7
+N  D  1
+N  C  8
+N NT  9
+E  S  1
+E  H  1
+E  D  8
+E  C  1
+E NT  1
+S  S  9
+S  H  7
+S  D  1
+S  C  8
+S NT  9
+W  S  1
+W  H  1
+W  D  8
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "17"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:4.AK8.K954.AQJ54 T75.J64.J632.T73 AKJ9832.T92.7.82 Q6.Q753.AQT8.K96"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "cc98bcc98b1111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S 12
+N  H  9
+N  D  8
+N  C 11
+N NT 12
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S 12
+S  H  9
+S  D  8
+S  C 11
+S NT 12
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "18"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:AQ764.T98.QT3.Q2 KJ83.74.A7.A9653 T5.Q62.KJ642.J84 92.AKJ53.985.KT7"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "99a8b99a8b1111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  9
+N  H 10
+N  D  8
+N  C 11
+N NT  9
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S  9
+S  H 10
+S  D  8
+S  C 11
+S NT  9
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "19"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:Q.8732.A2.KQ8765 AKT.T954.KJ7.JT2 J873..QT9863.A94 96542.AKQJ6.54.3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "111aa111aa1891119911"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  1
+N  D 10
+N  C 10
+N NT  1
+E  S  8
+E  H  9
+E  D  1
+E  C  1
+E NT  1
+S  S  1
+S  H  1
+S  D 10
+S  C 10
+S NT  1
+W  S  9
+W  H  9
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "20"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "W:J83.Q4.K643.K854 Q654.A9.QT2.AQ63 AKT9.KJT5.75.T72 72.87632.AJ98.J9"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11771111717711777117"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  7
+N  D  7
+N  C  1
+N NT  1
+E  S  7
+E  H  1
+E  D  1
+E  C  7
+E NT  7
+S  S  1
+S  H  1
+S  D  7
+S  C  1
+S NT  1
+W  S  7
+W  H  1
+W  D  1
+W  C  7
+W NT  7
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "21"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:AJ94.AK72.J63.75 KT5.QT864.982.64 Q832.J5.AT.QT982 76.93.KQ754.AKJ3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "18117181177178171781"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  8
+N  H  1
+N  D  1
+N  C  7
+N NT  1
+E  S  1
+E  H  7
+E  D  8
+E  C  1
+E NT  7
+S  S  8
+S  H  1
+S  D  1
+S  C  7
+S NT  1
+W  S  1
+W  H  7
+W  D  8
+W  C  1
+W NT  7
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "22"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "E:84.QJ64.QT4.Q642 J5.53.AJ87632.KJ AKQ973.2.K9.AT87 T62.AKT987.5.953"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "11781117819911999119"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  1
+N  H  7
+N  D  8
+N  C  1
+N NT  1
+E  S  9
+E  H  1
+E  D  1
+E  C  9
+E NT  9
+S  S  1
+S  H  7
+S  D  8
+S  C  1
+S NT  1
+W  S  9
+W  H  1
+W  D  1
+W  C  9
+W NT  9
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "23"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "All"]
+[Deal "S:T853..AKJ93.Q843 92.T53.752.AJT72 K64.KQ8764.T.K96 AQJ7.AJ92.Q864.5"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "78177171171171111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  8
+N  H  1
+N  D  7
+N  C  7
+N NT  7
+E  S  1
+E  H  7
+E  D  1
+E  C  1
+E NT  1
+S  S  7
+S  H  1
+S  D  1
+S  C  7
+S NT  1
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "24"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "None"]
+[Deal "W:T.T52.K9843.A865 AKJ98543.98.AT.2 Q7.KQ.75.KQJT974 62.AJ7643.QJ62.3"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "1ba111ba111111911119"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S 11
+N  H 10
+N  D  1
+N  C  1
+N NT  1
+E  S  1
+E  H  1
+E  D  1
+E  C  9
+E NT  1
+S  S 11
+S  H 10
+S  D  1
+S  C  1
+S NT  1
+W  S  1
+W  H  1
+W  D  1
+W  C  9
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "25"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "EW"]
+[Deal "N:K82.JT95.KQJ87.4 A97.AKQ62.4.QJ93 Q543.3.AT63.KT82 JT6.874.952.A765"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "18191181911171911719"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  8
+N  H  1
+N  D  9
+N  C  1
+N NT  1
+E  S  1
+E  H  7
+E  D  1
+E  C  9
+E NT  1
+S  S  8
+S  H  1
+S  D  9
+S  C  1
+S NT  1
+W  S  1
+W  H  7
+W  D  1
+W  C  9
+W NT  1
+
+[Event "160816TuE"]
+[Site ""]
+[Date "2016.08.16"]
+[Board "26"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "All"]
+[Deal "E:Q54.KQJ64.9632.7 .T985.AK874.KQT3 KT832.7.QT5.A982 AJ976.A32.J.J654"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Application "BridgeComposer; Views=001F"]
+[DoubleDummyTricks "87889878791111111111"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N  S  7
+N  H  8
+N  D  8
+N  C  9
+N NT  8
+E  S  1
+E  H  1
+E  D  1
+E  C  1
+E NT  1
+S  S  7
+S  H  8
+S  D  7
+S  C  9
+S NT  8
+W  S  1
+W  H  1
+W  D  1
+W  C  1
+W NT  1
+% BridgeNZ txt2pbn V0.1
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "1"]
+[Dealer "N"]
+[Vulnerable "None "]
+[Deal "N:AJ7.KT73.2.K9872 .9862.KQJ7.AT643 KQ9.AJ5.AT9865.J T865432.Q4.43.Q5"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 9
+N D 10
+N C 9
+N NT 9
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 8
+S H 9
+S D 9
+S C 9
+S NT 9
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "2"]
+[Dealer "E"]
+[Vulnerable "N-S "]
+[Deal "E:AJ52.A73.854.KT2 Q3.T4.AK2.QJ9864 7.KJ985.QT976.A3 KT9864.Q62.J3.75"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 7
+E H 10
+E D 11
+E C 6
+E NT 10
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 7
+W H 10
+W D 11
+W C 6
+W NT 8
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "3"]
+[Dealer "S"]
+[Vulnerable "E-W "]
+[Deal "S:AJT962.976.A96.9 75.JT853.82.J764 Q843.Q42.Q.AQ853 K.AK.KJT7543.KT2"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 11
+N H 7
+N D 6
+N C 7
+N NT 9
+E S 6
+E H 6
+E D 9
+E C 6
+E NT 6
+S S 11
+S H 7
+S D 6
+S C 7
+S NT 8
+W S 6
+W H 6
+W D 9
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "4"]
+[Dealer "W"]
+[Vulnerable "Both "]
+[Deal "W:J854.93.AK862.J6 K976.K.Q953.AT54 A32.AJT7.T.KQ972 QT.Q86542.J74.83"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 8
+E H 8
+E D 7
+E C 9
+E NT 8
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 8
+W H 8
+W D 7
+W C 9
+W NT 8
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "5"]
+[Dealer "N"]
+[Vulnerable "N-S "]
+[Deal "N:K53.KJ964.J87.42 642.82.A642.AQJT J87.A7.KQT93.863 AQT9.QT53.5.K975"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 7
+N D 8
+N C 6
+N NT 6
+E S 8
+E H 6
+E D 6
+E C 9
+E NT 6
+S S 6
+S H 7
+S D 8
+S C 6
+S NT 6
+W S 8
+W H 6
+W D 6
+W C 9
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "6"]
+[Dealer "E"]
+[Vulnerable "E-W "]
+[Deal "E:T97.KJT8.754.AQ9 K43.762.QT82.J73 AJ65.AQ9.A6.T642 Q82.543.KJ93.K85"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 10
+E H 10
+E D 8
+E C 10
+E NT 9
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 10
+W H 10
+W D 8
+W C 10
+W NT 9
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "7"]
+[Dealer "S"]
+[Vulnerable "Both "]
+[Deal "S:Q6.A86.AT632.AK3 9732.KQT742.94.T JT54..KJ87.Q8765 AK8.J953.Q5.J942"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 6
+N D 11
+N C 10
+N NT 9
+E S 6
+E H 8
+E D 6
+E C 6
+E NT 6
+S S 7
+S H 6
+S D 11
+S C 10
+S NT 9
+W S 6
+W H 8
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "8"]
+[Dealer "W"]
+[Vulnerable "None "]
+[Deal "W:543.KJ984.542.85 97.5.Q97.AKQ9643 Q62.QT73.AJ86.T2 AKJT8.A62.KT3.J7"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 12
+N H 8
+N D 10
+N C 12
+N NT 12
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 12
+S H 8
+S D 10
+S C 12
+S NT 12
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "9"]
+[Dealer "N"]
+[Vulnerable "E-W "]
+[Deal "N:T.AT9542.963.T52 A9862.Q.AQ7.KQJ9 Q4.87.KJ54.87643 KJ753.KJ63.T82.A"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 12
+E H 8
+E D 9
+E C 10
+E NT 12
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 12
+W H 8
+W D 9
+W C 8
+W NT 11
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "10"]
+[Dealer "E"]
+[Vulnerable "Both "]
+[Deal "E:AKQ.Q965.J82.A83 T84.J87.QT5.QJ96 532.K2.A97.K7542 J976.AT43.K643.T"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 7
+E H 7
+E D 7
+E C 8
+E NT 7
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 7
+W H 7
+W D 7
+W C 8
+W NT 7
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "11"]
+[Dealer "S"]
+[Vulnerable "None "]
+[Deal "S:753.QT9854.A876. K6.AK.KJ542.KQT5 QJT9.J732.9.AJ72 A842.6.QT3.98643"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 9
+N D 6
+N C 6
+N NT 6
+E S 7
+E H 6
+E D 9
+E C 9
+E NT 8
+S S 6
+S H 9
+S D 6
+S C 6
+S NT 6
+W S 6
+W H 6
+W D 9
+W C 9
+W NT 8
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "12"]
+[Dealer "W"]
+[Vulnerable "N-S "]
+[Deal "W:KQ76.KJ2.T74.AQ2 T2.QT843.K32.J73 94.A.AQJ986.KT65 AJ853.9765.5.984"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 10
+E H 8
+E D 12
+E C 12
+E NT 12
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 10
+W H 8
+W D 12
+W C 12
+W NT 12
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "13"]
+[Dealer "N"]
+[Vulnerable "Both "]
+[Deal "N:AQ53.82.973.AJ72 KT9864.Q64.QT2.4 J.K975.8654.KT95 72.AJT3.AKJ.Q863"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 7
+N NT 6
+E S 9
+E H 8
+E D 7
+E C 6
+E NT 7
+S S 6
+S H 6
+S D 6
+S C 7
+S NT 6
+W S 9
+W H 8
+W D 7
+W C 6
+W NT 7
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "14"]
+[Dealer "E"]
+[Vulnerable "None "]
+[Deal "E:A93.A42.T65.QJ92 J52.KJ986.K4.AT8 KT87.T753.A9.K73 Q64.Q.QJ8732.654"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 8
+E H 8
+E D 6
+E C 8
+E NT 8
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 8
+W H 8
+W D 6
+W C 8
+W NT 8
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "15"]
+[Dealer "S"]
+[Vulnerable "N-S "]
+[Deal "S:AK.KJ76.T95.AKJT 2.8532.A876.Q986 Q9653.T94.QJ3.42 JT874.AQ.K42.753"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 8
+N D 7
+N C 8
+N NT 8
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 8
+S H 8
+S D 7
+S C 8
+S NT 8
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "16"]
+[Dealer "W"]
+[Vulnerable "E-W "]
+[Deal "W:J7653.6.AT732.KT KQT94.KQT..J5432 A8.J84.QJ8654.Q8 2.A97532.K9.A976"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 10
+N D 6
+N C 11
+N NT 6
+E S 6
+E H 6
+E D 10
+E C 6
+E NT 6
+S S 6
+S H 11
+S D 6
+S C 11
+S NT 6
+W S 6
+W H 6
+W D 10
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "17"]
+[Dealer "N"]
+[Vulnerable "None "]
+[Deal "N:J5.AJT5.QJ5.J762 98632.83.T7643.K AT7.KQ42.82.Q543 KQ4.976.AK9.AT98"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 7
+N NT 6
+E S 9
+E H 6
+E D 9
+E C 6
+E NT 6
+S S 6
+S H 6
+S D 6
+S C 7
+S NT 6
+W S 9
+W H 6
+W D 9
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "18"]
+[Dealer "E"]
+[Vulnerable "N-S "]
+[Deal "E:K85.KJ53.K98.KJ3 T9.AQT.QJ6.AQ986 AJ7643.2.54.T742 Q2.98764.AT732.5"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 9
+N D 10
+N C 7
+N NT 6
+E S 8
+E H 6
+E D 6
+E C 6
+E NT 7
+S S 6
+S H 9
+S D 10
+S C 7
+S NT 6
+W S 8
+W H 6
+W D 6
+W C 6
+W NT 7
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "19"]
+[Dealer "S"]
+[Vulnerable "E-W "]
+[Deal "S:9752.K2.J95.AQJ7 AQJT3.J.K86.K862 4.QT863.AQ732.T3 K86.A9754.T4.954"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 8
+N D 9
+N C 6
+N NT 6
+E S 8
+E H 6
+E D 6
+E C 7
+E NT 7
+S S 6
+S H 8
+S D 9
+S C 6
+S NT 6
+W S 8
+W H 6
+W D 6
+W C 7
+W NT 7
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "20"]
+[Dealer "W"]
+[Vulnerable "Both "]
+[Deal "W:T8.KJ65.AT532.K9 A972.AT72.74.JT3 J63.943.986.8765 KQ54.Q8.KQJ.AQ42"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 10
+N H 9
+N D 8
+N C 10
+N NT 10
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 11
+S H 9
+S D 8
+S C 10
+S NT 10
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "21"]
+[Dealer "N"]
+[Vulnerable "N-S "]
+[Deal "N:.AJ5.Q97.AJ98543 Q843.3.852.KQT72 AKJ75.T9864.AT6. T962.KQ72.KJ43.6"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 10
+N D 8
+N C 9
+N NT 9
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 8
+S H 10
+S D 8
+S C 8
+S NT 9
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "22"]
+[Dealer "E"]
+[Vulnerable "E-W "]
+[Deal "E:.KQ854.AQ6532.32 AT943.J763.J.974 8752.A2.K987.AKQ KQJ6.T9.T4.JT865"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 6
+E H 12
+E D 13
+E C 8
+E NT 8
+S S 7
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 6
+W H 12
+W D 13
+W C 8
+W NT 8
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "23"]
+[Dealer "S"]
+[Vulnerable "Both "]
+[Deal "S:AJT8753.Q9..KQ73 K9.85.J753.JT862 4.764.AQT982.954 Q62.AKJT32.K64.A"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 6
+N D 6
+N C 7
+N NT 6
+E S 6
+E H 8
+E D 7
+E C 6
+E NT 9
+S S 7
+S H 6
+S D 6
+S C 7
+S NT 6
+W S 6
+W H 8
+W D 7
+W C 6
+W NT 9
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "24"]
+[Dealer "W"]
+[Vulnerable "None "]
+[Deal "W:JT2.JT63.K.J7653 743.A98.7652.K82 AQ986.7.JT843.Q9 K5.KQ542.AQ9.AT4"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 9
+N D 8
+N C 9
+N NT 9
+E S 7
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 6
+S H 9
+S D 8
+S C 9
+S NT 9
+W S 7
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "25"]
+[Dealer "N"]
+[Vulnerable "E-W "]
+[Deal "N:AT2.T7.AT74.AQT4 65.J643.J932.752 98.AKQ95.KQ65.J8 KQJ743.82.8.K963"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 13
+N D 13
+N C 11
+N NT 13
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 9
+S H 13
+S D 13
+S C 11
+S NT 13
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "26"]
+[Dealer "E"]
+[Vulnerable "Both "]
+[Deal "E:74.K8632.4.KT542 KT85.Q75.A32.AJ8 AQ93.T9.Q9876.76 J62.AJ4.KJT5.Q93"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 8
+N D 8
+N C 8
+N NT 10
+E S 6
+E H 6
+E D 6
+E C 6
+E NT 6
+S S 9
+S H 8
+S D 9
+S C 8
+S NT 10
+W S 6
+W H 6
+W D 6
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "27"]
+[Dealer "S"]
+[Vulnerable "None "]
+[Deal "S:QT94.A93.Q2.KQ72 A87.742.AJ6.J954 652.KJT6.74.AT83 KJ3.Q85.KT9853.6"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 8
+N D 6
+N C 9
+N NT 6
+E S 6
+E H 6
+E D 8
+E C 6
+E NT 6
+S S 7
+S H 8
+S D 6
+S C 9
+S NT 6
+W S 6
+W H 6
+W D 8
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "28"]
+[Dealer "W"]
+[Vulnerable "N-S "]
+[Deal "W:6532.KJ964.K7.QT K987.Q72.QJ85.97 AQT.AT8.AT642.53 J4.53.93.AKJ8642"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 10
+E H 10
+E D 9
+E C 6
+E NT 6
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 10
+W H 10
+W D 9
+W C 6
+W NT 6
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "29"]
+[Dealer "N"]
+[Vulnerable "Both "]
+[Deal "N:QJT9864.JT4.9.62 52.K96.Q432.AKQ3 A3.87532.A87.J98 K7.AQ.KJT65.T754"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 6
+E H 7
+E D 11
+E C 9
+E NT 11
+S S 7
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 6
+W H 7
+W D 11
+W C 9
+W NT 11
+ 
+[Event "Hazlemere_Trophy"]
+[Site "503"]
+[Date "20151006"]
+[Board "30"]
+[Dealer "E"]
+[Vulnerable "None "]
+[Deal "E:743.AK72.AKQJ6.9 QT6.QT3.T87.AT76 KJ82.J6.32.KQJ42 A95.9854.954.853"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 6
+N C 6
+N NT 6
+E S 10
+E H 9
+E D 10
+E C 10
+E NT 9
+S S 6
+S H 6
+S D 6
+S C 6
+S NT 6
+W S 10
+W H 9
+W D 10
+W C 10
+W NT 9
+ 
+% BridgeNZ edr2pbn V0.1
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "1"]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:J943.Q54.AK876.8 AQ6.AJT76.JT9.T4 KT75.K.542.J9632 82.9832.Q3.AKQ75"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 4
+N D 8
+N C 5
+N NT 4
+E S 4
+E H 9
+E D 4
+E C 8
+E NT 7
+S S 9
+S H 4
+S D 8
+S C 5
+S NT 4
+W S 4
+W H 9
+W D 4
+W C 7
+W NT 7
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "2"]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:Q96.A753.AJ8.854 AK843..T5432.AK3 T.K984.KQ7.JT972 J752.QJT62.96.Q6"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 11
+N H 6
+N D 8
+N C 5
+N NT 7
+E S 4
+E H 6
+E D 5
+E C 8
+E NT 6
+S S 11
+S H 6
+S D 8
+S C 5
+S NT 7
+W S 4
+W H 6
+W D 4
+W C 7
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "3"]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:A876432.97.A7.J7 QJ95.Q53.QJT98.2 .AJ864.43.QT8654 KT.KT2.K652.AK93"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 6
+N D 4
+N C 8
+N NT 4
+E S 7
+E H 7
+E D 9
+E C 4
+E NT 10
+S S 6
+S H 6
+S D 4
+S C 8
+S NT 4
+W S 7
+W H 6
+W D 9
+W C 4
+W NT 10
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "4"]
+[Dealer "W"]
+[Vulnerable "Both"]
+[Deal "W:KT98.987.7643.72 QJ3.32.KT982.JT9 54.AKT65.5.KQ653 A762.QJ4.AQJ.A84"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 4
+N D 9
+N C 5
+N NT 8
+E S 4
+E H 9
+E D 4
+E C 6
+E NT 4
+S S 8
+S H 4
+S D 9
+S C 5
+S NT 8
+W S 4
+W H 9
+W D 4
+W C 6
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "5"]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:53.A9543.KT52.T6 JT94.J7.Q743.873 KQ62.Q82.AJ8.QJ4 A87.KT6.96.AK952"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 9
+N D 8
+N C 5
+N NT 7
+E S 6
+E H 4
+E D 5
+E C 7
+E NT 5
+S S 7
+S H 9
+S D 8
+S C 6
+S NT 7
+W S 6
+W H 4
+W D 5
+W C 7
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "6"]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "E:T6.75.J87532.Q64 AJ3.Q432.AQT6.KJ Q98542.AJT6.K.T8 K7.K98.94.A97532"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 10
+N D 10
+N C 12
+N NT 12
+E S 5
+E H 4
+E D 4
+E C 4
+E NT 4
+S S 8
+S H 11
+S D 10
+S C 12
+S NT 12
+W S 5
+W H 4
+W D 4
+W C 4
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "7"]
+[Dealer "S"]
+[Vulnerable "Both"]
+[Deal "S:Q85.J82.AKJ63.42 K93.5.QT975.Q963 AJT642.T73.4.T87 7.AKQ964.82.AKJ5"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 4
+N D 5
+N C 4
+N NT 4
+E S 5
+E H 9
+E D 7
+E C 10
+E NT 5
+S S 7
+S H 4
+S D 5
+S C 4
+S NT 4
+W S 5
+W H 9
+W D 7
+W C 10
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "8"]
+[Dealer "W"]
+[Vulnerable "None"]
+[Deal "W:986.K8632.T94.A4 AJ72.J974.5.KT76 KT43.AQT5.873.95 Q5..AKQJ62.QJ832"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 6
+N D 11
+N C 12
+N NT 7
+E S 5
+E H 7
+E D 4
+E C 4
+E NT 6
+S S 7
+S H 6
+S D 11
+S C 11
+S NT 7
+W S 5
+W H 7
+W D 4
+W C 4
+W NT 6
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "9"]
+[Dealer "N"]
+[Vulnerable "EW"]
+[Deal "N:Q5.AJ76.AT962.AK AK9.K.QJ54.T8753 863.Q943.73.QJ96 JT742.T852.K8.42"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 6
+N H 9
+N D 8
+N C 6
+N NT 8
+E S 7
+E H 4
+E D 4
+E C 6
+E NT 5
+S S 6
+S H 9
+S D 8
+S C 6
+S NT 8
+W S 7
+W H 4
+W D 5
+W C 6
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "10"]
+[Dealer "E"]
+[Vulnerable "Both"]
+[Deal "E:J6542..73.KT7642 A93.A97652.J52.A Q8.KQJ3.AQT.J953 KT7.T84.K9864.Q8"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 5
+N H 8
+N D 8
+N C 4
+N NT 5
+E S 7
+E H 5
+E D 4
+E C 9
+E NT 7
+S S 5
+S H 8
+S D 9
+S C 4
+S NT 5
+W S 7
+W H 5
+W D 4
+W C 9
+W NT 7
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "11"]
+[Dealer "S"]
+[Vulnerable "None"]
+[Deal "S:QJT9.63.63.AKT62 542.Q9.KQJ854.J7 873.AJ8542.2.Q98 AK6.KT7.AT97.543"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 8
+N D 4
+N C 9
+N NT 5
+E S 5
+E H 5
+E D 10
+E C 4
+E NT 7
+S S 7
+S H 8
+S D 4
+S C 9
+S NT 5
+W S 5
+W H 5
+W D 10
+W C 4
+W NT 7
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "12"]
+[Dealer "W"]
+[Vulnerable "NS"]
+[Deal "W:AKJ8.A4.J98.7652 7.982.AK63.AT983 9.KJT753.T754.KJ QT65432.Q6.Q2.Q4"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 4
+N D 5
+N C 8
+N NT 4
+E S 6
+E H 8
+E D 8
+E C 5
+E NT 9
+S S 7
+S H 4
+S D 5
+S C 8
+S NT 4
+W S 6
+W H 8
+W D 8
+W C 5
+W NT 9
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "13"]
+[Dealer "N"]
+[Vulnerable "Both"]
+[Deal "N:Q5.QT96.T942.J42 KT64.AJ74.K6.AT3 A92.K53.Q53.8765 J873.82.AJ87.KQ9"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 4
+N D 4
+N C 4
+N NT 4
+E S 11
+E H 9
+E D 10
+E C 10
+E NT 10
+S S 4
+S H 4
+S D 4
+S C 4
+S NT 4
+W S 11
+W H 9
+W D 9
+W C 10
+W NT 10
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "14"]
+[Dealer "E"]
+[Vulnerable "None"]
+[Deal "E:T84.JT762.QT85.8 Q7.A985.J.QJ9542 AKJ952.KQ4.432.6 63.3.AK976.AKT73"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 5
+N D 9
+N C 11
+N NT 7
+E S 6
+E H 7
+E D 4
+E C 4
+E NT 4
+S S 4
+S H 5
+S D 9
+S C 11
+S NT 7
+W S 6
+W H 7
+W D 4
+W C 4
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "15"]
+[Dealer "S"]
+[Vulnerable "NS"]
+[Deal "S:AQ73.QJ852.Q2.73 86542.93.J963.A8 JT9.7.T854.JT654 K.AKT64.AK7.KQ92"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 4
+N D 4
+N C 4
+N NT 4
+E S 8
+E H 10
+E D 10
+E C 8
+E NT 9
+S S 4
+S H 4
+S D 4
+S C 4
+S NT 4
+W S 8
+W H 9
+W D 10
+W C 8
+W NT 9
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "16"]
+[Dealer "W"]
+[Vulnerable "EW"]
+[Deal "W:QJT965.AKQ.J7.KJ AK82.75.532.A986 7.JT843.A964.T72 43.962.KQT8.Q543"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 4
+N D 7
+N C 8
+N NT 6
+E S 9
+E H 9
+E D 6
+E C 4
+E NT 5
+S S 4
+S H 4
+S D 7
+S C 8
+S NT 6
+W S 9
+W H 9
+W D 6
+W C 4
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "17"]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:9.932.T762.KJ532 J842.K65.AJ85.84 A76.JT874.Q4.AT6 KQT53.AQ.K93.Q97"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 7
+N D 5
+N C 6
+N NT 6
+E S 10
+E H 5
+E D 8
+E C 6
+E NT 7
+S S 4
+S H 7
+S D 5
+S C 6
+S NT 6
+W S 10
+W H 5
+W D 8
+W C 6
+W NT 7
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "18"]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:J2.97642.K74.AJ4 3.83.AQT53.KQT32 KQ854.AQ5.J2.986 AT976.KJT.986.75"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 7
+N D 10
+N C 10
+N NT 8
+E S 5
+E H 6
+E D 4
+E C 4
+E NT 4
+S S 8
+S H 7
+S D 10
+S C 10
+S NT 9
+W S 5
+W H 6
+W D 4
+W C 4
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "19"]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:Q8.QJ3.A74.QJ753 AT962.KT2.Q3.AK2 74.A9764.9852.96 KJ53.85.KJT6.T84"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 5
+N D 4
+N C 6
+N NT 4
+E S 10
+E H 7
+E D 9
+E C 7
+E NT 8
+S S 4
+S H 6
+S D 4
+S C 6
+S NT 4
+W S 10
+W H 7
+W D 9
+W C 7
+W NT 8
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "20"]
+[Dealer "W"]
+[Vulnerable "Both"]
+[Deal "W:J432.9763.KJ82.Q KT85.QT84.Q5.KJ6 AQ96.AK52.7.T743 7.J.AT9643.A9852"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 4
+N D 8
+N C 9
+N NT 8
+E S 8
+E H 9
+E D 4
+E C 4
+E NT 5
+S S 4
+S H 4
+S D 8
+S C 9
+S NT 7
+W S 8
+W H 9
+W D 4
+W C 4
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "21"]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:QT43.AK983.942.J KJ2.QJT5.AQT75.Q A9765.64..T87432 8.72.KJ863.AK965"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 6
+N D 4
+N C 6
+N NT 4
+E S 4
+E H 7
+E D 10
+E C 7
+E NT 9
+S S 8
+S H 6
+S D 4
+S C 6
+S NT 4
+W S 4
+W H 6
+W D 10
+W C 7
+W NT 9
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "22"]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "E:QJ86.QT85.AJ.QJ4 A974.J.Q9432.AT9 T3.A9762.KT876.8 K52.K43.5.K76532"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 4
+N D 6
+N C 9
+N NT 5
+E S 5
+E H 8
+E D 7
+E C 4
+E NT 5
+S S 8
+S H 4
+S D 6
+S C 9
+S NT 5
+W S 5
+W H 8
+W D 7
+W C 4
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "23"]
+[Dealer "S"]
+[Vulnerable "Both"]
+[Deal "S:AJT76.975.AJT4.J 9432.8.Q65.QT642 K5.KQ2.9832.A753 Q8.AJT643.K7.K98"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 9
+N H 7
+N D 10
+N C 6
+N NT 8
+E S 4
+E H 5
+E D 4
+E C 7
+E NT 4
+S S 9
+S H 6
+S D 10
+S C 6
+S NT 8
+W S 4
+W H 5
+W D 4
+W C 7
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "24"]
+[Dealer "W"]
+[Vulnerable "None"]
+[Deal "W:J87642.KT6.K8.K7 KQT9.A5.J963.984 .J832.7542.QJT62 A53.Q974.AQT.A53"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 6
+N D 7
+N C 6
+N NT 9
+E S 5
+E H 6
+E D 5
+E C 6
+E NT 4
+S S 8
+S H 6
+S D 7
+S C 7
+S NT 9
+W S 5
+W H 6
+W D 5
+W C 6
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "25"]
+[Dealer "N"]
+[Vulnerable "EW"]
+[Deal "N:3.AKQ9.KJT976.52 KJ952.JT76..K643 Q6.8532.A543.AT7 AT874.4.Q82.QJ98"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 10
+N D 10
+N C 4
+N NT 8
+E S 11
+E H 4
+E D 4
+E C 9
+E NT 4
+S S 4
+S H 10
+S D 10
+S C 4
+S NT 8
+W S 11
+W H 4
+W D 4
+W C 9
+W NT 4
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "26"]
+[Dealer "E"]
+[Vulnerable "Both"]
+[Deal "E:643.AK84.QT7.J86 AKQT8.J2.J84.QT7 J9.Q653.K53.K954 752.T97.A962.A32"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 8
+N H 5
+N D 7
+N C 6
+N NT 8
+E S 5
+E H 8
+E D 5
+E C 7
+E NT 5
+S S 8
+S H 5
+S D 7
+S C 6
+S NT 7
+W S 5
+W H 8
+W D 5
+W C 7
+W NT 5
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "27"]
+[Dealer "S"]
+[Vulnerable "None"]
+[Deal "S:A86432.43.J75.J2 J75.KQJ52.AKQ9.8 Q.76.T842.T97543 KT9.AT98.63.AKQ6"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 4
+N H 4
+N D 4
+N C 4
+N NT 4
+E S 10
+E H 11
+E D 11
+E C 9
+E NT 12
+S S 4
+S H 4
+S D 4
+S C 4
+S NT 4
+W S 10
+W H 11
+W D 11
+W C 9
+W NT 12
+ 
+[Event "Wed_Individual"]
+[Site "715"]
+[Date "20160831"]
+[Board "28"]
+[Dealer "W"]
+[Vulnerable "NS"]
+[Deal "W:T8632.A.52.JT764 QJ74.872.AKT74.K A95.KQJT953.63.3 K.64.QJ98.AQ9852"]
+[OptimumResultTable "Declarer;Denomination\2R;Result\2R"]
+N S 7
+N H 5
+N D 10
+N C 8
+N NT 5
+E S 4
+E H 8
+E D 4
+E C 4
+E NT 4
+S S 7
+S H 5
+S D 10
+S C 8
+S NT 5
+W S 4
+W H 8
+W D 4
+W C 4
+W NT 4
+ 
+% PBN 2.0
+% EXPORT
+% 
+% <META  name=Generator                  content="Ruter i Norge">
+% <META  name=Version                    content="4.4">
+% <META  name=Author                     content="www.brenning.se">
+% 
+% <META  name=Licencee                   content="1156 Rekrutteringsklubben Ruter 7">
+% <META  name=Arranger                   content="1156 Rekrutteringsklubben Ruter 7">
+% <META  name=Signature                  content="1156 Rekrutteringsklubben Ruter 7">
+% <META  name=Created                    content="2012-01-24 22:34:06">
+% 
+% <META  name=ContestDate                content="2012-01-24">
+% <META  name=ContestName                content="Klubbkveld">
+% <META  name=ContestType                content="2">
+% <META  name=ScoringType                content="IMP;Butler-2;Mean">
+% <META  name=TournamentDirector         content=";;;;;;;;;;;;;;;;;;">
+% 
+% <META  name=TableCount                 content="8">
+% <META  name=PairCount                  content="16">
+% <META  name=PhantomCount               content="0">
+% <META  name=BoardCount                 content="21">
+% <META  name=RoundCount                 content="7">
+% <META  name=Average                    content="">
+% <META  name=HandicapPercentageAverage  content="">
+% 
+% <META  name=CRCategoryID               content="1">
+% <META  name=Factor                     content="1">
+% <META  name=FactorReason               content="">
+% <META  name=ContestID                  content="">
+% <META  name=SerialNumber               content="34">
+% <META  name=PlayerCategoryCount        content="">
+% 
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "1"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:Q53.AKQ.96.K8754 KT98.JT7.KQ43.A6 A64.843.T752.J93 J72.9652.AJ8.QT2"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[TotalScoreTable "Rank\2R;RankTie\2R;PairId\2R;Table\1R;Direction\5R;TotalScoreIMP\3R;Names\50L;NrBoards\2R;Club\49L;MemberID1\7R;MemberID2\7R;Sex1\3R;Sex2\3R"]
+ 1  -  3 2 "N-S"  50 "Magne Tønnessen - Dagfinn Iversen"                21 "Rekrutteringsklubben Ruter 7 - Kristiansands BK" "11925" "39066" "M" "M"
+ 2  - 16 8 "E-W"  46 "Rudi Dahl - Marit Dahl"                           21 "Rekrutteringsklubben Ruter 7"                    "24682" "34692" "M" "M"
+ 3  -  7 4 "N-S"  34 "Clas Gundersen - Glenn Mathisen"                  21 "Rekrutteringsklubben Ruter 7"                    "31875" "38593" "M" "M"
+ 4  5  6 3 "N-S"  29 "Nina Skoland Kaspersen - Thomas Haukland"         21 "Rekrutteringsklubben Ruter 7"                    "35471" "31044" "M" "M"
+ 4  5 10 5 "E-W"  29 "Jan Erik Eriksen - Rita Løvsland"                 21 "Rekrutteringsklubben Ruter 7"                    "37971" "37970" "M" "W"
+ 6  - 13 7 "E-W"  16 "Kenneth Gjernes - Martin Eiesland"                21 "Rekrutteringsklubben Ruter 7"                    "35472" "38850" "M" "M"
+ 7  -  4 2 "E-W"   9 "Henning Klemo - Heidi Langeland"                  21 "Rekrutteringsklubben Ruter 7"                    "27542" "40115" "M" "M"
+ 8  -  2 1 "E-W"   7 "Eirik Breen - Monica Strandmyr"                   21 "Rekrutteringsklubben Ruter 7 - Kristiansands BK" "40121" "30096" "M" "W"
+ 9  - 11 6 "E-W"   6 "Inger Berge - Finn Thomassen"                     21 "Søgne BK"                                        "37346" "37347" "M" "M"
+10  -  1 1 "N-S"  -1 "Øyvind Lindberg - Samson Sundfjord"               21 "Rekrutteringsklubben Ruter 7 - Kristiansands BK" "37650" "38763" "M" "M"
+11  - 14 7 "N-S" -12 "Roald Hodne Larsen - Arvid Thorbjørnsen"          21 "Rekrutteringsklubben Ruter 7"                    "10520" "40063" "M" "M"
+12  -  9 5 "N-S" -19 "Trygve Bryn - John Skogheim"                      21 "Søm BK - Rekrutteringsklubben Ruter 7"           "29429"  "8983" "M" "M"
+13  - 15 8 "N-S" -37 "Gerd Andersen - Wenche Haraldsen Myhre"           21 "Rekrutteringsklubben Ruter 7"                    "35476" "38193" "M" "M"
+14 15  5 3 "E-W" -47 "Bjørg Jernæs - Årstein Jernæs"                    21 "Rekrutteringsklubben Ruter 7"                    "40119" "40118" "W" "M"
+14 15  8 4 "E-W" -47 "Hanne Cecilie Jensen - Paul Otto Johnsen"         21 "Rekrutteringsklubben Ruter 7 - Søgne BK"         "35575" "38762" "M" "M"
+16  - 12 6 "N-S" -63 "Mette Høgdal Johannessen - Dag Flemming Pedersen" 21 "Rekrutteringsklubben Ruter 7"                    "40116" "35067" "M" "M"
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+2 1  3  4 1N  N  8 ST   "120"      -   5  -5  -90
+3 1  6  5 2S  W  7 HJ    "50"      -   4  -4  -90
+4 1  7  8 1H  W  7 HA       -   "80"   0   0  -90
+6 1 12 11 1S  E  7 C9       -   "80"   0   0  -90
+7 1 14 13 1H  W  8 D9       -  "110"  -1   1  -90
+5 1  9 10 2H  W  9 HA       -  "140"  -2   2  -90
+1 1  1  2 1N  E  9 CJ       -  "150"  -2   2  -90
+8 1 15 16 1N  E  9 CJ       -  "150"  -2   2  -90
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "2"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:AQ98.QJ98.Q3.Q63 T65.AT7.AK74.JT2 J73.K5432.JT.K85 K42.6.98652.A974"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+8 1 15 16 3H  W  8 D6    "50"      -   5  -5 -130
+4 1  7  8 4D  S  9 H2       -  "100"   1  -1 -130
+1 1  1  2 2H  W  9 D9       -  "140"   0   0 -130
+2 1  3  4 2H  E  9 ST       -  "140"   0   0 -130
+3 1  6  5 2H  E  9 DA       -  "140"   0   0 -130
+5 1  9 10 2H  W  9 S2       -  "140"   0   0 -130
+6 1 12 11 2H  E  9 DA       -  "140"   0   0 -130
+7 1 14 13 3H  E  9 D2       -  "140"   0   0 -130
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "3"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:K2.KT983.J97.KQ5 Q874.AQ765.A5.92 65.J2.K832.AJ874 AJT93.4.QT64.T63"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+3 1  6  5 3N  E  7 HJ   "200"      -   6  -6  -30
+4 1  7  8 1N  N  7 H4    "90"      -   3  -3  -30
+8 1 15 16 1N  N  7 SA    "90"      -   3  -3  -30
+2 1  3  4 1N  N  6 SJ       -   "50"  -1   1  -30
+5 1  9 10 1N  N  6 SJ       -   "50"  -1   1  -30
+6 1 12 11 1N  N  5 S3       -  "100"  -2   2  -30
+1 1  1  2 2S  E  9 H3       -  "140"  -3   3  -30
+7 1 14 13 3S  E  9 H3       -  "140"  -3   3  -30
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "4"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "W:AQ9843.7654.7.Q4 J52.AKT3.AK42.86 KT.Q82.Q6.A97532 76.J9.JT9853.KJT"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+5 2  7 12 3N  N 11 CA   "660"      -  11 -11  140
+6 2 14  9 4C  E  8 D8   "200"      -   2  -2  140
+1 2  1  4 1N  N  9 C2   "150"      -   0   0  140
+3 2  8  3 3D  S 10 C8   "130"      -   0   0  140
+8 2 13 15 4D  S 10 SA   "130"      -   0   0  140
+7 2 16 11 4D  N 10 SK   "130"      -   0   0  140
+2 2  2  6 3D  S  9 H7   "110"      -  -1   1  140
+4 2  5 10 3S  W  9 HA       -  "140"  -7   7  140
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "5"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:K872.6.AQJ6.JT42 Q965.Q95.K9753.A AJT.T84.T4.K8653 43.AKJ732.82.Q97"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+8 2 13 15 3C  S  9 HA   "110"      -   5  -5 -100
+5 2  7 12 4H  W  9 C2    "50"      -   4  -4 -100
+2 2  2  6 2H  W  8 S8       -  "110"   0   0 -100
+1 2  1  4 2H  W  9 CJ       -  "140"  -1   1 -100
+4 2  5 10 3H  W  9 D6       -  "140"  -1   1 -100
+3 2  8  3 3H  W  9 S2       -  "140"  -1   1 -100
+7 2 16 11 3H  W  9 S2       -  "140"  -1   1 -100
+6 2 14  9 2HX W  8 CJ       -  "470"  -9   9 -100
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "6"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "EW"]
+[Deal "E:JT3.KT73.Q73.AKQ 965.J2.T52.86543 AK4.Q985.A98.972 Q872.A64.KJ64.JT"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+1 2  1  4 4H  E  9 C6   "100"      -  12 -12 -500
+2 2  2  6 4H  W  9 C6   "100"      -  12 -12 -500
+5 2  7 12 3N  E  9 HJ       -  "600"  -3   3 -500
+8 2 13 15 3N  E  9 S9       -  "600"  -3   3 -500
+4 2  5 10 4H  E 10 D2       -  "620"  -3   3 -500
+6 2 14  9 4H  E 10 DT       -  "620"  -3   3 -500
+3 2  8  3 3N  E 10 -        -  "630"  -4   4 -500
+7 2 16 11 3N  E 10 C6       -  "630"  -4   4 -500
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "7"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "All"]
+[Deal "S:Q84.K95.Q9754.J2 AT953.AQ432.T8.4 KJ7.J86.KJ6.Q753 62.T7.A32.AKT986"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+6 3 16  7 3N  E  6 D7   "300"      -   9  -9  -70
+2 3  4  8 2N  E  6 H5   "200"      -   7  -7  -70
+3 3 10  2 3N  E  7 D4   "200"      -   7  -7  -70
+8 3 11 13 3S  W  8 D2   "100"      -   5  -5  -70
+5 3  5 14 3C  E 10 D7       -  "130"  -2   2  -70
+4 3  3 12 2H  W 10 H6       -  "170"  -3   3  -70
+1 3  1  6 3N  W  9 D4       -  "600" -11  11  -70
+7 3 15  9 4S  W 10 C5       -  "620" -11  11  -70
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "8"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "None"]
+[Deal "W:Q4.J542.A9765.K7 T95.T983.KJ.AJT8 J862.AQ.432.9532 AK73.K76.QT8.Q64"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+2 3  4  8 1N  N  9 S8   "150"      -   1  -1  130
+3 3 10  2 1N  N  9 D4   "150"      -   1  -1  130
+4 3  3 12 2H  N  9 D4   "140"      -   0   0  130
+6 3 16  7 2H  N  9 D4   "140"      -   0   0  130
+7 3 15  9 3C  S 10 D5   "130"      -   0   0  130
+1 3  1  6 1N  N  8 C5   "120"      -   0   0  130
+5 3  5 14 2S  S  8 D4   "110"      -  -1   1  130
+8 3 11 13 3H  N  8 D4       -   "50"  -5   5  130
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "9"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "EW"]
+[Deal "N:9.AT743.QT74.AQ7 AK64.J5.AJ96.T53 JT52.K982.83.J98 Q873.Q6.K52.K642"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+6 3 16  7 4HX N 10 SA   "590"      -  10 -10  110
+7 3 15  9 3S  W  7 D4   "200"      -   3  -3  110
+1 3  1  6 3H  N 10 SA   "170"      -   2  -2  110
+4 3  3 12 1H  N 10 SA   "170"      -   2  -2  110
+2 3  4  8 3S  E  8 H2   "100"      -   0   0  110
+8 3 11 13 3S  E  8 H2   "100"      -   0   0  110
+5 3  5 14 1S  W  8 C7       -  "110"  -6   6  110
+3 3 10  2 2S  W  8 HA       -  "110"  -6   6  110
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "10"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "All"]
+[Deal "E:K94.74.J763.QT82 J5.KQT92.T9.J654 QT6.AJ8653.K52.K A8732..AQ84.A973"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+2 4  6 10 2HX W  7 C3   "200"      -   5  -5   10
+7 4 13  7 2S  N  9 H7   "140"      -   4  -4   10
+6 4 15  5 2N  S  8 H3   "120"      -   3  -3   10
+5 4  3 16 1S  N  7 H7    "80"      -   2  -2   10
+3 4 12  4 1N  E  7 SJ       -   "90"  -3   3   10
+1 4  1  8 2D  N  7 H4       -  "100"  -3   3   10
+4 4  2 14 2H  W  8 C9       -  "110"  -3   3   10
+8 4  9 11 2HX W  8 CA       -  "670" -12  12   10
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "11"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "None"]
+[Deal "S:AKT743.KT32.K2.K 65.A98.T643.T654 9.Q54.A985.AQ973 QJ82.J76.QJ7.J82"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+5 4  3 16 3N  N 11 S2   "460"      -   1  -1  440
+8 4  9 11 3N  N 11 SQ   "460"      -   1  -1  440
+1 4  1  8 4H  S 11 D6   "450"      -   0   0  440
+4 4  2 14 4H  S 11 S5   "450"      -   0   0  440
+2 4  6 10 3N  N 10 DQ   "430"      -   0   0  440
+3 4 12  4 4H  S 10 D6   "420"      -  -1   1  440
+7 4 13  7 3N  N  9 DQ   "400"      -  -1   1  440
+6 4 15  5 3N  N  8 DQ       -   "50" -10  10  440
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "12"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "NS"]
+[Deal "W:J54.873.A97.Q832 AT82.AKT4.Q6.J76 K763.Q652.T4.KT4 Q9.J9.KJ8532.A95"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+1 4  1  8 3N  S 10 SJ   "630"      -   7  -7  330
+5 4  3 16 3N  N 10 S3   "630"      -   7  -7  330
+4 4  2 14 3N  S  9 C3   "600"      -   7  -7  330
+7 4 13  7 3SX E  6 HJ   "500"      -   5  -5  330
+8 4  9 11 2N  N 10 S3   "180"      -  -4   4  330
+2 4  6 10 2D  S 11 H8   "150"      -  -5   5  330
+6 4 15  5 3N  S  8 C8       -  "100" -10  10  330
+3 4 12  4 3N  N  6 C4       -  "300" -12  12  330
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "13"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "All"]
+[Deal "N:AJ9.QJ753.3.KQT8 K84.94.KQ96.AJ42 765.A.JT7542.965 QT32.KT862.A8.73"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+8 5  7  9 2C  N  7 H9       -  "100"   1  -1 -120
+2 5  8 12 1H  N  6 D6       -  "100"   1  -1 -120
+3 5 14  6 1H  N  6 S3       -  "100"   1  -1 -120
+1 5  1 10 2S  W  8 D3       -  "110"   0   0 -120
+4 5  4 16 2S  W  8 D3       -  "110"   0   0 -120
+5 5  2 15 2N  E  8 D2       -  "120"   0   0 -120
+7 5 11  5 1HX N  6 DK       -  "200"  -2   2 -120
+6 5 13  3 1H  N  5 DK       -  "200"  -2   2 -120
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "14"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "None"]
+[Deal "E:K4.KQJ43.83.QJ86 AT2.9.AQJ965.AT2 QJ75.T765.4.K543 9863.A82.KT72.97"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+1 5  1 10 4D  S 11 H7   "150"      -   2  -2  100
+5 5  2 15 4D  S 10 HT   "130"      -   1  -1  100
+2 5  8 12 4D  S 10 HT   "130"      -   1  -1  100
+7 5 11  5 3D  S 10 H5   "130"      -   1  -1  100
+6 5 13  3 4D  S 10 HT   "130"      -   1  -1  100
+4 5  4 16 3H  E  8 DA    "50"      -  -2   2  100
+3 5 14  6 3H  E  8 D5    "50"      -  -2   2  100
+8 5  7  9 4S  N  8 HK       -  "100"  -5   5  100
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "15"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "NS"]
+[Deal "S:A63.KQJ2.QJ762.5 K84.865.K53.AT62 QJT2.T43.94.J843 975.A97.AT8.KQ97"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+8 5  7  9 3CX W  8 SQ   "100"      -   5  -5  -70
+2 5  8 12 1D  S  8 S4    "90"      -   4  -4  -70
+5 5  2 15 2C  W  7 D9    "50"      -   3  -3  -70
+4 5  4 16 2C  E  8 HK       -   "90"  -1   1  -70
+7 5 11  5 1N  W  7 D9       -   "90"  -1   1  -70
+3 5 14  6 1N  W  9 SQ       -  "150"  -2   2  -70
+1 5  1 10 2H  S  6 H5       -  "200"  -4   4  -70
+6 5 13  3 2H  S  6 CA       -  "200"  -4   4  -70
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "16"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "EW"]
+[Deal "W:K54.Q62.K2.KQT72 A863.K43.Q85.983 Q92.AT985.JT94.6 JT7.J7.A763.AJ54"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+2 6 10 14 1S  N  7 DJ    "80"      -   6  -6 -140
+4 6  6 15 2S  N  6 C6       -  "100"   1  -1 -140
+1 6  1 12 1N  W  8 S6       -  "120"   1  -1 -140
+3 6 16  8 1N  W  8 S7       -  "120"   1  -1 -140
+5 6  4 13 2H  E  9 S7       -  "140"   0   0 -140
+7 6  9  3 1N  W 10 S3       -  "180"  -1   1 -140
+6 6 11  2 1N  W 10 S3       -  "180"  -1   1 -140
+8 6  5  7 4H  W 10 S2       -  "620" -10  10 -140
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "17"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:JT9853.Q4.6.A965 A6.K653.AKJ5.832 Q2.AJT872.T9872. K74.9.Q43.KQJT74"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+3 6 16  8 6HX E  6 SQ  "1400"      -  17 -17 -210
+4 6  6 15 5CX W 10 D6   "100"      -   7  -7 -210
+1 6  1 12 6C  W 11 H4    "50"      -   6  -6 -210
+2 6 10 14 3C  W 11 D6       -  "150"   2  -2 -210
+5 6  4 13 5C  W 11 SJ       -  "400"  -5   5 -210
+6 6 11  2 3N  E  9 H2       -  "400"  -5   5 -210
+7 6  9  3 3N  W 11 SJ       -  "460"  -6   6 -210
+8 6  5  7 3N  E 12 DT       -  "490"  -7   7 -210
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "18"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:752.J98532.94.A7 863.KQT6.Q87.Q98 AJ4..AKJT53.K543 KQT9.A74.62.JT62"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+3 6 16  8 4H  E  7 S8   "150"      -   7  -7 -150
+5 6  4 13 5D  W 10 SK    "50"      -   5  -5 -150
+1 6  1 12 1D  W 10 SK       -  "130"   1  -1 -150
+4 6  6 15 3D  W 10 CJ       -  "130"   1  -1 -150
+6 6 11  2 3D  W 10 CJ       -  "130"   1  -1 -150
+2 6 10 14 2D  W 11 SK       -  "150"   0   0 -150
+8 6  5  7 3N  W 10 SK       -  "430"  -7   7 -150
+7 6  9  3 1NX S  5 DA       -  "500"  -8   8 -150
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "19"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "S"]
+[Vulnerable "EW"]
+[Deal "S:KJ82.J76543.9.A6 A73.Q.Q42.KQJ752 Q965.8.AT753.983 T4.AKT92.KJ86.T4"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+8 7  3  5 3N  W  7 S6   "200"      -   7  -7 -110
+6 7  9  4 2S  S  9 CK   "140"      -   6  -6 -110
+5 7  6 11 3N  W  8 S5   "100"      -   5  -5 -110
+7 7  7  2 3S  S  8 CQ       -   "50"   2  -2 -110
+1 7  1 14 2D  E  9 S2       -  "110"   0   0 -110
+3 7 15 10 2C  W 10 H8       -  "130"  -1   1 -110
+4 7  8 13 5C  W 11 H5       -  "600" -10  10 -110
+2 7 12 16 4NX E 11 H7       - "1010" -14  14 -110
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "20"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "W:K42.JT952.AT6.KJ 9.Q4.K9842.T9842 QJ8653.A7.753.A6 AT7.K863.QJ.Q753"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+7 7  7  2 5S  E  9 DQ   "200"      -   9  -9 -190
+3 7 15 10 4S  E  9 DQ   "100"      -   7  -7 -190
+8 7  3  5 3S  E  9 DQ       -  "140"   2  -2 -190
+5 7  6 11 3S  E  9 DQ       -  "140"   2  -2 -190
+4 7  8 13 2S  E 10 DQ       -  "170"   1  -1 -190
+2 7 12 16 2S  E 10 DQ       -  "170"   1  -1 -190
+1 7  1 14 4S  E 10 C3       -  "620" -10  10 -190
+6 7  9  4 4S  E 10 DQ       -  "620" -10  10 -190
+
+[Event "Klubbkveld"]
+[Site "1156 Rekrutteringsklubben Ruter 7, Norge"]
+[Date "2012.01.24"]
+[Board "21"]
+[West ""]
+[North ""]
+[East ""]
+[South ""]
+[Dealer "N"]
+[Vulnerable "NS"]
+[Deal "N:AKJT964.2.85.873 53.AJT5.T4.AQJT5 Q87.873.AKJ73.K9 2.KQ964.Q962.642"]
+[Scoring "IMP;Butler-2;Mean"]
+[Declarer ""]
+[Contract ""]
+[Result ""]
+[Competition "Pairs"]
+[EventDate "2012.01.24"]
+[Annotator "1156 Rekrutteringsklubben Ruter 7"]
+[Application "Ruter i Norge - Read more at www.brenning.se"]
+[ScoreTable "Table\1R;Round\1R;PairId_NS\2R;PairId_EW\2R;Contract\3L;Declarer\1R;Result\2R;Lead\3L;Score_NS\6R;Score_EW\6R;IMP_NS\3R;IMP_EW\3R;ButlerDatum\4R"]
+7 7  7  2 4SX N 11 HA   "990"      -   9  -9  600
+8 7  3  5 4S  N 13 DT   "710"      -   3  -3  600
+5 7  6 11 4S  N 12 S5   "680"      -   2  -2  600
+1 7  1 14 4S  N 11 S5   "650"      -   2  -2  600
+4 7  8 13 4S  N 11 DT   "650"      -   2  -2  600
+6 7  9  4 4S  N 10 S4   "620"      -   1  -1  600
+2 7 12 16 4HX W  8 SA   "300"      -  -7   7  600
+3 7 15 10 3S  N 11 DT   "200"      -  -9   9  600

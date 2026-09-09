@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/BettyBridgeGame/sw.js', { scope: '/BettyBridgeGame/' })})}
