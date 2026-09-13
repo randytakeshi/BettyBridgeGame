@@ -9,10 +9,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>BettyBridge</title>
-    <script type="module" crossorigin src="/BettyBridgeGame/assets/index-DT9JfPEz.js"></script>
-    <link rel="stylesheet" crossorigin href="/BettyBridgeGame/assets/index-BMcQe40L.css">
+    <script type="module" crossorigin src="/BettyBridgeGame/assets/index-Bk3cNQBS.js"></script>
+    <link rel="stylesheet" crossorigin href="/BettyBridgeGame/assets/index-C1I8ojT8.css">
   <link rel="manifest" href="/BettyBridgeGame/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/BettyBridgeGame/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
+    <!-- Last resort. If the game cannot start for any reason at all — the
+         script failed to load, the browser is too old to read it, something
+         threw on the way up — Betty must see words she can act on rather
+         than a blank screen. Deliberately plain script so that it runs on
+         anything. -->
+    <script>
+      (function () {
+        function stranded() {
+          var root = document.getElementById('root');
+          if (root && root.children.length > 0) return;
+          document.body.innerHTML =
+            '<div style="font-family:system-ui,-apple-system,Helvetica,sans-serif;' +
+            'background:#0d381c;color:#fff;position:fixed;inset:0;display:flex;' +
+            'flex-direction:column;align-items:center;justify-content:center;' +
+            'text-align:center;padding:32px;line-height:1.5">' +
+            '<div style="font-size:2.4rem;font-weight:bold;margin-bottom:18px">' +
+            'BettyBridge could not start</div>' +
+            '<div style="font-size:1.5rem;max-width:26em">Close the game completely, ' +
+            'then open it again.<br><br>If it still will not start, let Randell know.</div>' +
+            '</div>';
+        }
+        // Capture phase, so a script that fails to load at all is caught too
+        // and she is not left looking at a black screen for nine seconds.
+        window.addEventListener('error', function () { setTimeout(stranded, 1200); }, true);
+        setTimeout(stranded, 9000);
+      })();
+    </script>
   </body>
 </html>
