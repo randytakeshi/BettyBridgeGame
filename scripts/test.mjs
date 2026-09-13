@@ -8,7 +8,7 @@
  *   node scripts/test.mjs [boards]
  */
 import { GameEngine, PLAYERS } from '../src/GameEngine.js';
-import { chooseCall, classifyCall } from '../src/bidding.js';
+import { chooseCall, classifyCall, classifyDouble } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
 
@@ -510,6 +510,7 @@ function replayTest(boards = 60) {
 // All of them are things she will spot instantly, so all are asserted.
 function houseRulesTest(boards = 600) {
   const partnerOf = (s) => PLAYERS[(PLAYERS.indexOf(s) + 2) % 4];
+  const sameSideAs = (a, b) => (PLAYERS.indexOf(a) % 2) === (PLAYERS.indexOf(b) % 2);
   const hcpOf = (h) => h.reduce((s, c) => s + ({ A: 4, K: 3, Q: 2, J: 1 }[c.rank] || 0), 0);
   const acesOf = (h) => h.filter(c => c.rank === 'A').length;
   const ACE_SUIT = { C: 0, D: 1, H: 2, S: 3 };
@@ -530,12 +531,24 @@ function houseRulesTest(boards = 600) {
     const bids = e.bids.filter(c => c.type === 'bid');
     if (!bids.length) continue;
     const meaning = bids.map((_, i) => classifyCall(bids, i));
+    // Deals are random, so a board number is not reproducible. Any failure
+    // has to carry the auction with it or it cannot be diagnosed afterwards.
+    const auction = e.bids
+      .map(c => `${c.player}:${c.type === 'bid' ? c.level + c.suit : c.type === 'double' ? 'X' : 'p'}`)
+      .join(' ');
 
     // Nobody opens on fewer than thirteen high cards — except the defensive
-    // three-level opening, which is six to twelve points and seven cards.
+    // openings, which trade points for shape.
     const opener = bids[0];
     const openerHcp = hcpOf(dealt[opener.player]);
-    if (opener.level === 3 && opener.suit !== 'NT') {
+    if (opener.level === 2 && ['S', 'H', 'D'].includes(opener.suit)) {
+      // A weak two is exactly six cards and six to ten points
+      check(dealt[opener.player].filter(c => c.suit === opener.suit).length === 6,
+        `board ${board}: ${opener.player} opened a weak ${opener.level}${opener.suit} without six cards`);
+      check(openerHcp >= 6 && openerHcp <= 10,
+        `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ${openerHcp} points ` +
+        `— a weak two is six to ten`);
+    } else if (opener.level === 3 && opener.suit !== 'NT') {
       check(dealt[opener.player].filter(c => c.suit === opener.suit).length >= 7,
         `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} without seven cards`);
       check(openerHcp >= 6 && openerHcp <= 12,
@@ -571,28 +584,48 @@ function houseRulesTest(boards = 600) {
       if (firstAt[k] === undefined) firstAt[k] = i;
     });
 
+    // Partner never pulls a penalty double. She was explicit: at the three
+    // level, or once both sides have bid, a double means she can beat them.
+    e.bids.forEach((c, i) => {
+      if (c.type !== 'double') return;
+      if (classifyDouble(e.bids, i) !== 'penalty') return;
+      const next = e.bids.slice(i + 1).find(x => x.player === partnerOf(c.player));
+      if (!next) return;
+      check(next.type !== 'bid',
+        `board ${board}: ${next.player} pulled ${c.player}'s penalty double with ` +
+        `${next.level}${next.suit}`);
+    });
+
     // A question must never go unanswered — the whole auction depends on it
     bids.forEach((c, i) => {
       const asked = meaning[i];
       if (asked !== 'stayman' && asked !== 'blackwood' && asked !== 'strong2C') return;
       const reply = bids.slice(i + 1).find(x => x.player === partnerOf(c.player));
       const replyMeaning = reply ? meaning[bids.indexOf(reply)] : null;
-      if (asked === 'stayman') {
+      // The opponents are allowed to bid over a question, and partner is then
+      // released from answering it. Partner is at fault only if they had a
+      // clear run — nothing bid between the question and their own next turn.
+      const askAt = e.bids.indexOf(c);
+      const partnerTurnAt = e.bids.findIndex((x, j) => j > askAt && x.player === partnerOf(c.player));
+      const theyInterfered = partnerTurnAt < 0 || e.bids
+        .slice(askAt + 1, partnerTurnAt)
+        .some(x => x.type === 'bid' && !sameSideAs(x.player, c.player));
+      if (asked === 'stayman' && !theyInterfered) {
         check(replyMeaning === 'staymanReply',
-          `board ${board}: Stayman went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'})`);
+          `Stayman went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'}) — ${auction}`);
       }
-      if (asked === 'strong2C') {
-        check(!!reply, `board ${board}: the 2 Clubs opening was passed out`);
+      if (asked === 'strong2C' && !theyInterfered) {
+        check(!!reply, `the 2 Clubs opening was passed out — ${auction}`);
       }
-      if (asked === 'blackwood') {
+      if (asked === 'blackwood' && !theyInterfered) {
         check(replyMeaning === 'aceShow',
-          `board ${board}: 4 No Trump went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'})`);
+          `4 No Trump went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'}) — ${auction}`);
         if (replyMeaning === 'aceShow') {
           // and the answer must be the truth
           const shown = ACE_SUIT[reply.suit];
           const held = acesOf(dealt[reply.player]);
           check(held === shown || (reply.suit === 'C' && held === 4),
-            `board ${board}: ${reply.player} showed ${shown} aces holding ${held}`);
+            `${reply.player} showed ${shown} aces holding ${held} — ${auction}`);
         }
       }
     });

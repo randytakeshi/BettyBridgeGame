@@ -5,7 +5,7 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
-import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange } from './bidding';
+import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -118,10 +118,14 @@ function App() {
   const [ntRange, setNtRange] = useState(
     () => (NT_RANGES.some(r => r.key === prefsRef.current.ntRange) ? prefsRef.current.ntRange : DEFAULT_NT_RANGE)
   );
-  // Apply it before the engine ever evaluates a call
-  if (prefsRef.current.__applied !== ntRange) {
+  const [weakTwos, setWeakTwosPref] = useState(
+    () => (typeof prefsRef.current.weakTwos === 'boolean' ? prefsRef.current.weakTwos : DEFAULT_WEAK_TWOS)
+  );
+  // Apply both before the engine ever evaluates a call
+  if (prefsRef.current.__applied !== `${ntRange}|${weakTwos}`) {
     setNoTrumpRange(ntRange);
-    prefsRef.current.__applied = ntRange;
+    setWeakTwos(weakTwos);
+    prefsRef.current.__applied = `${ntRange}|${weakTwos}`;
   }
   const soundEnabledRef = useRef(soundEnabled);
   const speedRef = useRef(speed);
@@ -135,12 +139,13 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    savePrefs({ sound: soundEnabled, speed, ntRange });
-  }, [soundEnabled, speed, ntRange]);
+    savePrefs({ sound: soundEnabled, speed, ntRange, weakTwos });
+  }, [soundEnabled, speed, ntRange, weakTwos]);
 
   useEffect(() => {
     setNoTrumpRange(ntRange);
-  }, [ntRange]);
+    setWeakTwos(weakTwos);
+  }, [ntRange, weakTwos]);
 
   // The engine paces the computer players; auto-play uses the same dial
   useEffect(() => {
@@ -678,6 +683,27 @@ function App() {
               <p>With seven cards in one suit you can open <b>3 of that suit on just
                  6 points</b>. It is a defensive bid — the shape is worth more than the
                  points, and it takes away the opponents' room.</p>
+              <p>With <b>six</b> cards and 6 to 10 points, open <b>2 of that suit</b> —
+                 a weak two. Two Clubs is never weak; it is always the strong hand.</p>
+              <div className="rules-setting">
+                <span>
+                  {weakTwos
+                    ? 'Some play all the two-bids as strong hands instead. Tap to switch.'
+                    : 'Two-bids are all strong at the moment. Tap to play weak twos.'}
+                </span>
+                <button
+                  className="header-btn btn-show"
+                  onClick={() => setWeakTwosPref(!weakTwos)}
+                >
+                  Two-bids: {weakTwos ? 'weak' : 'strong'} — tap to change
+                </button>
+              </div>
+
+              <h3>Doubling</h3>
+              <p>Double their <b>1 or 2 level</b> opening and it means "I have a good
+                 hand — partner, pick a suit."</p>
+              <p>Double them at <b>3 or higher</b>, or once <b>both sides have bid</b>,
+                 and it is for <b>penalty</b> — you can beat them. Partner leaves it in.</p>
 
               <p>Repeating your own five-card major says you actually have <b>six</b>.</p>
 
@@ -689,6 +715,8 @@ function App() {
                  2 Diamonds if they do not.</p>
               <p><b>4 No Trump asks for aces.</b> Partner answers 5 Clubs with none or
                  all four, 5 Diamonds with one, 5 Hearts with two, 5 Spades with three.</p>
+              <p>Over 1 No Trump, <b>4 Clubs just means Clubs</b> — we do not use it to
+                 ask for aces.</p>
               <p>Everything else means exactly what it says.</p>
 
               <h3>Suit order</h3>

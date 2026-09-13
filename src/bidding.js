@@ -35,6 +35,15 @@ export const NT_RANGES = [
   { key: '15-17', low: 15, label: '15 to 17 points' }
 ];
 export const DEFAULT_NT_RANGE = '16-18';
+
+// Betty: "If you play weak twos, then two clubs becomes a strong hand. If you
+// play strong twos then they're all strong hands. We play either one." Since
+// she reserves 2 Clubs for 22, the other two-bids are free to be weak — but
+// she named both systems, so it is a setting.
+const weakTwoConfig = { on: true };
+export const DEFAULT_WEAK_TWOS = true;
+export function setWeakTwos(on) { weakTwoConfig.on = !!on; }
+export const weakTwosOn = () => weakTwoConfig.on;
 const ntConfig = { low: 16 };
 export function setNoTrumpRange(key) {
   const found = NT_RANGES.find(r => r.key === key);
@@ -134,6 +143,21 @@ export function analyzeHand(hand) {
 
 const ACE_REPLIES = { C: 0, D: 1, H: 2, S: 3 }; // 5C shows none or all four
 
+// Betty on doubles: "When someone opens one heart and you double it means you
+// have a good hand and you want partner to bid. But if the bid is around
+// three, then it's a penalty double — it means you can beat the bid. When you
+// double after both parties have bid it becomes a penalty double."
+export function classifyDouble(bids, i) {
+  const c = bids[i];
+  if (!c || c.type !== 'double') return null;
+  const realBefore = bids.slice(0, i).filter(b => b.type === 'bid');
+  const doubled = realBefore[realBefore.length - 1];
+  if (!doubled) return null;
+  const ourSideHasBid = realBefore.some(b => sameSide(b.player, c.player));
+  if (!ourSideHasBid && doubled.level <= 2) return 'takeout';
+  return 'penalty';
+}
+
 // What an already-made call meant, judged from the calls before it
 export function classifyCall(bids, i) {
   const c = bids[i];
@@ -203,8 +227,9 @@ function rangeForCall(seat, c, prior) {
     return null;
   }
   if (c.type === 'double') {
-    const takeout = opening && !weOpened && firstCall && opening.level === 1 && opening.suit !== 'NT';
-    return takeout ? { min: 12, max: 21 } : { min: 10, max: 37 };
+    return classifyDouble(prior.concat([c]), prior.length) === 'takeout'
+      ? { min: 12, max: 21 }
+      : { min: 10, max: 37 };
   }
   if (c.type === 'redouble') return { min: 10, max: 37 };
 
@@ -214,6 +239,9 @@ function rangeForCall(seat, c, prior) {
     if (c.suit === 'NT' && c.level === 2) return { min: 20, max: 21 };
     if (c.suit === 'C' && c.level === 2) return { min: 22, max: 37 };
     if (c.level === 3 && c.suit !== 'NT') return { min: 6, max: 12 }; // weak, seven cards
+    if (weakTwosOn() && c.level === 2 && ['S', 'H', 'D'].includes(c.suit)) {
+      return { min: 6, max: 10 }; // weak two, six cards
+    }
     return { min: 13, max: 21 };
   }
 
@@ -389,7 +417,8 @@ function estimateLength(seat, bids, suit) {
   if (timesBid === 0) return 0;
 
   if (opening && opening.player === seat && opening.suit === suit) {
-    if (opening.level === 3) best = 7;          // the weak three-level opening
+    if (opening.level === 3) best = 7;                       // seven-card preempt
+    else if (opening.level === 2 && suit !== 'C') best = 6;   // weak two
     else best = MAJORS.includes(suit) ? 5 : 3;
   } else {
     best = 4;
@@ -490,6 +519,15 @@ function openingCall(a) {
   if (sevenCard && hcp >= 6 && hcp <= 12) {
     return call(3, sevenCard,
       `Only ${pts(hcp)}, but ${len[sevenCard]} ${SUIT_WORDS[sevenCard]} — opening 3 to take away their room`);
+  }
+
+  // Six cards and not enough to open at the one level: the weak two
+  if (weakTwosOn() && hcp >= 6 && hcp <= 10) {
+    const sixCard = ['S', 'H', 'D'].find(su => len[su] === 6);
+    if (sixCard) {
+      return call(2, sixCard,
+        `Only ${pts(hcp)}, but 6 ${SUIT_WORDS[sixCard]} — a weak two to take away their room`);
+    }
   }
 
   if (hcp < 13) {
@@ -655,7 +693,8 @@ function respondToPreempt(a, ctx) {
   const support = len[o.suit];
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
 
-  if (hcp >= 16 && support >= 1 && ALL_SUITS.every(su => su === o.suit || hasStopper(su))) {
+  const needForNT = o.level === 3 ? 16 : 18; // a seven-card suit runs more often than a six
+  if (hcp >= needForNT && support >= 1 && ALL_SUITS.every(su => su === o.suit || hasStopper(su))) {
     const c = want(3, 'NT', `${pts(hcp)} with every other suit stopped — 3 No Trump on partner's long suit`);
     if (c) return c;
   }
@@ -670,6 +709,9 @@ function firstResponse(a, ctx) {
   const o = ctx.opening;
   if (o.suit === 'NT') return respondToNoTrump(a, ctx, o.level);
   if (o.level === 3) return respondToPreempt(a, ctx);
+  if (o.level === 2 && weakTwosOn() && ['S', 'H', 'D'].includes(o.suit)) {
+    return respondToPreempt(a, ctx);
+  }
   return respondToSuitOpening(a, ctx);
 }
 
@@ -885,11 +927,11 @@ function overcallOrDouble(a, ctx) {
   }
 
   // Takeout double: opening values, short in their suit, support everywhere else
-  if (hcp >= 12 && opening.level <= 3 && opening.suit !== 'NT' && ctx.myCalls.length === 0) {
+  if (hcp >= 12 && opening.level <= 2 && opening.suit !== 'NT' && ctx.myCalls.length === 0) {
     const theirSuit = opening.suit;
     const short = len[theirSuit] <= 2;
     const othersOk = ALL_SUITS.every(s => s === theirSuit || len[s] >= 3);
-    const enough = opening.level === 1 ? 12 : 15; // doubling them at the three level needs more
+    const enough = opening.level === 1 ? 12 : 14; // coming in over a two-bid needs more
     if (short && othersOk && hcp >= enough && ctx.lastAction === opening) {
       return dbl(`${pts(hcp)}, short in ${SUIT_WORDS[theirSuit]} — double asks partner to pick a suit`);
     }
@@ -903,7 +945,18 @@ function advance(a, ctx) {
   const { hcp, len, balanced, hasStopper } = a;
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
 
-  if (ctx.partnerDoubled && ctx.partnerBids.length === 0) {
+  const partnerDoubleAt = ctx.bids.findIndex(c => c.player === ctx.partner && c.type === 'double');
+  const partnerDoubleMeant = partnerDoubleAt >= 0
+    ? classifyDouble(ctx.bids, partnerDoubleAt)
+    : null;
+
+  // A penalty double says partner can beat them. Taking her out of it is the
+  // single most annoying thing a partner can do.
+  if (partnerDoubleMeant === 'penalty' && ctx.partnerBids.length === 0) {
+    return pass('Partner doubled to beat them — leaving it in');
+  }
+
+  if (partnerDoubleMeant === 'takeout' && ctx.partnerBids.length === 0) {
     // Partner asked me to name my best suit
     const theirSuits = ctx.bids.filter(c => c.type === 'bid' && !sameSide(c.player, ctx.seat)).map(c => c.suit);
     let best = null;
