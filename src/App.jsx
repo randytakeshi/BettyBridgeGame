@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Table from './components/Table';
 import BiddingBox from './components/BiddingBox';
-import { GameEngine, PLAYER_NAMES } from './GameEngine';
+import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
@@ -17,13 +17,45 @@ const THINKING_LABELS = {
   W: 'David (West) is thinking…'
 };
 
-// Is the current turn one the human acts on? South always bids for herself.
-// During play she also runs the dummy when she declares; when Sarah (N)
-// declares, Sarah plays both hands and the human just watches.
+// Is the current turn one Betty acts on?
 function isHumanTurn(state) {
-  if (state.phase === 'playing' && state.declarer === 'N') return false;
-  return state.currentTurn === 'S' ||
-    (state.currentTurn === 'N' && state.phase === 'playing' && state.declarer === 'S');
+  if (state.phase !== 'bidding' && state.phase !== 'playing') return false;
+  return humanPlaysSeat(state, state.currentTurn);
+}
+
+// One short line telling Betty what her job is on this hand
+function roleOf(state) {
+  if (state.phase !== 'playing') return null;
+  if (state.declarer === 'S') return { label: 'You are DECLARER', tone: '#4ade80' };
+  if (state.dummy === 'S') return { label: `You are DUMMY — ${PLAYER_NAMES[state.declarer]} plays`, tone: '#fbd38d' };
+  return { label: 'You are DEFENDING', tone: '#93c5fd' };
+}
+
+const HCP_VALUE = { A: 4, K: 3, Q: 2, J: 1 };
+const SUIT_ORDER = ['S', 'H', 'C', 'D'];
+
+function HandSummary({ hand }) {
+  const points = hand.reduce((sum, c) => sum + (HCP_VALUE[c.rank] || 0), 0);
+  return (
+    <div className="hand-summary">
+      <div className="hand-summary-head">
+        YOUR HAND — <span className="hand-points">{points} point{points === 1 ? '' : 's'}</span>
+      </div>
+      <div className="hand-summary-rows">
+        {SUIT_ORDER.map(suit => {
+          const ranks = hand.filter(c => c.suit === suit).map(c => c.rank);
+          const red = suit === 'H' || suit === 'D';
+          return (
+            <div key={suit} className="hand-summary-row">
+              <span className={`hand-summary-suit ${red ? 'red' : ''}`}>{SUIT_SYMBOLS[suit]}</span>
+              <span className="hand-summary-ranks">{ranks.length ? ranks.join(' ') : '—'}</span>
+              <span className="hand-summary-count">({ranks.length})</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // Render one auction call in large, color-coded form
@@ -50,6 +82,8 @@ function App() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [appState, setAppState] = useState('menu');
+  const [hintText, setHintText] = useState(null);
+  const [showRules, setShowRules] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const soundEnabledRef = useRef(soundEnabled);
 
@@ -106,11 +140,14 @@ function App() {
       setGameState({ ...newState });
       if (!isHumanTurn(newState)) {
         setActiveHint(null);
+        setHintText(null);
       }
       setSelectedCard(null);
     }, useHistoricalMode ? pbnRef.current : null, (text) => speak(text));
 
     setEngine(ge);
+    // Handy for poking at a game from the dev console; never ships
+    if (import.meta.env.DEV) window.__engine = ge;
     ge.deal();
     return () => ge.destroy(); // Kill old timers so two games never fight
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,7 +164,7 @@ function App() {
     const seatKey = isHumanTurn(gameState) ? `${phase}:${currentTurn}` : null;
     if (seatKey && seatKey !== prevHumanSeatRef.current && !isAutoPlaying) {
       if (phase === 'bidding') speakQueued('Your turn to bid.');
-      else if (currentTurn === 'N') speakQueued("Your turn. Play a card from Sarah's hand at the top.");
+      else if (currentTurn === 'N') speakQueued("Your turn. Play one of Sarah's cards from the dummy at the top.");
       else speakQueued('Your turn.');
     }
     prevHumanSeatRef.current = seatKey;
@@ -169,31 +206,40 @@ function App() {
 
   const handleBid = (bidEvent) => {
     setActiveHint(null);
+    setHintText(null);
     engine.placeBid(bidEvent);
   };
 
   const handlePlayCard = (player, cardIndex) => {
     setActiveHint(null);
+    setHintText(null);
     engine.playCard(player, cardIndex);
   };
 
   const handleHint = () => {
     const { currentTurn } = gameState;
-    if (isHumanTurn(gameState)) {
-      const hint = engine.getHint(currentTurn);
-      setActiveHint(hint);
+    if (!isHumanTurn(gameState)) {
+      setHintText('It is not your turn just now.');
+      return;
+    }
+    const hint = engine.getHint(currentTurn);
+    setActiveHint(hint);
 
-      if (hint && hint.type === 'bid') {
-        if (hint.value.type === 'bid') {
-          speak(`Hint: Bid ${hint.value.level} ${SUIT_WORDS[hint.value.suit]}`);
-        } else {
-          speak('Hint: Pass');
-        }
-      } else if (hint && hint.type === 'card') {
-        const card = gameState.hands[currentTurn][hint.value];
-        if (card) {
-          speak(`Hint: Play the ${RANK_WORDS[card.rank] || card.rank} of ${SUIT_WORDS[card.suit]}`);
-        }
+    if (hint && hint.type === 'bid') {
+      const v = hint.value;
+      const what = v.type === 'bid'
+        ? `Bid ${bidName(v.level, v.suit)}`
+        : (v.type === 'double' ? 'Double' : 'Pass');
+      const why = v.explanation ? ` — ${v.explanation}` : '';
+      setHintText(`${what}${why}`);
+      speak(`Hint. ${what}. ${v.explanation || ''}`);
+    } else if (hint && hint.type === 'card') {
+      const card = gameState.hands[currentTurn][hint.value];
+      if (card) {
+        const whose = currentTurn === 'N' ? " from Sarah's dummy" : ' from your hand';
+        const what = `Play the ${RANK_WORDS[card.rank] || card.rank} of ${SUIT_WORDS[card.suit]}${whose}`;
+        setHintText(what);
+        speak(`Hint. ${what}`);
       }
     }
   };
@@ -215,6 +261,7 @@ function App() {
   };
 
   const { phase, contract, tricksWon, currentTurn } = gameState;
+  const role = roleOf(gameState);
   const highestBid = gameState.bids.filter(b => b.type === 'bid').pop();
 
   // Double / Redouble are only legal against the opponents' last call
@@ -289,6 +336,12 @@ function App() {
               ) : (highestBid ? <span>{highestBid.level}{SUIT_SYMBOLS[highestBid.suit]}</span> : '—')}
             </div>
           </div>
+          {role && (
+            <div className="stat-badge">
+              <div className="stat-label">Your job</div>
+              <div className="stat-value" style={{ fontSize: '1.15rem', color: role.tone }}>{role.label}</div>
+            </div>
+          )}
           <div className="stat-badge score-badge">
             <div className="stat-label">We (N/S)</div>
             <div className="stat-value">{tricksWon['N/S']}</div>
@@ -311,19 +364,27 @@ function App() {
             <button className="header-btn btn-show" onClick={toggleShowAuction}>Auction 📜</button>
           )}
           <button className="header-btn btn-show" onClick={toggleShowAllCards}>{showAllCards ? 'Hide Cards' : 'Show Cards 👁️'}</button>
+          <button className="header-btn btn-show" onClick={() => setShowRules(true)}>Rules ❓</button>
         </div>
       </header>
 
+      {hintText && (
+        <div className="hint-bar" onClick={() => setHintText(null)}>
+          <span className="hint-bar-label">HINT</span>
+          <span>{hintText}</span>
+          <span className="hint-bar-close">✖</span>
+        </div>
+      )}
+
       <main className="table-area">
         <Table gameState={gameState} onPlayCard={handlePlayCard} showAllCards={showAllCards} activeHint={activeHint} selectedCard={selectedCard} setSelectedCard={setSelectedCard} />
-      </main>
 
       {/* Bidding Modal Overlay */}
       {phase === 'bidding' && (
         <div className="bidding-modal-overlay bidding-overlay-top">
           <div className="bidding-modal-content bidding-columns">
             <div className="bidding-col-left">
-              <h2 style={{ color: currentTurn === 'S' ? '#ffd66b' : 'white', textAlign: 'center', marginBottom: '15px', fontSize: currentTurn === 'S' ? '2.2rem' : '1.8rem' }}>
+              <h2 className="bidding-turn-head" style={{ color: currentTurn === 'S' ? '#ffd66b' : 'white' }}>
                  {currentTurn === 'S' ? 'YOUR TURN TO BID' : THINKING_LABELS[currentTurn]}
               </h2>
 
@@ -352,6 +413,8 @@ function App() {
                  </div>
               </div>
 
+              <HandSummary hand={gameState.hands.S || []} />
+
               {currentTurn === 'S' && gameState.canUndo && gameState.bids.some(b => b.player === 'S') && (
                 <button
                   className="header-btn btn-undo"
@@ -371,6 +434,8 @@ function App() {
           </div>
         </div>
       )}
+      </main>
+
       {/* End of Hand Duplicate Score Modal */}
       {phase === 'finished' && gameState.duplicateScore && (
         <div className="bidding-modal-overlay">
@@ -430,6 +495,47 @@ function App() {
             >
               Next Board ▶️
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* House Rules */}
+      {showRules && (
+        <div className="bidding-modal-overlay" onClick={() => setShowRules(false)}>
+          <div className="rules-card" onClick={e => e.stopPropagation()}>
+            <div className="rules-head">
+              <h2>How We Play</h2>
+              <button onClick={() => setShowRules(false)} aria-label="Close">✖</button>
+            </div>
+            <div className="rules-body">
+              <h3>Counting your hand</h3>
+              <p>Ace 4 · King 3 · Queen 2 · Jack 1.</p>
+
+              <h3>Opening the bidding</h3>
+              <p>You need <b>13 points</b> to open, counting your high cards plus
+                 one extra for every card past the fourth in a suit — so 11 points
+                 with six Spades counts as 13.</p>
+              <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
+              <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
+              <p>Open <b>1 No Trump with 16 to 18 points</b> and even distribution.</p>
+
+              <h3>Suit order</h3>
+              <p>Clubs · Diamonds · Hearts · Spades · No Trump. Over 1 Spade you can bid
+                 1 No Trump, or go to 2 of another suit.</p>
+
+              <h3>Making your contract</h3>
+              <p>Bid 1 of a suit and you must win <b>7 tricks</b> out of 13. Each level adds one more.</p>
+              <p>Game is <b>4 Hearts or 4 Spades</b> (120 points), <b>5 Clubs or 5 Diamonds</b> (100 points),
+                 or <b>3 No Trump</b> (100 points).</p>
+              <p>A game scores <b>300 extra</b> — or <b>500</b> when you are vulnerable.</p>
+
+              <h3>Playing the hand</h3>
+              <p>Whoever <b>first named the suit</b> for the winning side is the declarer.</p>
+              <p>After the opening lead, the declarer's partner lays their cards face up as the
+                 <b> dummy</b>, and the declarer plays <b>both hands</b>.</p>
+              <p>We score each board on its own, duplicate style.</p>
+            </div>
+            <button className="header-btn btn-auto-play rules-done" onClick={() => setShowRules(false)}>Got it</button>
           </div>
         </div>
       )}

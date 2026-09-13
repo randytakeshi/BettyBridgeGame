@@ -16,19 +16,21 @@
 /* Header bar for game state */
 .game-header {
   min-height: 85px;
+  flex-shrink: 0; /* never let the buttons spill out over the table */
   background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px 15px;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 24px;
+  padding: 8px 18px;
   border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 
 .header-stats {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .stat-badge {
@@ -36,7 +38,7 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 12px;
-  padding: 8px 20px;
+  padding: 6px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,9 +73,9 @@
 
 .header-btn {
   border-radius: 10px;
-  padding: 12px 18px;
+  padding: 10px 14px;
   min-height: 52px; /* Comfortable touch target for older hands */
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
@@ -117,13 +119,10 @@
 
 .bidding-modal-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Dim the background */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.62); /* Dim the background */
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -181,4 +180,165 @@
   0% { box-shadow: 0 0 15px 5px gold; }
   50% { box-shadow: 0 0 25px 8px gold; }
   100% { box-shadow: 0 0 15px 5px gold; }
+}
+
+/* Hint line: whatever the Hint button just said, kept on screen to read */
+.hint-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 16px 0;
+  padding: 12px 18px;
+  background: rgba(249, 168, 38, 0.16);
+  border: 2px solid var(--ui-accent);
+  border-radius: 12px;
+  color: #ffe9a8;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hint-bar-label {
+  background: var(--ui-accent);
+  color: #1a1a1a;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+.hint-bar-close { margin-left: auto; opacity: 0.7; }
+
+/* House rules card */
+.rules-card {
+  background: #0f172a;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  color: #e2e8f0;
+  width: min(92%, 660px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 26px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+.rules-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+}
+.rules-head h2 { font-size: 1.9rem; color: #fbd38d; margin: 0; }
+.rules-head button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.rules-body { overflow-y: auto; padding: 14px 2px; }
+.rules-body h3 {
+  font-size: 1.15rem;
+  color: var(--ui-accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 16px 0 6px;
+}
+.rules-body h3:first-child { margin-top: 0; }
+.rules-body p { font-size: 1.2rem; line-height: 1.5; margin: 4px 0; }
+.rules-body b { color: #ffffff; }
+.rules-done { justify-content: center; width: 100%; font-size: 1.4rem; margin-top: 14px; }
+
+/* Narrow screens (an iPad held upright): keep the header to two tidy rows
+   so the table below it still has room to breathe. */
+@media (max-width: 950px) {
+  .game-header {
+    min-height: 0;
+    padding: 6px 10px;
+    gap: 6px 8px;
+  }
+  .header-stats { gap: 6px; }
+  .stat-badge { padding: 4px 9px; border-radius: 9px; }
+  .stat-label { font-size: 0.78rem; letter-spacing: 0.5px; }
+  .stat-value { font-size: 1.25rem; }
+  .contract-badge .stat-value { font-size: 1.35rem; }
+  .settings-btn { gap: 6px; }
+  .header-btn {
+    padding: 8px 10px;
+    min-height: 46px;
+    font-size: 1rem;
+    border-radius: 9px;
+  }
+  .hint-bar { margin: 6px 10px 0; padding: 9px 12px; font-size: 1.05rem; }
+}
+
+/* Betty's own hand, spelled out while she bids. A 92-year-old should not
+   have to squint at a fan of cards behind a dimmed overlay to count to 13. */
+.hand-summary {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid var(--ui-accent);
+}
+.hand-summary-head {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.hand-points {
+  color: var(--ui-accent);
+  font-size: 1.45rem;
+}
+.hand-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hand-summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.hand-summary-suit {
+  font-size: 1.8rem;
+  width: 1.9rem;
+  color: #ffffff;
+  line-height: 1.1;
+}
+.hand-summary-suit.red { color: #ff8585; }
+.hand-summary-ranks {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #ffffff;
+  flex: 1 1 auto;
+}
+.hand-summary-count {
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 950px) {
+  .hand-summary { margin-top: 10px; padding: 9px 12px; }
+  .hand-summary-head { font-size: 1rem; margin-bottom: 4px; }
+  .hand-points { font-size: 1.3rem; }
+  .hand-summary-rows { gap: 2px; }
+  .hand-summary-suit { font-size: 1.4rem; width: 1.55rem; }
+  .hand-summary-ranks { font-size: 1.2rem; letter-spacing: 2px; }
+  .bidding-overlay-top { padding-top: 4px; }
+  .bidding-columns { gap: 12px; }
+}
+
+.bidding-turn-head {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: clamp(1.4rem, 3.2vw, 2.2rem);
+}
+@media (max-width: 950px) {
+  .bidding-turn-head { margin-bottom: 8px; font-size: 1.5rem; }
 }

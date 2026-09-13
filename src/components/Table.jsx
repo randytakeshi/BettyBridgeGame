@@ -1,23 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Table.css';
 import Card from './Card';
-import { PLAYER_NAMES } from '../GameEngine';
+import { PLAYER_NAMES, humanPlaysSeat } from '../GameEngine';
+import { trickWinner } from '../cardPlay';
 
 const SUIT_SYMBOLS = { S: '♠', H: '♥', C: '♣', D: '♦' };
 const rankNames = { 'A': 'Ace', 'K': 'King', 'Q': 'Queen', 'J': 'Jack', '2': 'Two', '3': 'Three', '4': 'Four', '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine', '10': 'Ten' };
 const suitNames = { 'S': 'Spades', 'H': 'Hearts', 'D': 'Diamonds', 'C': 'Clubs' };
+const SUIT_ORDER = ['S', 'H', 'C', 'D'];
 
 // A hand shown as four large text rows, one per suit. Far more legible for
-// low vision than miniature card images.
-function SuitRows({ hand }) {
+// low vision than miniature card images. When `onPick` is supplied every
+// rank becomes a big button — that is how Betty plays the dummy.
+function SuitRows({ hand, onPick, selectedIndex, hintIndex, big }) {
   return (
-    <div className="suit-rows">
-      {['S', 'H', 'C', 'D'].map(suit => {
-        const cards = hand.filter(c => c.suit === suit);
+    <div className={`suit-rows ${big ? 'suit-rows-big' : ''}`}>
+      {SUIT_ORDER.map(suit => {
+        const entries = hand
+          .map((c, i) => ({ c, i }))
+          .filter(e => e.c.suit === suit);
         return (
           <div key={suit} className="suit-row">
             <span className={`suit-row-symbol ${suit === 'H' || suit === 'D' ? 'red' : ''}`}>{SUIT_SYMBOLS[suit]}</span>
-            <span className="suit-row-ranks">{cards.length > 0 ? cards.map(c => c.rank).join(' ') : '—'}</span>
+            {entries.length === 0 ? (
+              <span className="suit-row-ranks">—</span>
+            ) : onPick ? (
+              <span className="suit-row-ranks">
+                {entries.map(e => (
+                  <button
+                    key={e.i}
+                    type="button"
+                    className={`rank-chip ${selectedIndex === e.i ? 'selected' : ''} ${hintIndex === e.i ? 'hint-highlight' : ''} ${suit === 'H' || suit === 'D' ? 'red' : ''}`}
+                    onClick={() => onPick(e.i)}
+                  >
+                    {e.c.rank}
+                  </button>
+                ))}
+              </span>
+            ) : (
+              <span className="suit-row-ranks">{entries.map(e => e.c.rank).join(' ')}</span>
+            )}
           </div>
         );
       })}
@@ -25,19 +47,40 @@ function SuitRows({ hand }) {
   );
 }
 
+// A tall screen has room to lay the trick out as a compass cross, with each
+// card at the seat that played it. A wide, short one does not, so there the
+// four cards sit in a row in the order they were played. Measured rather
+// than guessed from orientation, so it is right on every device.
+function useTrickLayout() {
+  const pick = () => (typeof window === 'undefined' || window.innerHeight > window.innerWidth * 1.02
+    ? 'cross' : 'row');
+  const [mode, setMode] = useState(pick);
+  useEffect(() => {
+    const onResize = () => setMode(pick());
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+  return mode;
+}
+
 export default function Table({ gameState, onPlayCard, showAllCards, activeHint, selectedCard, setSelectedCard }) {
-  const { hands, currentTrick, currentTurn, dummy, phase, declarer } = gameState;
+  const trickLayout = useTrickLayout();
+  const { hands, currentTrick, currentTurn, dummy, phase, declarer, dummyVisible, trumpSuit } = gameState;
   const playerHand = hands['S'] || [];
 
   const isPlaying = phase === 'playing';
   const getActiveClass = (player) => currentTurn === player ? 'active-turn' : '';
 
-  // The human plays South (plus the dummy when she declares). When Sarah (N)
-  // declares, Sarah plays both hands and the human's cards are the dummy.
-  const humanControls = (player) => {
-    if (isPlaying && declarer === 'N') return false;
-    return player === 'S' || (player === 'N' && isPlaying && declarer === 'S');
-  };
+  // Whoever won the contract plays both their own hand and the dummy, so
+  // Betty plays two hands when she declares, her own when she is defending,
+  // and none at all when her cards are the dummy.
+  const humanIsDeclarer = isPlaying && declarer === 'S';
+  const humanIsDummy = isPlaying && dummy === 'S';
+  const humanControls = (player) => humanPlaysSeat(gameState, player);
 
   const announceCard = (card) => {
     if ('speechSynthesis' in window) {
@@ -54,139 +97,153 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
     if (currentTurn !== player || !humanControls(player)) return;
 
     if (selectedCard && selectedCard.player === player && selectedCard.index === index) {
-      // Second tap: Play the card
+      // Second tap: play the card
       onPlayCard(player, index);
       setSelectedCard(null);
     } else {
-      // First tap: Select the card and say its name
-      const card = hands[player][index];
-      announceCard(card);
+      // First tap: select the card and say its name
+      announceCard(hands[player][index]);
       setSelectedCard({ player, index });
     }
   };
 
-  const isHintCard = (player, index) => {
-    return activeHint && activeHint.type === 'card' && currentTurn === player && activeHint.value === index;
-  };
+  const hintIndexFor = (player) =>
+    (activeHint && activeHint.type === 'card' && currentTurn === player) ? activeHint.value : null;
+  const isHintCard = (player, index) => hintIndexFor(player) === index;
 
-  // North's cards are laid out as real cards in the center only when North
-  // is dummy (the human plays them). When Sarah declares, her hand stays
-  // hidden like a real declarer's.
-  const northShownInCenter = isPlaying && dummy === 'N';
+  // North's cards only go face up once the opening lead is on the table,
+  // and only Betty gets to tap them — and only when she is the declarer.
+  const northIsDummy = isPlaying && dummy === 'N' && dummyVisible;
+  const northPlayable = northIsDummy && humanIsDeclarer;
 
-  const renderOpponentHand = (player) => {
+  const renderHand = (player) => {
     if (!hands[player]) return null;
-
-    if (player === 'N' && northShownInCenter) {
-      return <div className="cards-left">{hands[player].length} cards — shown below</div>;
+    // The dummy's hand is public in bridge — but not before the opening lead
+    if (isPlaying && dummy === player && dummyVisible) {
+      return (
+        <SuitRows
+          hand={hands[player]}
+          big={player === 'N' && northPlayable}
+          onPick={player === 'N' && northPlayable ? (i) => handleCardClick('N', i) : undefined}
+          selectedIndex={selectedCard?.player === player ? selectedCard.index : null}
+          hintIndex={hintIndexFor(player)}
+        />
+      );
     }
-    // The dummy's hand is public in bridge: always show it, large
-    if (isPlaying && dummy === player) {
-      return <SuitRows hand={hands[player]} />;
-    }
-    if (showAllCards) {
-      return <SuitRows hand={hands[player]} />;
-    }
+    if (showAllCards) return <SuitRows hand={hands[player]} />;
     return <div className="cards-left">{hands[player].length} cards</div>;
   };
 
   const seatTag = (player) => {
-    if (isPlaying && dummy === player) return ' — Dummy';
-    if (isPlaying && declarer === player) return ' — Declarer';
+    if (!isPlaying) return '';
+    if (declarer === player) return ' — DECLARER';
+    if (dummy === player) return dummyVisible ? ' — DUMMY (face up)' : ' — DUMMY';
     return '';
   };
 
-  // Big status line so it's always obvious whose turn it is.
-  // Kept to a short headline + small sub-line so the pill never
-  // covers the played cards around it.
+  // Big status line so it is always obvious whose turn it is and, just as
+  // importantly, whose hand Betty is being asked to play from.
   let turnBanner = null;
-  if (isPlaying && currentTrick.length < 4) {
-    if (declarer === 'N') {
+  if (isPlaying && currentTrick.length === 4) {
+    // Hold the completed trick on screen and say who took it
+    const winner = trickWinner(currentTrick, trumpSuit);
+    turnBanner = winner
+      ? { main: `${PLAYER_NAMES[winner.player]} ${winner.player === 'S' ? 'win' : 'wins'} this trick` }
+      : null;
+  } else if (isPlaying) {
+    if (humanControls(currentTurn)) {
       turnBanner = currentTurn === 'S'
-        ? { main: 'Sarah is playing this hand', sub: 'your cards are the dummy' }
-        : { main: `${PLAYER_NAMES[currentTurn]} is thinking…` };
-    } else if (currentTurn === 'S') {
-      turnBanner = { main: 'YOUR TURN', sub: 'tap a card, tap again to play' };
-    } else if (humanControls('N') && currentTurn === 'N') {
-      turnBanner = { main: 'YOUR TURN', sub: "play from Sarah's cards above" };
+        ? { main: 'YOUR TURN', sub: 'play from your own cards below' }
+        : { main: 'YOUR TURN', sub: "now play one of Sarah's cards above" };
+    } else if (humanIsDummy) {
+      turnBanner = {
+        main: `${PLAYER_NAMES[declarer]} is playing this hand`,
+        sub: 'your cards are the dummy — sit back and watch'
+      };
     } else {
       turnBanner = { main: `${PLAYER_NAMES[currentTurn]} is thinking…` };
     }
   }
 
   return (
-    <div className="table-layout">
-      {/* North */}
-      <div className={`player-info info-N ${getActiveClass('N')}`}>
-        <div className="name">SARAH (N) — Your Partner{seatTag('N')}</div>
-        {renderOpponentHand('N')}
-      </div>
+    <div className={`table-layout layout-${trickLayout} ${northPlayable ? 'with-dummy-band' : ''}`}>
+      {/* North. When Betty is declaring, Sarah's dummy becomes a band across
+          the top of the table instead of a floating name panel. */}
+      {northPlayable ? (
+        <div className={`dummy-band ${getActiveClass('N')}`}>
+          <div className="name">
+            SARAH'S HAND — DUMMY
+            <span className="name-hint"> · you play these · tap a card twice</span>
+          </div>
+          {renderHand('N')}
+        </div>
+      ) : (
+        <div className={`player-info info-N ${getActiveClass('N')}`}>
+          <div className="name">SARAH (N) — Your Partner{seatTag('N')}</div>
+          {renderHand('N')}
+        </div>
+      )}
 
       {/* West */}
       <div className={`player-info info-W ${getActiveClass('W')}`}>
         <div className="name">DAVID (W){seatTag('W')}</div>
-        {renderOpponentHand('W')}
+        {renderHand('W')}
       </div>
 
       {/* East */}
       <div className={`player-info info-E ${getActiveClass('E')}`}>
         <div className="name">ROBERT (E){seatTag('E')}</div>
-        {renderOpponentHand('E')}
+        {renderHand('E')}
       </div>
 
-
-      <div className={`table-center ${northShownInCenter ? 'has-north-dummy' : ''}`}>
-        {/* Whose turn is it? */}
-        {turnBanner && (
-          <div className="turn-banner">
-            {turnBanner.main}
-            {turnBanner.sub && <span className="turn-banner-sub">{turnBanner.sub}</span>}
-          </div>
-        )}
-
-        {/* Render current trick here — each card labeled with who played it */}
+      <div className="table-center">
+        {/* The current trick — each card labelled with who played it */}
         {currentTrick.map((play, index) => (
           <div key={index} className={`played-card ${play.player}`} style={{ zIndex: index }}>
             <Card suit={play.card.suit} rank={play.card.rank} simplified={true} />
             <div className="played-card-label">{PLAYER_NAMES[play.player]}</div>
           </div>
         ))}
-
-        {/* North's hand as real cards when the human needs to play or see it */}
-        {northShownInCenter && (
-           <div className={`dummy-hand-container ${getActiveClass('N')}`}>
-            {hands['N'].map((c, i) => (
-              <div key={i} className={`dummy-card-wrapper ${isHintCard('N', i) ? 'hint-highlight' : ''} ${selectedCard?.player === 'N' && selectedCard?.index === i ? 'selected' : ''}`} onClick={() => handleCardClick('N', i)}>
-                <Card suit={c.suit} rank={c.rank} simplified={selectedCard?.player === 'N' && selectedCard?.index === i} />
-              </div>
-            ))}
-           </div>
-        )}
       </div>
 
-      {/* Player Hand */}
-      <div className="player-hand-container">
-        {playerHand.map((c, i) => {
-          const total = playerHand.length;
-          const middle = (total - 1) / 2;
-          const offset = i - middle;
-          const rotation = offset * 3;
-          const yOffset = Math.abs(offset) * 2;
+      {/* Whose turn it is — always directly above Betty's own cards, so it
+          can never sit on top of a played card */}
+      {turnBanner && (
+        <div className="turn-banner">
+          {turnBanner.main}
+          {turnBanner.sub && <span className="turn-banner-sub">{turnBanner.sub}</span>}
+        </div>
+      )}
 
-          return (
-            <div key={i} className={`playable-card-wrapper ${isHintCard('S', i) ? 'hint-highlight' : ''} ${selectedCard?.player === 'S' && selectedCard?.index === i ? 'selected' : ''}`} style={{
-              marginLeft: i === 0 ? 0 : 'clamp(-40px, -5vw, -15px)',
-              transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
-              transformOrigin: 'bottom center',
-              zIndex: selectedCard?.player === 'S' && selectedCard?.index === i ? 50 : i,
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              cursor: currentTurn === 'S' && isPlaying && humanControls('S') ? 'pointer' : 'default',
-              borderRadius: '12px'
-            }} onClick={() => handleCardClick('S', i)}>
-              <Card suit={c.suit} rank={c.rank} simplified={selectedCard?.player === 'S' && selectedCard?.index === i} />
-            </div>
-          );
-        })}
+      {/* Betty's own hand */}
+      <div className="player-hand-container">
+        {humanIsDummy && (
+          <div className="your-hand-tag">YOUR CARDS — DUMMY · {PLAYER_NAMES[declarer]} plays these</div>
+        )}
+        <div className="player-hand-fan">
+          {playerHand.map((c, i) => {
+            const total = playerHand.length;
+            const middle = (total - 1) / 2;
+            const offset = i - middle;
+            const rotation = offset * 2;
+            const yOffset = Math.abs(offset) * 2;
+            const selected = selectedCard?.player === 'S' && selectedCard?.index === i;
+
+            return (
+              <div key={i} className={`playable-card-wrapper ${isHintCard('S', i) ? 'hint-highlight' : ''} ${selected ? 'selected' : ''}`} style={{
+                marginLeft: i === 0 ? 0 : 'clamp(-56px, -5vw, -18px)',
+                transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
+                transformOrigin: 'bottom center',
+                zIndex: selected ? 50 : i,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                cursor: currentTurn === 'S' && humanControls('S') ? 'pointer' : 'default',
+                borderRadius: '12px'
+              }} onClick={() => handleCardClick('S', i)}>
+                <Card suit={c.suit} rank={c.rank} simplified={selected} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

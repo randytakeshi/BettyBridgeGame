@@ -1,23 +1,28 @@
+/* The table is one vertical stack: partner at the top, the trick in the
+   middle, the turn banner, then Betty's own cards. Nothing is layered on
+   top of anything else, so nothing can ever hide a played card. */
 .table-layout {
   width: 100%;
   height: 100%;
   position: relative;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 6px 0 16px;
 }
 
 .table-center {
-  width: 54%;
-  height: 50%;
+  width: min(62%, 640px);
+  flex: 1 1 auto;
+  min-height: 140px;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 20px;
-  /* Lift the trick area up out from behind the player's hand fan */
-  margin-bottom: clamp(80px, 18vh, 160px);
 }
 
 .compass-container {
@@ -36,19 +41,17 @@
 .compass-E { right: -60px; }
 .compass-W { left: -60px; }
 
-/* Big status line in the middle of the table — always says whose turn it is */
+/* Big status line, sitting between the trick and Betty's hand */
 .turn-banner {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  flex: 0 0 auto;
+  margin: 4px 0;
   font-size: clamp(1.2rem, 2.2vw, 1.8rem);
   font-weight: 800;
   color: #ffd66b;
   text-align: center;
   pointer-events: none;
-  max-width: 60%;
-  line-height: 1.35;
+  max-width: 90%;
+  line-height: 1.3;
   z-index: 6;
   background: rgba(0, 0, 0, 0.72);
   padding: 10px 24px;
@@ -92,24 +95,63 @@
   font-size: 1.4rem;
   letter-spacing: 2px;
   color: #ffffff;
-  max-width: 30vw;
+  max-width: 100%;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* The dummy Betty actually plays from: one big button per card, laid out
+   by suit like a real dummy on the table. No overlapping, no tiny pips. */
+.suit-rows-big {
+  gap: 8px;
+}
+.suit-rows-big .suit-row-symbol {
+  font-size: 2.4rem;
+  width: 2.4rem;
+}
+.suit-rows-big .suit-row-ranks {
+  max-width: none;
+  gap: 8px;
+}
+
+.rank-chip {
+  min-width: 56px;
+  min-height: 56px;
+  padding: 4px 10px;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+.rank-chip.red { color: #d32f2f; }
+.rank-chip:hover { border-color: var(--ui-accent); }
+.rank-chip.selected {
+  background: #ffd66b;
+  border-color: #ffffff;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px #fff, 0 6px 14px rgba(0, 0, 0, 0.6);
 }
 
 /* Played cards sit at the compass point of whoever played them, like a
-   real bridge table. In landscape the box is short, so North and South
-   are nudged off-center to keep both fully visible. */
+   real bridge table. */
 .played-card {
   position: absolute;
 }
-.played-card.N { top: 0; left: 50%; transform: translateX(-92%); }
-.played-card.S { bottom: 12%; left: 50%; transform: translateX(-8%); }
+
+
+.played-card.N { top: 4px; left: 50%; transform: translateX(-50%); }
+.played-card.S { bottom: 4px; left: 50%; transform: translateX(-50%); }
 .played-card.E { right: 5%; top: 50%; transform: translateY(-50%); }
 .played-card.W { left: 5%; top: 50%; transform: translateY(-50%); }
 
-.played-card .card {
-  width: clamp(84px, 10vw, 140px);
-  height: clamp(126px, 15vw, 210px);
-}
 
 /* Name tag under each played card so it's always clear who played it */
 .played-card-label {
@@ -132,9 +174,60 @@
   font-size: clamp(1.8rem, 4vw, 3rem);
 }
 
-/* Opponents / Partner Info Cards */
+.played-card .card {
+  width: clamp(84px, 10vw, 140px);
+  height: clamp(126px, 15vw, 210px);
+}
+
+/* A wide, short screen has no room to stack North above South, so the
+   trick is laid out left to right in the order the cards were played.
+   Every card keeps its name tag, so it is still obvious who played what. */
+.layout-row .table-center {
+  flex-direction: row;
+  gap: clamp(8px, 1.6vw, 26px);
+  width: min(58%, 760px);
+}
+.layout-row .played-card,
+.layout-row .played-card.N,
+.layout-row .played-card.E,
+.layout-row .played-card.S,
+.layout-row .played-card.W {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+}
+.layout-row .played-card .card {
+  width: clamp(66px, min(8vw, 14vh), 120px);
+  height: clamp(99px, min(12vw, 21vh), 180px);
+}
+
+/* Tall screens keep the compass cross: each card at its own seat */
+.layout-cross .table-center {
+  width: min(72%, 620px);
+  container-type: size;
+}
+.layout-cross .played-card .card {
+  width: clamp(70px, min(13vw, 10.5vh), 130px);
+  height: clamp(105px, min(19.5vw, 16vh), 195px);
+}
+/* Where the browser supports it, tie the card size to the trick area itself
+   so North and South can never grow into each other, whatever else is on
+   screen. Falls back to the sizes above. */
+@container (min-height: 1px) {
+  .layout-cross .played-card .card {
+    height: min(clamp(105px, 19.5vw, 195px), 36cqh);
+    width: min(clamp(70px, 13vw, 130px), 24cqh);
+  }
+}
+
+/* Opponents' and partner's seat panels. Capped in width so a face-up
+   dummy at the side can never creep across the played cards. */
 .player-info {
   position: absolute;
+  max-width: min(320px, 20vw);
   background-color: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -143,7 +236,7 @@
   border-radius: 12px;
   color: white;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .player-info .name {
@@ -155,7 +248,65 @@
   color: var(--ui-accent);
 }
 
-.info-N { top: 4px; left: 50%; transform: translateX(-50%); }
+/* North sits at the top of the stack rather than floating over the table */
+.info-N {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* When Betty is the declarer, Sarah's dummy becomes a band across the top
+   of the table: every card big enough to read and tap. */
+.dummy-band {
+  flex: 0 0 auto;
+  width: min(96%, 940px);
+  margin: 0 auto;
+  padding: 10px 20px 14px;
+  border-radius: 12px;
+  background-color: rgba(15, 23, 42, 0.92);
+  border: 2px solid var(--ui-accent);
+  color: white;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+}
+.dummy-band .name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffd66b;
+}
+.dummy-band .suit-rows {
+  align-items: flex-start;
+  margin-top: 8px;
+}
+
+/* On a short, wide screen the dummy sits in two columns so it does not
+   eat the whole table. Tall screens keep the familiar single column. */
+@media (orientation: landscape) {
+  .dummy-band .suit-rows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 28px;
+    justify-items: start;
+  }
+  .dummy-band .rank-chip {
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 1.6rem;
+  }
+  .dummy-band .suit-rows-big .suit-row-symbol {
+    font-size: 2rem;
+    width: 2rem;
+  }
+}
+/* Smaller trick cards while the dummy takes up the top of the screen */
+.table-layout.with-dummy-band .played-card .card {
+  width: clamp(60px, min(7vw, 10vh), 104px);
+  height: clamp(90px, min(10.5vw, 15vh), 156px);
+}
+.name-hint {
+  font-weight: 600;
+  color: #ffd66b;
+  font-size: 0.95rem;
+}
 .info-E { right: 20px; top: 38%; transform: translateY(-50%); }
 .info-W { left: 20px; top: 38%; transform: translateY(-50%); }
 
@@ -182,42 +333,40 @@
     letter-spacing: 1px;
   }
 
-  /* Portrait: the table box is tall, so lay the dummy inside its top
-     edge instead of on top of the North name panel, and use a full
-     compass cross for the trick — one card per side, no overlap */
-  .table-center {
-    height: 56%;
-    margin-bottom: clamp(60px, 10vh, 120px);
-  }
-  .dummy-hand-container {
-    bottom: auto;
-    top: 10px;
-  }
   .played-card.N { top: 5%; left: 50%; transform: translateX(-50%); }
   .played-card.S { bottom: 5%; left: 50%; transform: translateX(-50%); }
   .played-card.E { right: 5%; top: 50%; transform: translateY(-50%); }
   .played-card.W { left: 5%; top: 50%; transform: translateY(-50%); }
-  .turn-banner {
-    top: 50%;
-    max-width: 52%;
-  }
-
-  /* When North's dummy cards occupy the top of the box, push the
-     North played card and the middle row down below them */
-  .has-north-dummy .played-card.N { top: 30%; }
-  .has-north-dummy .played-card.E,
-  .has-north-dummy .played-card.W { top: 58%; }
-  .has-north-dummy .turn-banner { top: 64%; }
+  .suit-rows-big .suit-row-symbol { font-size: 1.9rem; width: 2rem; }
+  .rank-chip { min-width: 46px; min-height: 46px; font-size: 1.5rem; padding: 3px 7px; }
+  .your-hand-tag { font-size: 0.95rem; padding: 4px 12px; }
 }
 
-/* The player's hand at the bottom */
+/* The player's hand at the bottom of the stack. The extra bottom padding
+   leaves room for the fanned-out corners so no card gets clipped. */
 .player-hand-container {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 26px;
+  z-index: 10;
+}
+.player-hand-fan {
   display: flex;
   justify-content: center;
-  position: absolute;
-  bottom: clamp(20px, 5vh, 60px);
-  width: 100%;
-  z-index: 10000;
+}
+.your-hand-tag {
+  margin-bottom: 8px;
+  padding: 6px 18px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffd66b;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 /* Active turn indicator */
@@ -229,43 +378,10 @@
   /* Removed border-top, relying on card glow instead */
 }
 
-/* Dummy Hand rendering */
-.dummy-hand-container {
-  position: absolute;
-  bottom: calc(100% + 15px);
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-.dummy-card-wrapper {
-  margin-left: clamp(-45px, -5vw, -20px);
-  transition: transform 0.2s;
-  cursor: pointer;
-}
-.dummy-card-wrapper:first-child {
-  margin-left: 0;
-}
-.dummy-card-wrapper .card {
-  width: clamp(70px, 10vw, 130px);
-  height: clamp(105px, 15vw, 195px);
-}
-.dummy-card-wrapper .card-top-left,
-.dummy-card-wrapper .card-bottom-right {
-  font-size: clamp(1.8rem, 4vw, 3rem);
-}
-.dummy-card-wrapper .card-suit {
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
-}
-.dummy-card-wrapper:hover,
-.dummy-card-wrapper.selected {
-  transform: translateY(-30px) scale(1.1);
-  z-index: 50;
-}
-
 /* Enhanced playable card hover */
 .playable-card-wrapper .card {
-  width: clamp(70px, 10vw, 140px);
-  height: clamp(105px, 15vw, 210px);
+  width: clamp(66px, min(9.5vw, 13vh), 140px);
+  height: clamp(99px, min(14vw, 19.5vh), 210px);
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
 }
 .playable-card-wrapper .card-top-left,
@@ -278,16 +394,12 @@
 
 /* Switch layouts on hover or select purely in CSS for instant feedback */
 .playable-card-wrapper:hover .standard-layout,
-.playable-card-wrapper.selected .standard-layout,
-.dummy-card-wrapper:hover .standard-layout,
-.dummy-card-wrapper.selected .standard-layout {
+.playable-card-wrapper.selected .standard-layout {
   display: none !important;
 }
 
 .playable-card-wrapper:hover .giant-layout,
-.playable-card-wrapper.selected .giant-layout,
-.dummy-card-wrapper:hover .giant-layout,
-.dummy-card-wrapper.selected .giant-layout {
+.playable-card-wrapper.selected .giant-layout {
   display: flex !important;
   justify-content: center;
   align-items: center;

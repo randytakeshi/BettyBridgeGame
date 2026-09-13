@@ -63,7 +63,8 @@
 }
 
 .bid-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.22;
+  filter: grayscale(0.65);
   cursor: not-allowed;
 }
 
@@ -95,4 +96,28 @@
 .btn-redouble {
   background-color: var(--ui-info);
   color: white;
+}
+
+/* On a narrow screen the auction panel and the bid buttons stack, so the
+   buttons have to stay compact or the bottom rows run off the screen.
+   Every bid must be reachable without scrolling. */
+@media (max-width: 950px) {
+  .bidding-box {
+    width: 100%;
+    padding: 10px;
+    gap: 7px;
+  }
+  .bidding-header {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+  .bids-grid { gap: 6px; }
+  .bid-btn {
+    min-height: 46px;
+    padding: 6px 4px;
+    font-size: 1.25rem;
+    gap: 4px;
+  }
+  .special-bids { gap: 8px; }
+  .btn-pass { font-size: 1.45rem !important; letter-spacing: 1px; }
 }
