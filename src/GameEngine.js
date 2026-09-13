@@ -17,6 +17,11 @@ const rankWord = (r) => ({ A: 'Ace', K: 'King', Q: 'Queen', J: 'Jack' }[r] || r)
 // two red suits never sit next to each other — easier for low-vision players.
 const DISPLAY_SUIT_ORDER = { S: 3, H: 2, C: 1, D: 0 };
 
+// Bump this whenever the saved shape changes, so an old save is ignored
+// rather than restored into a game that no longer understands it.
+const SAVE_VERSION = 1;
+const SAVED_HISTORY = 8;
+
 /**
  * Which seats Betty acts on. She sits South and always bids for herself.
  * During the play, whoever won the contract plays both their own hand and
@@ -192,6 +197,90 @@ export class GameEngine {
       // If we somehow landed on an AI turn (e.g. stack ran out), keep the game moving
       this.checkAITurn();
     }
+  }
+
+  // --- SAVING AND RESUMING ---------------------------------------------
+
+  // Everything needed to put the board back exactly as it was. The undo
+  // history is trimmed: undo only ever steps back to Betty's last turn, so
+  // a handful of recent states is plenty and keeps the save small.
+  serialize() {
+    return {
+      v: SAVE_VERSION,
+      historical: !!(this.pbnDatabase && this.pbnDatabase.length > 0),
+      boardNumber: this.boardNumber,
+      cumulativeScore: { ...this.cumulativeScore },
+      phase: this.phase,
+      hands: this.hands,
+      bids: this.bids,
+      contract: this.contract,
+      declarer: this.declarer,
+      dummy: this.dummy,
+      currentTurn: this.currentTurn,
+      currentTrick: this.currentTrick,
+      tricksWon: { ...this.tricksWon },
+      leader: this.leader,
+      trumpSuit: this.trumpSuit,
+      playedCards: this.playedCards,
+      openingLeadMade: this.openingLeadMade,
+      doubledStatus: this.doubledStatus,
+      duplicateScore: this.duplicateScore,
+      history: this.historyStack.slice(-SAVED_HISTORY)
+    };
+  }
+
+  // A save from another version, another deal mode, or a half-written one
+  // is ignored rather than trusted — a fresh board beats a broken one.
+  static isRestorable(data, historicalMode) {
+    if (!data || data.v !== SAVE_VERSION) return false;
+    if (!!data.historical !== !!historicalMode) return false;
+    if (!['bidding', 'playing', 'finished'].includes(data.phase)) return false;
+    if (!data.hands || !Array.isArray(data.bids) || !Array.isArray(data.playedCards)) return false;
+    if (!PLAYERS.includes(data.currentTurn)) return false;
+
+    let inHands = 0;
+    for (const p of PLAYERS) {
+      if (!Array.isArray(data.hands[p])) return false;
+      inHands += data.hands[p].length;
+    }
+    const onTable = Array.isArray(data.currentTrick) ? data.currentTrick.length : -1;
+    if (onTable < 0) return false;
+    // Every one of the 52 cards is either still in a hand or already played
+    return inHands + data.playedCards.length === 52;
+  }
+
+  restore(data) {
+    if (!GameEngine.isRestorable(data, this.pbnDatabase && this.pbnDatabase.length > 0)) {
+      return false;
+    }
+    this.clearTimers();
+    this.boardNumber = data.boardNumber;
+    this.cumulativeScore = { ...data.cumulativeScore };
+    this.phase = data.phase;
+    this.hands = data.hands;
+    this.bids = data.bids;
+    this.contract = data.contract;
+    this.declarer = data.declarer;
+    this.dummy = data.dummy;
+    this.currentTurn = data.currentTurn;
+    this.currentTrick = data.currentTrick;
+    this.tricksWon = { ...data.tricksWon };
+    this.leader = data.leader;
+    this.trumpSuit = data.trumpSuit;
+    this.playedCards = data.playedCards;
+    this.openingLeadMade = !!data.openingLeadMade;
+    this.doubledStatus = data.doubledStatus || 'none';
+    this.duplicateScore = data.duplicateScore || null;
+    this.historyStack = Array.isArray(data.history) ? data.history : [];
+    return true;
+  }
+
+  // Start the session over from board one with a clean scorecard
+  newSession() {
+    this.boardNumber = 1;
+    this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
+    this.resetGame();
+    this.deal();
   }
 
   createDeck() {

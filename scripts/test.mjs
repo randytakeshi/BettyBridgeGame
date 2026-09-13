@@ -254,6 +254,125 @@ function undoTest() {
   }
 }
 
+// --- Saving and resuming ------------------------------------------------
+// Betty's iPad sleeps mid-hand. The board has to come back exactly as it was
+// and still play out to thirteen tricks.
+function saveResumeTest(boards = 80) {
+  const FIELDS = ['boardNumber', 'phase', 'declarer', 'dummy', 'currentTurn',
+    'leader', 'trumpSuit', 'openingLeadMade', 'doubledStatus'];
+
+  for (let board = 1; board <= boards; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+
+    // Stop at the end of the auction rather than playing the whole board
+    const startPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = startPlay;
+
+    // Save in the middle of the auction on every third board
+    const midAuction = board % 3 === 0;
+    if (!midAuction) {
+      if (e.phase !== 'playing') continue;
+      // Play a handful of cards so the save lands mid-trick sometimes
+      const realCheck = e.checkAITurn.bind(e);
+      e.checkAITurn = () => {};
+      const cards = 1 + (board % 9);
+      for (let i = 0; i < cards && e.phase === 'playing'; i++) {
+        const idx = e.determineAIPlay(e.currentTurn);
+        if (idx === null) break;
+        e.playCard(e.currentTurn, idx);
+      }
+      e.checkAITurn = realCheck;
+    } else {
+      // Rewind to a partly-finished auction
+      e.resetGame();
+      e.startPlayingPhase = function () { this.phase = 'playing'; };
+      e.deal();
+      e.startPlayingPhase = startPlay;
+      e.phase = 'bidding';
+      e.bids = e.bids.slice(0, Math.max(1, e.bids.length - 2));
+      e.currentTurn = PLAYERS[(PLAYERS.indexOf(e.getDealer()) + e.bids.length) % 4];
+    }
+
+    const saved = JSON.parse(JSON.stringify(e.serialize()));
+    check(GameEngine.isRestorable(saved, false),
+      `board ${board}: a freshly written save was rejected`);
+
+    // Come back to it in a brand new engine, as a page reload would
+    const e2 = new GameEngine(() => {});
+    e2.humanControlsSeat = () => false;
+    check(e2.restore(saved) === true, `board ${board}: restore refused a good save`);
+
+    for (const f of FIELDS) {
+      check(JSON.stringify(e2[f]) === JSON.stringify(e[f]),
+        `board ${board}: ${f} came back as ${JSON.stringify(e2[f])}, expected ${JSON.stringify(e[f])}`);
+    }
+    for (const p of PLAYERS) {
+      check(JSON.stringify(e2.hands[p]) === JSON.stringify(e.hands[p]),
+        `board ${board}: ${p}'s hand did not come back intact`);
+    }
+    check(JSON.stringify(e2.currentTrick) === JSON.stringify(e.currentTrick),
+      `board ${board}: the part-played trick did not come back`);
+    check(e2.playedCards.length === e.playedCards.length,
+      `board ${board}: the played-card record did not come back`);
+    check(JSON.stringify(e2.cumulativeScore) === JSON.stringify(e.cumulativeScore),
+      `board ${board}: the running score did not come back`);
+
+    // And it still finishes properly from there
+    let guard = 0;
+    while (e2.phase !== 'finished' && guard++ < 300) e2.checkAITurn();
+    check(e2.phase === 'finished', `board ${board}: a resumed board never finished`);
+    if (e2.phase === 'finished' && e2.contract) {
+      const total = e2.tricksWon['N/S'] + e2.tricksWon['E/W'];
+      check(total === 13, `board ${board}: a resumed board scored ${total} tricks`);
+    }
+  }
+
+  // Junk must be refused rather than trusted. The fixture stops at the end
+  // of the auction so every hand still holds thirteen cards — a played-out
+  // board would hide the missing-card check behind two empty hands.
+  const e = new GameEngine(() => {});
+  e.resetGame();
+  e.humanControlsSeat = () => false;
+  const holdPlay = e.startPlayingPhase.bind(e);
+  e.startPlayingPhase = function () { this.phase = 'playing'; };
+  e.deal();
+  e.startPlayingPhase = holdPlay;
+  const good = JSON.parse(JSON.stringify(e.serialize()));
+  check(good.hands.N.length === 13 && good.playedCards.length === 0,
+    'the corruption fixture was not a full, unplayed deal');
+  check(GameEngine.isRestorable({ ...good, v: 99 }, false) === false,
+    'a save from another version was accepted');
+  check(GameEngine.isRestorable({ ...good, historical: true }, false) === false,
+    'a save from the other deal mode was accepted');
+  check(GameEngine.isRestorable({ ...good, phase: 'dealing' }, false) === false,
+    'a save with no board in progress was accepted');
+  check(GameEngine.isRestorable({ ...good, currentTurn: 'X' }, false) === false,
+    'a save naming no real seat was accepted');
+  const short = JSON.parse(JSON.stringify(good));
+  short.hands.N = short.hands.N.slice(1);
+  check(GameEngine.isRestorable(short, false) === false,
+    'a save missing a card was accepted');
+  check(GameEngine.isRestorable(null, false) === false, 'an empty save was accepted');
+
+  // A refused save must leave the engine alone
+  const e3 = new GameEngine(() => {});
+  e3.resetGame();
+  e3.humanControlsSeat = () => false;
+  const holdPlay3 = e3.startPlayingPhase.bind(e3);
+  e3.startPlayingPhase = function () { this.phase = 'playing'; };
+  e3.deal();
+  e3.startPlayingPhase = holdPlay3;
+  const before = JSON.parse(JSON.stringify(e3.serialize()));
+  check(e3.restore({ ...good, v: 99 }) === false, 'restore accepted a bad save');
+  check(JSON.stringify(e3.serialize()) === JSON.stringify(before),
+    'a refused restore disturbed the game in progress');
+}
+
 // --- Run ---------------------------------------------------------------
 console.log(`Playing ${BOARDS} boards…\n`);
 const results = [];
@@ -263,6 +382,7 @@ for (let b = 1; b <= BOARDS; b++) {
   if (r && !r.passedOut) results.push(r);
 }
 undoTest();
+saveResumeTest();
 
 const isGame = c => (c.suit === 'NT' && c.level >= 3) ||
   (['H', 'S'].includes(c.suit) && c.level >= 4) ||

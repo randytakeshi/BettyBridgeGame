@@ -4,6 +4,7 @@ import Table from './components/Table';
 import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
+import { loadSavedGame, saveGame, clearSavedGame } from './saveGame';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -84,6 +85,14 @@ function App() {
   const [appState, setAppState] = useState('menu');
   const [hintText, setHintText] = useState(null);
   const [showRules, setShowRules] = useState(false);
+
+  // Read the saved board once, before the engine is built, so the menu can
+  // offer to carry on from it
+  const pendingRestoreRef = useRef(undefined);
+  if (pendingRestoreRef.current === undefined) pendingRestoreRef.current = loadSavedGame();
+  const [savedBoard, setSavedBoard] = useState(
+    () => (pendingRestoreRef.current ? pendingRestoreRef.current.boardNumber : null)
+  );
   const [soundEnabled, setSoundEnabled] = useState(true);
   const soundEnabledRef = useRef(soundEnabled);
 
@@ -136,19 +145,34 @@ function App() {
   // Initialize GameEngine — only on mount or when the deal mode is switched
   // (which can only happen from the start menu, never mid-game)
   useEffect(() => {
-    const ge = new GameEngine((newState) => {
+    let ge;
+    ge = new GameEngine((newState) => {
       setGameState({ ...newState });
       if (!isHumanTurn(newState)) {
         setActiveHint(null);
         setHintText(null);
       }
       setSelectedCard(null);
+      // Keep her place after every single change, so nothing is ever lost
+      if (ge) saveGame(ge.serialize());
     }, useHistoricalMode ? pbnRef.current : null, (text) => speak(text));
 
     setEngine(ge);
     // Handy for poking at a game from the dev console; never ships
     if (import.meta.env.DEV) window.__engine = ge;
-    ge.deal();
+
+    // The saved board stays on the ref until she actually starts playing, so
+    // that a remount (React runs effects twice in development) restores it
+    // again rather than dealing over the top of it.
+    const toRestore = pendingRestoreRef.current;
+    if (toRestore && ge.restore(toRestore)) {
+      // Leave the computer players parked until she taps Continue
+      ge.notifyUpdate();
+    } else {
+      setSavedBoard(null);
+      ge.deal();
+    }
+
     return () => ge.destroy(); // Kill old timers so two games never fight
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useHistoricalMode]);
@@ -269,13 +293,25 @@ function App() {
   const canDouble = !!lastAction && lastAction.type === 'bid' && (lastAction.player === 'E' || lastAction.player === 'W');
   const canRedouble = !!lastAction && lastAction.type === 'double' && (lastAction.player === 'E' || lastAction.player === 'W');
 
-  const handleStartGame = (autoPlay) => {
-    // Unlock speech synthesis on iOS
+  // 'continue' picks up the saved board, 'new' starts a fresh session,
+  // 'watch' carries on with the computer playing Betty's seat too
+  const handleStartGame = (mode) => {
+    // Unlock speech synthesis on iOS — this tap is the gesture it needs
     const utterance = new SpeechSynthesisUtterance('');
     window.speechSynthesis.speak(utterance);
 
-    if (autoPlay) setIsAutoPlaying(true);
+    // From here the live game is the truth, not the snapshot we loaded with
+    pendingRestoreRef.current = null;
+
+    if (mode === 'new') {
+      clearSavedGame();
+      setSavedBoard(null);
+      engine.newSession();
+    }
+    if (mode === 'watch') setIsAutoPlaying(true);
     setAppState('game');
+    // A restored board has been sitting idle — get the table moving again
+    engine.checkAITurn();
   };
 
   if (appState === 'menu') {
@@ -284,25 +320,36 @@ function App() {
         <h1 style={{ color: 'white', fontSize: '4rem', marginBottom: '10px', textAlign: 'center' }}>BettyBridge ♠️</h1>
         <p style={{ color: '#cbd5e1', fontSize: '1.5rem', marginBottom: '50px', textAlign: 'center' }}>The Accessible Duplicate Bridge Experience</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '440px' }}>
-          <button
-            onClick={() => handleStartGame(false)}
-            style={{ padding: '24px', fontSize: '2rem', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}
-          >
-            Play Bridge ♠️
-          </button>
+        <div className="menu-buttons">
+          {savedBoard !== null && (
+            <button className="menu-btn menu-btn-primary" onClick={() => handleStartGame('continue')}>
+              Carry on with Board {savedBoard} ▶️
+              <span className="menu-btn-sub">right where you left off</span>
+            </button>
+          )}
 
           <button
-            onClick={() => handleStartGame(true)}
-            style={{ padding: '24px', fontSize: '2rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}
+            className={`menu-btn ${savedBoard === null ? 'menu-btn-primary' : 'menu-btn-plain'}`}
+            onClick={() => handleStartGame('new')}
           >
+            {savedBoard === null ? 'Play Bridge ♠️' : 'Start a New Game ♠️'}
+            {savedBoard !== null && <span className="menu-btn-sub">board 1, scores back to nothing</span>}
+          </button>
+
+          <button className="menu-btn menu-btn-watch" onClick={() => handleStartGame('watch')}>
             Auto-Play / Watch 👀
           </button>
 
           {pbnDatabase && pbnDatabase.length > 0 && (
             <button
-              onClick={() => setUseHistoricalMode(!useHistoricalMode)}
-              style={{ padding: '16px', fontSize: '1.3rem', backgroundColor: 'transparent', color: '#cbd5e1', border: '2px solid #475569', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+              className="menu-btn menu-btn-toggle"
+              onClick={() => {
+                // A different set of deals means the saved board no longer applies
+                clearSavedGame();
+                setSavedBoard(null);
+                pendingRestoreRef.current = null;
+                setUseHistoricalMode(!useHistoricalMode);
+              }}
             >
               Deals: {useHistoricalMode ? 'Famous Tournament Hands ✓' : 'Random Shuffle'}
             </button>
