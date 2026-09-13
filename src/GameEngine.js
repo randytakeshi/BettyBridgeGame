@@ -22,6 +22,18 @@ const DISPLAY_SUIT_ORDER = { S: 3, H: 2, C: 1, D: 0 };
 const SAVE_VERSION = 1;
 const SAVED_HISTORY = 8;
 
+// How long the computer players pause, as a multiple of the normal pace.
+// Slow gives the spoken card names plenty of room; Fast is for when Betty
+// is the dummy and just wants to see how the hand comes out.
+export const SPEEDS = [
+  { key: 'slow', label: 'Slow', mult: 1.6 },
+  { key: 'normal', label: 'Normal', mult: 1 },
+  { key: 'fast', label: 'Fast', mult: 0.5 }
+];
+export const DEFAULT_SPEED = 'normal';
+export const speedMultiplier = (key) =>
+  (SPEEDS.find(s => s.key === key) || SPEEDS[1]).mult;
+
 /**
  * Which seats Betty acts on. She sits South and always bids for herself.
  * During the play, whoever won the contract plays both their own hand and
@@ -47,6 +59,7 @@ export class GameEngine {
     this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
     this.aiTimer = null;
     this.trickTimer = null;
+    this.speed = 1;
     this.resetGame();
   }
 
@@ -65,6 +78,10 @@ export class GameEngine {
       clearTimeout(this.trickTimer);
       this.trickTimer = null;
     }
+  }
+
+  setSpeed(key) {
+    this.speed = speedMultiplier(key);
   }
 
   announce(text) {
@@ -122,6 +139,12 @@ export class GameEngine {
 
     // Undo state
     this.historyStack = [];
+
+    // Replay state. dealtHands is the board exactly as it came off the
+    // shuffle, so the same deal can be played again from the auction.
+    this.dealtHands = null;
+    this.isReplay = false;
+    this.firstResult = null;
   }
 
   humanControlsSeat(seat) {
@@ -225,6 +248,9 @@ export class GameEngine {
       openingLeadMade: this.openingLeadMade,
       doubledStatus: this.doubledStatus,
       duplicateScore: this.duplicateScore,
+      dealtHands: this.dealtHands,
+      isReplay: this.isReplay,
+      firstResult: this.firstResult,
       history: this.historyStack.slice(-SAVED_HISTORY)
     };
   }
@@ -272,6 +298,10 @@ export class GameEngine {
     this.doubledStatus = data.doubledStatus || 'none';
     this.duplicateScore = data.duplicateScore || null;
     this.historyStack = Array.isArray(data.history) ? data.history : [];
+    // Older saves predate replay; without the deal we simply cannot offer it
+    this.dealtHands = data.dealtHands || null;
+    this.isReplay = !!data.isReplay;
+    this.firstResult = data.firstResult || null;
     return true;
   }
 
@@ -326,9 +356,35 @@ export class GameEngine {
       });
     }
 
+    // Keep the deal so she can play the same cards again afterwards
+    this.dealtHands = JSON.parse(JSON.stringify(this.hands));
+
     this.phase = 'bidding';
     this.notifyUpdate();
     this.checkAITurn();
+  }
+
+  // Play the same thirteen cards over again, from the auction. The board
+  // number, dealer and vulnerability all stay put; the score does not move,
+  // because a second go at a deal she has already seen is practice.
+  replayBoard() {
+    if (!this.dealtHands) return false;
+    const hands = JSON.parse(JSON.stringify(this.dealtHands));
+    const first = this.isReplay
+      ? this.firstResult
+      : (this.duplicateScore
+        ? { contract: this.contract, declarer: this.declarer, score: this.duplicateScore }
+        : null);
+
+    this.resetGame();
+    this.hands = hands;
+    this.dealtHands = JSON.parse(JSON.stringify(hands));
+    this.isReplay = true;
+    this.firstResult = first;
+    this.phase = 'bidding';
+    this.notifyUpdate();
+    this.checkAITurn();
+    return true;
   }
 
   nextBoard() {
@@ -369,6 +425,9 @@ export class GameEngine {
       cumulativeScore: this.cumulativeScore,
       historicalData: historicalData,
       canUndo: this.canUndo(),
+      canReplay: !!this.dealtHands,
+      isReplay: this.isReplay,
+      firstResult: this.firstResult,
       dummyVisible: this.phase === 'playing' && this.openingLeadMade,
       openingLeadMade: this.openingLeadMade
     };
@@ -559,7 +618,7 @@ export class GameEngine {
       if (globalThis.TEST_MODE) {
         this.resolveTrick();
       } else {
-        this.trickTimer = setTimeout(() => this.resolveTrick(), 2500); // Pause so the full trick can be seen
+        this.trickTimer = setTimeout(() => this.resolveTrick(), 2500 * this.speed); // Pause so the full trick can be seen
       }
     } else {
       this.advanceTurn();
@@ -683,7 +742,7 @@ export class GameEngine {
       }
 
       this.duplicateScore = { side: declarerSide, points: score, made: true, tricks: tricksTaken, overtricks, contract: this.contract, doubled: this.doubledStatus };
-      this.cumulativeScore[declarerSide] += score;
+      if (!this.isReplay) this.cumulativeScore[declarerSide] += score;
 
     } else {
       // Failed (Undertricks)
@@ -708,7 +767,7 @@ export class GameEngine {
       }
 
       this.duplicateScore = { side: defendersSide, points: penalty, made: false, tricks: tricksTaken, undertricks, contract: this.contract, doubled: this.doubledStatus };
-      this.cumulativeScore[defendersSide] += penalty;
+      if (!this.isReplay) this.cumulativeScore[defendersSide] += penalty;
     }
   }
 
@@ -743,7 +802,7 @@ export class GameEngine {
       aiAction();
     } else {
       // Slower during play so the spoken card names have time to finish
-      const delay = this.phase === 'playing' ? 2000 : 1500;
+      const delay = (this.phase === 'playing' ? 2000 : 1500) * this.speed;
       this.aiTimer = setTimeout(aiAction, delay);
     }
   }

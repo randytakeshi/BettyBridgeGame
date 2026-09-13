@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Table from './components/Table';
 import BiddingBox from './components/BiddingBox';
-import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat } from './GameEngine';
+import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
-import { loadSavedGame, saveGame, clearSavedGame } from './saveGame';
+import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -93,12 +93,31 @@ function App() {
   const [savedBoard, setSavedBoard] = useState(
     () => (pendingRestoreRef.current ? pendingRestoreRef.current.boardNumber : null)
   );
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prefsRef = useRef(undefined);
+  if (prefsRef.current === undefined) prefsRef.current = loadPrefs();
+  const [soundEnabled, setSoundEnabled] = useState(() => prefsRef.current.sound !== false);
+  const [speed, setSpeed] = useState(
+    () => (SPEEDS.some(s => s.key === prefsRef.current.speed) ? prefsRef.current.speed : DEFAULT_SPEED)
+  );
   const soundEnabledRef = useRef(soundEnabled);
+  const speedRef = useRef(speed);
 
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
   }, [soundEnabled]);
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    savePrefs({ sound: soundEnabled, speed });
+  }, [soundEnabled, speed]);
+
+  // The engine paces the computer players; auto-play uses the same dial
+  useEffect(() => {
+    if (engine) engine.setSpeed(speed);
+  }, [engine, speed]);
 
   const speak = (text) => {
     if (!soundEnabledRef.current) return;
@@ -157,6 +176,7 @@ function App() {
       if (ge) saveGame(ge.serialize());
     }, useHistoricalMode ? pbnRef.current : null, (text) => speak(text));
 
+    ge.setSpeed(speedRef.current);
     setEngine(ge);
     // Handy for poking at a game from the dev console; never ships
     if (import.meta.env.DEV) window.__engine = ge;
@@ -207,16 +227,17 @@ function App() {
     if (isHumanTurn(gameState)) {
       const hint = engine.getHint(currentTurn);
 
+      const pace = speedMultiplier(speed);
       if (hint && hint.type === 'bid') {
-        timer1 = setTimeout(() => engine.placeBid(hint.value), 1200);
+        timer1 = setTimeout(() => engine.placeBid(hint.value), 1200 * pace);
       } else if (hint && hint.type === 'card') {
         timer1 = setTimeout(() => {
           setSelectedCard({ player: currentTurn, index: hint.value });
           timer2 = setTimeout(() => {
             engine.playCard(currentTurn, hint.value);
             setSelectedCard(null);
-          }, 1000);
-        }, 800);
+          }, 1000 * pace);
+        }, 800 * pace);
       }
     }
 
@@ -224,7 +245,7 @@ function App() {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [gameState, isAutoPlaying, engine]);
+  }, [gameState, isAutoPlaying, engine, speed]);
 
   if (!gameState) return <div style={{ color: 'white', fontSize: '2rem', padding: '40px', textAlign: 'center' }}>Loading…</div>;
 
@@ -274,6 +295,13 @@ function App() {
     if (showAuction) setSelectedBid(null);
   };
   const toggleAutoPlay = () => setIsAutoPlaying(!isAutoPlaying);
+
+  // One button cycling Slow / Normal / Fast, like the Sound and Deals toggles
+  const cycleSpeed = () => {
+    const i = SPEEDS.findIndex(s => s.key === speed);
+    setSpeed(SPEEDS[(i + 1) % SPEEDS.length].key);
+  };
+  const speedLabel = (SPEEDS.find(s => s.key === speed) || SPEEDS[1]).label;
 
   const toggleSound = () => {
     if (!soundEnabled) {
@@ -402,6 +430,7 @@ function App() {
           <button className={`header-btn ${soundEnabled ? 'btn-auto-play' : 'btn-stop-auto'}`} onClick={toggleSound}>
             {soundEnabled ? 'Sound 🔊' : 'Muted 🔇'}
           </button>
+          <button className="header-btn btn-show" onClick={cycleSpeed}>Speed: {speedLabel} ⏱️</button>
           <button className={`header-btn ${isAutoPlaying ? 'btn-stop-auto' : 'btn-auto-play'}`} onClick={toggleAutoPlay}>{isAutoPlaying ? 'Stop Auto ⏹️' : 'Auto-Play ▶️'}</button>
           <button className="header-btn btn-hint" onClick={handleHint}>Hint 💡</button>
           {gameState.canUndo && (
@@ -512,7 +541,27 @@ function App() {
               <p style={{ fontSize: '1.5rem', marginBottom: '30px', color: '#cbd5e1' }}>Passed Out — no contract</p>
             )}
 
+            {gameState.isReplay && gameState.firstResult && gameState.firstResult.score && (
+              <div className="first-try">
+                <h3>First time through</h3>
+                <p>
+                  {gameState.firstResult.contract.level}
+                  {SUIT_SYMBOLS[gameState.firstResult.contract.suit]} by {PLAYER_NAMES[gameState.firstResult.declarer]}
+                  {' — '}
+                  {gameState.firstResult.score.made
+                    ? `made ${gameState.firstResult.score.tricks}`
+                    : `down ${gameState.firstResult.score.undertricks}`}
+                  {', '}
+                  {gameState.firstResult.score.side === 'N/S' ? 'we' : 'they'} scored {gameState.firstResult.score.points}
+                </p>
+              </div>
+            )}
+
             <p style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '25px' }}>
+              {gameState.isReplay
+                ? 'A replay is practice — the running score has not moved.'
+                : null}
+              {gameState.isReplay && <br />}
               Total score — We: {gameState.cumulativeScore['N/S']} · They: {gameState.cumulativeScore['E/W']}
             </p>
 
@@ -535,13 +584,23 @@ function App() {
               </div>
             )}
 
-            <button
-              className="header-btn btn-auto-play"
-              style={{ fontSize: '1.6rem', padding: '18px 40px', width: '100%', justifyContent: 'center' }}
-              onClick={() => engine.nextBoard()}
-            >
-              Next Board ▶️
-            </button>
+            <div className="board-done-buttons">
+              <button
+                className="header-btn btn-auto-play board-done-btn"
+                onClick={() => engine.nextBoard()}
+              >
+                Next Board ▶️
+              </button>
+              {gameState.canReplay && (
+                <button
+                  className="header-btn btn-show board-done-btn board-done-replay"
+                  onClick={() => engine.replayBoard()}
+                >
+                  Play This Deal Again ↺
+                  <span className="board-done-sub">same cards, bid it again — just for practice</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

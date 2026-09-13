@@ -373,6 +373,95 @@ function saveResumeTest(boards = 80) {
     'a refused restore disturbed the game in progress');
 }
 
+// --- Replaying a deal ---------------------------------------------------
+// The same thirteen cards, bid again from scratch, and the running score
+// left exactly where it was.
+function replayTest(boards = 60) {
+  for (let board = 1; board <= boards; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    const dealt = JSON.parse(JSON.stringify(e.dealtHands));
+    const dealer = e.getDealer();
+    const vul = e.getVulnerability();
+
+    // Play the board right out
+    let guard = 0;
+    while (e.phase !== 'finished' && guard++ < 300) e.checkAITurn();
+    if (e.phase !== 'finished') { check(false, `board ${board}: never finished before replay`); continue; }
+
+    const scoreAfterFirst = JSON.parse(JSON.stringify(e.cumulativeScore));
+    const firstContract = e.contract ? { ...e.contract } : null;
+
+    check(e.replayBoard() === true, `board ${board}: replay was refused`);
+
+    // The same cards come back out
+    for (const p of PLAYERS) {
+      const back = e.hands[p].map(c => `${c.rank}${c.suit}`).sort().join(' ');
+      const orig = dealt[p].map(c => `${c.rank}${c.suit}`).sort().join(' ');
+      check(back === orig || e.phase === 'finished',
+        `board ${board}: ${p} was dealt different cards on the replay`);
+    }
+    check(e.boardNumber === board, `board ${board}: the replay changed the board number`);
+    check(e.getDealer() === dealer, `board ${board}: the replay changed the dealer`);
+    check(e.getVulnerability() === vul, `board ${board}: the replay changed the vulnerability`);
+    check(e.isReplay === true, `board ${board}: the replay was not marked as one`);
+    if (firstContract) {
+      check(!!e.firstResult, `board ${board}: the first result was not kept for comparison`);
+    }
+
+    // Play the replay out — and the running score must not budge
+    guard = 0;
+    while (e.phase !== 'finished' && guard++ < 300) e.checkAITurn();
+    check(e.phase === 'finished', `board ${board}: the replay never finished`);
+    check(JSON.stringify(e.cumulativeScore) === JSON.stringify(scoreAfterFirst),
+      `board ${board}: a replay moved the running score to ${JSON.stringify(e.cumulativeScore)}`);
+    if (e.contract) {
+      const total = e.tricksWon['N/S'] + e.tricksWon['E/W'];
+      check(total === 13, `board ${board}: the replay scored ${total} tricks`);
+    }
+
+    // Replaying twice keeps pointing back at the very first attempt
+    const firstKept = JSON.stringify(e.firstResult);
+    e.replayBoard();
+    check(JSON.stringify(e.firstResult) === firstKept,
+      `board ${board}: a second replay forgot the original result`);
+
+    // Moving on clears the replay flag so the next board scores normally
+    e.nextBoard();
+    check(e.isReplay === false, `board ${board}: the next board was still marked a replay`);
+    check(e.firstResult === null, `board ${board}: the next board kept the old result`);
+  }
+
+  // A replay survives being saved and resumed
+  const e2 = new GameEngine(() => {});
+  e2.resetGame();
+  e2.humanControlsSeat = () => false;
+  e2.deal();
+  e2.replayBoard();
+  const saved = JSON.parse(JSON.stringify(e2.serialize()));
+  const e3 = new GameEngine(() => {});
+  e3.humanControlsSeat = () => false;
+  check(e3.restore(saved) === true, 'a replay could not be restored');
+  check(e3.isReplay === true, 'a restored replay forgot it was one');
+  check(!!e3.dealtHands, 'a restored board could not be replayed again');
+
+  // Speed only changes the pace, never the rules
+  const e4 = new GameEngine(() => {});
+  e4.setSpeed('fast');
+  check(e4.speed === 0.5, 'the fast setting did not take');
+  e4.setSpeed('slow');
+  check(e4.speed === 1.6, 'the slow setting did not take');
+  e4.setSpeed('nonsense');
+  check(e4.speed === 1, 'an unknown speed did not fall back to normal');
+}
+
 // --- Run ---------------------------------------------------------------
 console.log(`Playing ${BOARDS} boards…\n`);
 const results = [];
@@ -383,6 +472,7 @@ for (let b = 1; b <= BOARDS; b++) {
 }
 undoTest();
 saveResumeTest();
+replayTest();
 
 const isGame = c => (c.suit === 'NT' && c.level >= 3) ||
   (['H', 'S'].includes(c.suit) && c.level >= 4) ||

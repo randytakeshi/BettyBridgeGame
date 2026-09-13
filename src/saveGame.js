@@ -39,3 +39,28 @@ export function clearSavedGame() {
     // Nothing to do
   }
 }
+
+/**
+ * Settings, kept apart from the board so that starting a new game never
+ * resets how she likes to play.
+ */
+const PREFS_KEY = 'bettybridge.prefs.v1';
+
+export function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+export function savePrefs(prefs) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // Play on without remembering
+  }
+}
