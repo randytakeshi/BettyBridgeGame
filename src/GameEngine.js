@@ -84,9 +84,12 @@ export class GameEngine {
     this.speed = speedMultiplier(key);
   }
 
-  announce(text) {
+  // Speaking normally cuts off whatever is still being said, which is right
+  // for a fresh event but wrong for a follow-on — "Sarah wins the trick" must
+  // not swallow the score that comes straight after it. Pass queued for those.
+  announce(text, queued = false) {
     if (this.announceCallback) {
-      this.announceCallback(text);
+      this.announceCallback(text, queued);
     }
   }
 
@@ -559,7 +562,7 @@ export class GameEngine {
     if (this.declarer === 'N') {
       announcement += ' Your hand is the dummy — Sarah will play both hands for your side.';
     }
-    this.announce(announcement);
+    this.announce(announcement, true);
     this.notifyUpdate();
     this.checkAITurn();
   }
@@ -594,14 +597,17 @@ export class GameEngine {
     this.currentTrick.push({ player, card });
     this.playedCards.push({ ...card, player });
 
-    // Announce card with the player's name
+    // Announce the card with the player's name. Speaking cancels whatever is
+    // already being said, so the opening lead and the news about the dummy
+    // have to go out as one sentence or the card name gets cut off.
+    let spoken;
     if (player === this.dummy && this.declarer !== 'S') {
       // The declarer is running both hands and just played from the dummy
       const owner = player === 'S' ? 'your' : `${PLAYER_NAMES[player]}'s`;
-      this.announce(`${PLAYER_NAMES[this.declarer]} plays ${owner} ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`);
+      spoken = `${PLAYER_NAMES[this.declarer]} plays ${owner} ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`;
     } else {
       const name = PLAYER_NAMES[player];
-      this.announce(`${name} ${player === 'S' ? 'play' : 'plays'} the ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`);
+      spoken = `${name} ${player === 'S' ? 'play' : 'plays'} the ${rankWord(card.rank)} of ${SUIT_WORDS[card.suit]}`;
     }
 
     // The opening lead is on the table, so the dummy goes face up now
@@ -609,17 +615,14 @@ export class GameEngine {
       this.openingLeadMade = true;
       const who = this.dummy === 'S' ? 'Your cards go face up' : `${PLAYER_NAMES[this.dummy]}'s cards go face up`;
       const by = this.declarer === 'S' ? 'you play both hands' : `${PLAYER_NAMES[this.declarer]} plays both hands`;
-      this.announce(`${who} as the dummy, and ${by}.`);
+      spoken += `. ${who} as the dummy, and ${by}.`;
     }
+    this.announce(spoken);
 
     if (this.currentTrick.length === 4) {
-      // Trick complete
+      // Trick complete — pause so the full trick can be seen
       this.notifyUpdate();
-      if (globalThis.TEST_MODE) {
-        this.resolveTrick();
-      } else {
-        this.trickTimer = setTimeout(() => this.resolveTrick(), 2500 * this.speed); // Pause so the full trick can be seen
-      }
+      this.scheduleTrickResolution();
     } else {
       this.advanceTurn();
       this.checkAITurn();
@@ -666,9 +669,9 @@ export class GameEngine {
       if (this.duplicateScore) {
         const ds = this.duplicateScore;
         if (ds.made) {
-          this.announce(`${ds.side === 'N/S' ? 'Your side' : 'They'} made the contract! ${ds.points} points.`);
+          this.announce(`${ds.side === 'N/S' ? 'Your side' : 'They'} made the contract! ${ds.points} points.`, true);
         } else {
-          this.announce(`The contract went down. ${ds.points} points to ${ds.side === 'N/S' ? 'your side' : 'them'}.`);
+          this.announce(`The contract went down. ${ds.points} points to ${ds.side === 'N/S' ? 'your side' : 'them'}.`, true);
         }
       }
     }
@@ -779,11 +782,29 @@ export class GameEngine {
 
   // --- AI LOGIC ---
 
+  // Start the pause that clears a finished trick off the table. Normally
+  // playCard does this, but a board resumed from a save can come back with
+  // four cards already down and no timer running — without this, nobody can
+  // ever play again and the game is stuck for good.
+  scheduleTrickResolution() {
+    if (this.trickTimer) return;
+    if (globalThis.TEST_MODE) {
+      this.resolveTrick();
+    } else {
+      this.trickTimer = setTimeout(() => this.resolveTrick(), 2500 * this.speed);
+    }
+  }
+
   checkAITurn() {
     // Always clear any stale timer first so two AI actions can never race
     if (this.aiTimer) {
       clearTimeout(this.aiTimer);
       this.aiTimer = null;
+    }
+    if (this.phase !== 'bidding' && this.phase !== 'playing') return;
+    if (this.phase === 'playing' && this.currentTrick.length >= 4) {
+      this.scheduleTrickResolution();
+      return;
     }
     if (this.humanControlsSeat(this.currentTurn)) return;
 

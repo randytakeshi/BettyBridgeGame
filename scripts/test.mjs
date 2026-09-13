@@ -439,6 +439,48 @@ function replayTest(boards = 60) {
     check(e.firstResult === null, `board ${board}: the next board kept the old result`);
   }
 
+  // Saving during the pause that shows a finished trick. The test engine
+  // clears tricks instantly, so this state can only be built by hand — and
+  // it is the state the app is in for two and a half seconds of every trick,
+  // which is plenty of time for the iPad to go to sleep.
+  for (let board = 1; board <= 40; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    if (e.phase !== 'playing') continue;
+
+    // Four cards down, trick not yet cleared, no timer running
+    const realResolve = e.resolveTrick.bind(e);
+    const realCheck = e.checkAITurn.bind(e);
+    e.resolveTrick = () => {};
+    e.checkAITurn = () => {};
+    for (let i = 0; i < 4; i++) e.playCard(e.currentTurn, e.determineAIPlay(e.currentTurn));
+    e.resolveTrick = realResolve;
+    e.checkAITurn = realCheck;
+    if (e.currentTrick.length !== 4) continue;
+
+    const saved = JSON.parse(JSON.stringify(e.serialize()));
+    const e2 = new GameEngine(() => {});
+    e2.humanControlsSeat = () => false;
+    check(e2.restore(saved) === true, `board ${board}: a mid-pause save was refused`);
+    check(e2.currentTrick.length === 4, `board ${board}: the finished trick did not come back`);
+
+    // Resuming must clear the trick and carry on, not sit there forever
+    let guard = 0;
+    while (e2.phase !== 'finished' && guard++ < 400) e2.checkAITurn();
+    check(e2.phase === 'finished',
+      `board ${board}: a board saved while a trick was on the table could not be resumed`);
+    if (e2.phase === 'finished' && e2.contract) {
+      const total = e2.tricksWon['N/S'] + e2.tricksWon['E/W'];
+      check(total === 13, `board ${board}: resuming mid-trick scored ${total} tricks`);
+    }
+  }
+
   // A replay survives being saved and resumed
   const e2 = new GameEngine(() => {});
   e2.resetGame();

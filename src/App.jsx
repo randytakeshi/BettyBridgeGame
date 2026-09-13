@@ -183,7 +183,7 @@ function App() {
       setSelectedCard(null);
       // Keep her place after every single change, so nothing is ever lost
       if (ge) saveGame(ge.serialize());
-    }, useHistoricalMode ? pbnRef.current : null, (text) => speak(text));
+    }, useHistoricalMode ? pbnRef.current : null, (text, queued) => (queued ? speakQueued(text) : speak(text)));
 
     ge.setSpeed(speedRef.current);
     setEngine(ge);
