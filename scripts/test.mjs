@@ -531,11 +531,21 @@ function houseRulesTest(boards = 600) {
     if (!bids.length) continue;
     const meaning = bids.map((_, i) => classifyCall(bids, i));
 
-    // Nobody opens on fewer than thirteen high cards
+    // Nobody opens on fewer than thirteen high cards — except the defensive
+    // three-level opening, which is six to twelve points and seven cards.
     const opener = bids[0];
-    check(hcpOf(dealt[opener.player]) >= 13,
-      `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
-      `${hcpOf(dealt[opener.player])} high cards`);
+    const openerHcp = hcpOf(dealt[opener.player]);
+    if (opener.level === 3 && opener.suit !== 'NT') {
+      check(dealt[opener.player].filter(c => c.suit === opener.suit).length >= 7,
+        `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} without seven cards`);
+      check(openerHcp >= 6 && openerHcp <= 12,
+        `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ${openerHcp} points ` +
+        `— the defensive opening is six to twelve`);
+    } else {
+      check(openerHcp >= 13,
+        `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
+        `${openerHcp} high cards`);
+    }
 
     // The 2 Clubs opening means 22 or more, not clubs
     if (meaning[0] === 'strong2C') {

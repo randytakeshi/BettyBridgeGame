@@ -5,6 +5,7 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
+import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -114,6 +115,14 @@ function App() {
   const [speed, setSpeed] = useState(
     () => (SPEEDS.some(s => s.key === prefsRef.current.speed) ? prefsRef.current.speed : DEFAULT_SPEED)
   );
+  const [ntRange, setNtRange] = useState(
+    () => (NT_RANGES.some(r => r.key === prefsRef.current.ntRange) ? prefsRef.current.ntRange : DEFAULT_NT_RANGE)
+  );
+  // Apply it before the engine ever evaluates a call
+  if (prefsRef.current.__applied !== ntRange) {
+    setNoTrumpRange(ntRange);
+    prefsRef.current.__applied = ntRange;
+  }
   const soundEnabledRef = useRef(soundEnabled);
   const speedRef = useRef(speed);
 
@@ -126,8 +135,12 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    savePrefs({ sound: soundEnabled, speed });
-  }, [soundEnabled, speed]);
+    savePrefs({ sound: soundEnabled, speed, ntRange });
+  }, [soundEnabled, speed, ntRange]);
+
+  useEffect(() => {
+    setNoTrumpRange(ntRange);
+  }, [ntRange]);
 
   // The engine paces the computer players; auto-play uses the same dial
   useEffect(() => {
@@ -337,6 +350,7 @@ function App() {
 
   const { phase, contract, tricksWon, currentTurn } = gameState;
   const role = roleOf(gameState);
+  const ntLabel = (NT_RANGES.find(r => r.key === ntRange) || NT_RANGES[0]).label;
   const highestBid = gameState.bids.filter(b => b.type === 'bid').pop();
 
   // Double / Redouble are only legal against the opponents' last call
@@ -647,7 +661,23 @@ function App() {
               <p>Once a fit is found, <b>then</b> you count your distribution.</p>
               <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
               <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
-              <p>Open <b>1 No Trump with 16 to 18 points</b> and even distribution.</p>
+              <p>Open <b>1 No Trump with {ntLabel}</b> and even distribution.</p>
+              <div className="rules-setting">
+                <span>
+                  {ntRange === '16-18'
+                    ? 'Some play 15 to 17 now. Tap to try it — you can always tap back.'
+                    : 'This is the newer range. Tap to go back to 16 to 18.'}
+                </span>
+                <button
+                  className="header-btn btn-show"
+                  onClick={() => setNtRange(ntRange === '16-18' ? '15-17' : '16-18')}
+                >
+                  1 No Trump: {ntLabel} — tap to change
+                </button>
+              </div>
+              <p>With seven cards in one suit you can open <b>3 of that suit on just
+                 6 points</b>. It is a defensive bid — the shape is worth more than the
+                 points, and it takes away the opponents' room.</p>
 
               <p>Repeating your own five-card major says you actually have <b>six</b>.</p>
 

@@ -26,6 +26,23 @@ const HCP_VALUE = { A: 4, K: 3, Q: 2, J: 1 };
 const MAJORS = ['H', 'S'];
 const ALL_SUITS = ['C', 'D', 'H', 'S'];
 
+// Betty plays 1 No Trump as 16 to 18. She knows the modern range is 15 to 17
+// and is thinking about switching, so it is a setting rather than a constant.
+// Everything that depends on the range reads it from here, so the opening,
+// the responses, the overcall and the Stayman arithmetic can never disagree.
+export const NT_RANGES = [
+  { key: '16-18', low: 16, label: '16 to 18 points' },
+  { key: '15-17', low: 15, label: '15 to 17 points' }
+];
+export const DEFAULT_NT_RANGE = '16-18';
+const ntConfig = { low: 16 };
+export function setNoTrumpRange(key) {
+  const found = NT_RANGES.find(r => r.key === key);
+  ntConfig.low = found ? found.low : 16;
+}
+export const noTrumpLow = () => ntConfig.low;
+export const noTrumpHigh = () => ntConfig.low + 2;
+
 // Betty settled this herself: "When opening bid is made, just high card
 // points matter. Later distribution is counted." So the opening bid is a
 // straight 13 high cards — no length, no shortness — and distribution only
@@ -193,9 +210,10 @@ function rangeForCall(seat, c, prior) {
 
   // --- an actual bid ---
   if (!opening) {
-    if (c.suit === 'NT' && c.level === 1) return { min: 16, max: 18 };
+    if (c.suit === 'NT' && c.level === 1) return { min: noTrumpLow(), max: noTrumpHigh() };
     if (c.suit === 'NT' && c.level === 2) return { min: 20, max: 21 };
     if (c.suit === 'C' && c.level === 2) return { min: 22, max: 37 };
+    if (c.level === 3 && c.suit !== 'NT') return { min: 6, max: 12 }; // weak, seven cards
     return { min: 13, max: 21 };
   }
 
@@ -266,7 +284,7 @@ function rangeForCall(seat, c, prior) {
       }
       return { min: 6, max: 12 };
     }
-    if (c.suit === 'NT' && c.level === 1) return { min: 16, max: 18 };
+    if (c.suit === 'NT' && c.level === 1) return { min: noTrumpLow(), max: noTrumpHigh() };
     if (c.level === 1) return { min: 8, max: 16 };
     if (c.level === 2) return { min: 11, max: 17 };
     return { min: 10, max: 20 };
@@ -371,7 +389,8 @@ function estimateLength(seat, bids, suit) {
   if (timesBid === 0) return 0;
 
   if (opening && opening.player === seat && opening.suit === suit) {
-    best = MAJORS.includes(suit) ? 5 : 3;
+    if (opening.level === 3) best = 7;          // the weak three-level opening
+    else best = MAJORS.includes(suit) ? 5 : 3;
   } else {
     best = 4;
   }
@@ -460,8 +479,17 @@ function openingCall(a) {
   }
   // 1 No Trump shows 16 to 18 with even distribution. With a five-card
   // major, open the major instead so we can still find the major fit.
-  if (hcp >= 16 && hcp <= 18 && balanced && !longMajor) {
-    return call(1, 'NT', `${pts(hcp)}, even distribution — opening 1 No Trump`);
+  if (hcp >= noTrumpLow() && hcp <= noTrumpHigh() && balanced && !longMajor) {
+    return call(1, 'NT', `${pts(hcp)}, even distribution — opening 1 No Trump (${noTrumpLow()} to ${noTrumpHigh()})`);
+  }
+
+  // Betty: "If you have 7 cards of one suit you can open 3 of that suit on
+  // just 6 pts. It's a defensive bid." Shape beating points — the object is
+  // to take away the opponents' room, not to make the contract.
+  const sevenCard = ['S', 'H', 'D', 'C'].find(su => len[su] >= 7);
+  if (sevenCard && hcp >= 6 && hcp <= 12) {
+    return call(3, sevenCard,
+      `Only ${pts(hcp)}, but ${len[sevenCard]} ${SUIT_WORDS[sevenCard]} — opening 3 to take away their room`);
   }
 
   if (hcp < 13) {
@@ -486,7 +514,7 @@ function openingCall(a) {
 
 function respondToNoTrump(a, ctx, openingLevel) {
   const { hcp, len, longMajor, hasStopper } = a;
-  const lo = openingLevel === 1 ? 16 : 20;
+  const lo = openingLevel === 1 ? noTrumpLow() : 20;
   // If they have overcalled, we need their suit stopped before No Trump
   const theirSuits = ctx.bids
     .filter(c => c.type === 'bid' && !sameSide(c.player, ctx.seat) && c.suit !== 'NT')
@@ -618,9 +646,30 @@ function respondToSuitOpening(a, ctx) {
   return pass(`${pts(hcp)} — nothing safe to bid`);
 }
 
+// Partner's three-level opening was defensive: six to twelve points and a
+// seven-card suit. Nine tricks is already a stretch, so the answer is almost
+// always to leave it alone.
+function respondToPreempt(a, ctx) {
+  const o = ctx.opening;
+  const { hcp, len, hasStopper } = a;
+  const support = len[o.suit];
+  const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
+
+  if (hcp >= 16 && support >= 1 && ALL_SUITS.every(su => su === o.suit || hasStopper(su))) {
+    const c = want(3, 'NT', `${pts(hcp)} with every other suit stopped — 3 No Trump on partner's long suit`);
+    if (c) return c;
+  }
+  if (MAJORS.includes(o.suit) && support >= 3 && hcp >= 14) {
+    const c = want(4, o.suit, `${pts(hcp)} with ${support} ${SUIT_WORDS[o.suit]} — raising to game`);
+    if (c) return c;
+  }
+  return pass('Partner bid three to take away their room, not to be raised — leaving it alone');
+}
+
 function firstResponse(a, ctx) {
   const o = ctx.opening;
   if (o.suit === 'NT') return respondToNoTrump(a, ctx, o.level);
+  if (o.level === 3) return respondToPreempt(a, ctx);
   return respondToSuitOpening(a, ctx);
 }
 
@@ -805,7 +854,7 @@ function overcallOrDouble(a, ctx) {
   if (hcp < 8) return pass(`Only ${pts(hcp)} — staying out of it`);
 
   // 1NT overcall: 15-18 balanced with their suit stopped
-  if (hcp >= 16 && hcp <= 18 && balanced && (opening.suit === 'NT' || hasStopper(opening.suit))) {
+  if (hcp >= noTrumpLow() && hcp <= noTrumpHigh() && balanced && (opening.suit === 'NT' || hasStopper(opening.suit))) {
     const c = want(1, 'NT', `${pts(hcp)}, even distribution, their suit stopped — 1 No Trump`);
     if (c) return c;
   }
@@ -824,18 +873,21 @@ function overcallOrDouble(a, ctx) {
     const lvl = ctx.cheapest(best);
     const honours = a.bySuit[best].filter(r => 'AKQJ'.includes(r)).length;
     const goodSuit = len[best] >= 6 || honours >= 2;
-    const needed = lvl === 1 ? 8 : 12;
-    if (hcp >= needed && lvl <= 2 && (lvl === 1 || goodSuit)) {
+    // A three-level opening is meant to shut us out; it should not succeed
+    // automatically, but coming in that high costs real values
+    const needed = lvl === 1 ? 8 : (lvl === 2 ? 12 : 15);
+    if (hcp >= needed && lvl <= 3 && (lvl === 1 || goodSuit)) {
       return call(lvl, best, `${pts(hcp)} and ${len[best]} ${SUIT_WORDS[best]} — overcalling`);
     }
   }
 
   // Takeout double: opening values, short in their suit, support everywhere else
-  if (hcp >= 12 && opening.level === 1 && opening.suit !== 'NT' && ctx.myCalls.length === 0) {
+  if (hcp >= 12 && opening.level <= 3 && opening.suit !== 'NT' && ctx.myCalls.length === 0) {
     const theirSuit = opening.suit;
     const short = len[theirSuit] <= 2;
     const othersOk = ALL_SUITS.every(s => s === theirSuit || len[s] >= 3);
-    if (short && othersOk && ctx.lastAction === opening) {
+    const enough = opening.level === 1 ? 12 : 15; // doubling them at the three level needs more
+    if (short && othersOk && hcp >= enough && ctx.lastAction === opening) {
       return dbl(`${pts(hcp)}, short in ${SUIT_WORDS[theirSuit]} — double asks partner to pick a suit`);
     }
   }
@@ -942,7 +994,7 @@ function laterCall(a, ctx) {
 
   // 0a. Partner has answered my Stayman ask
   if (lastMeaning === 'staymanReply') {
-    const combinedNT = hcp + 16; // they opened 1 No Trump
+    const combinedNT = hcp + noTrumpLow(); // they opened 1 No Trump
     if (last.suit !== 'D' && len[last.suit] >= 4) {
       const target = combinedNT >= 26 ? 4 : 3;
       const c = want(target, last.suit, `${pts(hcp)} and ${len[last.suit]} ${SUIT_WORDS[last.suit]} — we have our fit`);

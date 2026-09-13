@@ -444,3 +444,23 @@
 @media (max-width: 950px) {
   .hand-summary-note { font-size: 0.9rem; margin-bottom: 6px; }
 }
+
+/* A rule she can change from inside the rules card */
+.rules-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(249, 168, 38, 0.12);
+  border: 1px solid var(--ui-accent);
+}
+.rules-setting span {
+  font-size: 1.05rem;
+  color: #ffe9a8;
+}
+.rules-setting .header-btn {
+  justify-content: center;
+  font-size: 1.15rem;
+}
