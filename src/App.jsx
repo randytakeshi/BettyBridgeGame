@@ -5,7 +5,7 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
-import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos } from './bidding';
+import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos, DEFAULT_TRANSFERS, setTransfers } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -121,11 +121,16 @@ function App() {
   const [weakTwos, setWeakTwosPref] = useState(
     () => (typeof prefsRef.current.weakTwos === 'boolean' ? prefsRef.current.weakTwos : DEFAULT_WEAK_TWOS)
   );
-  // Apply both before the engine ever evaluates a call
-  if (prefsRef.current.__applied !== `${ntRange}|${weakTwos}`) {
+  const [transfers, setTransfersPref] = useState(
+    () => (typeof prefsRef.current.transfers === 'boolean' ? prefsRef.current.transfers : DEFAULT_TRANSFERS)
+  );
+  // Apply them all before the engine ever evaluates a call
+  const settingsKey = `${ntRange}|${weakTwos}|${transfers}`;
+  if (prefsRef.current.__applied !== settingsKey) {
     setNoTrumpRange(ntRange);
     setWeakTwos(weakTwos);
-    prefsRef.current.__applied = `${ntRange}|${weakTwos}`;
+    setTransfers(transfers);
+    prefsRef.current.__applied = settingsKey;
   }
   const soundEnabledRef = useRef(soundEnabled);
   const speedRef = useRef(speed);
@@ -139,13 +144,14 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    savePrefs({ sound: soundEnabled, speed, ntRange, weakTwos });
-  }, [soundEnabled, speed, ntRange, weakTwos]);
+    savePrefs({ sound: soundEnabled, speed, ntRange, weakTwos, transfers });
+  }, [soundEnabled, speed, ntRange, weakTwos, transfers]);
 
   useEffect(() => {
     setNoTrumpRange(ntRange);
     setWeakTwos(weakTwos);
-  }, [ntRange, weakTwos]);
+    setTransfers(transfers);
+  }, [ntRange, weakTwos, transfers]);
 
   // The engine paces the computer players; auto-play uses the same dial
   useEffect(() => {
@@ -715,6 +721,23 @@ function App() {
                  2 Diamonds if they do not.</p>
               <p><b>4 No Trump asks for aces.</b> Partner answers 5 Clubs with none or
                  all four, 5 Diamonds with one, 5 Hearts with two, 5 Spades with three.</p>
+              <p><b>5 No Trump after that asks for kings</b>, answered the same way one
+                 level up — 6 Clubs with none or all four, and so on.</p>
+              <p>Over 1 No Trump, <b>2 Diamonds means diamonds</b>. There is another
+                 system where it tells partner to bid Hearts instead:</p>
+              <div className="rules-setting">
+                <span>
+                  {transfers
+                    ? '2 Diamonds now says "bid Hearts", and 2 Hearts says "bid Spades".'
+                    : '2 Diamonds and 2 Hearts mean what they say. Tap if you play them the other way.'}
+                </span>
+                <button
+                  className="header-btn btn-show"
+                  onClick={() => setTransfersPref(!transfers)}
+                >
+                  2 Diamonds over 1 No Trump: {transfers ? 'asks for Hearts' : 'means Diamonds'} — tap to change
+                </button>
+              </div>
               <p>Over 1 No Trump, <b>4 Clubs just means Clubs</b> — we do not use it to
                  ask for aces.</p>
               <p>Everything else means exactly what it says.</p>

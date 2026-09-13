@@ -42,6 +42,15 @@ export const DEFAULT_NT_RANGE = '16-18';
 // she named both systems, so it is a setting.
 const weakTwoConfig = { on: true };
 export const DEFAULT_WEAK_TWOS = true;
+
+// Betty on 2 Diamonds over 1 No Trump: "Depending on the system, you have
+// diamonds and bid hearts; another system asks for a 4 card major." She has
+// described both without saying which she plays, so it is a switch, and it
+// starts off — 2 Diamonds means diamonds until she says otherwise.
+const transferConfig = { on: false };
+export const DEFAULT_TRANSFERS = false;
+export function setTransfers(on) { transferConfig.on = !!on; }
+export const transfersOn = () => transferConfig.on;
 export function setWeakTwos(on) { weakTwoConfig.on = !!on; }
 export const weakTwosOn = () => weakTwoConfig.on;
 const ntConfig = { low: 16 };
@@ -142,6 +151,7 @@ export function analyzeHand(hand) {
 // is recognised by its exact position in the auction and nowhere else.
 
 const ACE_REPLIES = { C: 0, D: 1, H: 2, S: 3 }; // 5C shows none or all four
+const KING_REPLIES = { C: 0, D: 1, H: 2, S: 3 }; // and 6C likewise for kings
 
 // Betty on doubles: "When someone opens one heart and you double it means you
 // have a good hand and you want partner to bid. But if the bid is around
@@ -182,6 +192,16 @@ export function classifyCall(bids, i) {
     if (lastByPartner === opening && opening.level === 1 && opening.suit === 'NT'
       && c.level === 2 && c.suit === 'C') return 'stayman';
 
+    // With transfers switched on, 2 Diamonds and 2 Hearts over partner's
+    // 1 No Trump tell partner to bid the next suit up
+    if (transfersOn() && lastByPartner === opening && opening.level === 1
+      && opening.suit === 'NT' && c.level === 2 && (c.suit === 'D' || c.suit === 'H')) {
+      return 'transfer';
+    }
+    if (partnerMeant === 'transfer' && c.level === 2 && (c.suit === 'H' || c.suit === 'S')) {
+      return 'transferDone';
+    }
+
     // The answer to Stayman
     if (partnerMeant === 'stayman' && c.level === 2 && ['D', 'H', 'S'].includes(c.suit)) {
       return 'staymanReply';
@@ -189,6 +209,10 @@ export function classifyCall(bids, i) {
 
     // The answer to Blackwood
     if (partnerMeant === 'blackwood' && c.level === 5 && c.suit !== 'NT') return 'aceShow';
+
+    // Betty: "5 no trump after 4 no is asking for kings"
+    if (partnerMeant === 'aceShow' && c.level === 5 && c.suit === 'NT') return 'kingAsk';
+    if (partnerMeant === 'kingAsk' && c.level === 6 && c.suit !== 'NT') return 'kingShow';
   }
 
   // 4 No Trump always asks for aces
@@ -199,6 +223,7 @@ export function classifyCall(bids, i) {
 // Does this call name a suit it actually holds?
 const namesItsSuit = (bids, i) => {
   const meaning = classifyCall(bids, i);
+  if (meaning === 'transfer' || meaning === 'transferDone') return false;
   return meaning === null || (meaning === 'staymanReply' && bids[i].suit !== 'D');
 };
 
@@ -390,7 +415,8 @@ export function estimateRange(seat, bids) {
       const meaning = classifyCall(bids, bids.indexOf(c));
       // A waiting bid, a Stayman ask and its answer, and an ace count all say
       // nothing about how strong the hand is
-      const silent = ['waiting', 'stayman', 'staymanReply', 'aceShow'].includes(meaning);
+      const silent = ['waiting', 'stayman', 'staymanReply', 'aceShow',
+        'kingAsk', 'kingShow', 'transfer', 'transferDone'].includes(meaning);
       const r = silent ? null : rangeForCall(seat, c, prior);
       if (r) {
         // A hand that has already limited itself cannot promise more later.
@@ -566,6 +592,15 @@ function respondToNoTrump(a, ctx, openingLevel) {
   if (openingLevel === 1 && !longMajor && (len.H >= 4 || len.S >= 4) && hcp >= 8
     && ctx.cheapest('C') <= 2 && theirSuitsStopped) {
     return convention(2, 'C', `${pts(hcp)} and a four-card major — Stayman asks partner for theirs`);
+  }
+
+  // With transfers on, show a five-card major by telling partner to bid it
+  if (transfersOn() && openingLevel === 1 && longMajor && ctx.cheapest('D') <= 2) {
+    const via = longMajor === 'H' ? 'D' : 'H';
+    if (ctx.cheapest(via) <= 2) {
+      return convention(2, via,
+        `${len[longMajor]} ${SUIT_WORDS[longMajor]} — asking partner to bid them`);
+    }
   }
 
   if (longMajor) {
@@ -1065,6 +1100,21 @@ function laterCall(a, ctx) {
     return pass(`${pts(hcp)} — no fit and not enough to go on`);
   }
 
+  // 0a2. Partner has completed my transfer; now say how good the hand is
+  if (lastMeaning === 'transferDone') {
+    const major = last.suit;
+    const combinedNT = hcp + noTrumpLow();
+    if (combinedNT >= 26) {
+      const c = want(4, major, `${pts(hcp)} opposite ${noTrumpLow()} to ${noTrumpHigh()} — that is game`);
+      if (c) return c;
+    }
+    if (hcp >= 8) {
+      const c = want(3, major, `${pts(hcp)} — inviting game in ${SUIT_WORDS[major]}`);
+      if (c) return c;
+    }
+    return pass(`Only ${pts(hcp)} — ${SUIT_WORDS[major]} at the two level is high enough`);
+  }
+
   // 0b. Slam values and a fit: ask for aces before committing
   if (strain && strain !== 'NT' && suitFit >= 8 && combined >= 32
     && highest.level < 4 && weOwnIt && ctx.cheapest('NT') <= 4
@@ -1207,6 +1257,18 @@ function answerConvention(a, ctx) {
     return convention(5, suit, `Answering partner's ask — I have ${word}`);
   }
 
+  if (meaning === 'kingAsk') {
+    const kings = ALL_SUITS.filter(su => a.bySuit[su].includes('K')).length;
+    const suit = ['C', 'D', 'H', 'S'][kings % 4];
+    const word = kings === 0 ? 'no kings' : `${kings} king${kings === 1 ? '' : 's'}`;
+    return convention(6, suit, `Answering partner's ask — I have ${word}`);
+  }
+
+  if (meaning === 'transfer') {
+    const to = last.suit === 'D' ? 'H' : 'S';
+    return convention(2, to, `Partner asked me to bid ${SUIT_WORDS[to]}, so I do`);
+  }
+
   if (meaning === 'stayman') {
     if (a.len.H >= 4 && a.len.H >= a.len.S) {
       return convention(2, 'H', `Answering Stayman — I have 4 Hearts`);
@@ -1248,8 +1310,8 @@ function afterBlackwood(a, ctx) {
     }
     return pass(`Only ${total} aces between us — stopping here`);
   }
-  if (total === 4 && combined >= 37 && ctx.cheapest(strain) <= 7) {
-    return call(7, strain, 'All four aces and the values for a grand slam');
+  if (total === 4 && combined >= 34 && ctx.cheapest('NT') <= 5) {
+    return convention(5, 'NT', 'All four aces between us — asking about kings');
   }
   if (total >= 3 && combined >= 33 && ctx.cheapest(strain) <= 6) {
     return call(6, strain, `${total} aces between us — bidding the slam`);
@@ -1260,6 +1322,31 @@ function afterBlackwood(a, ctx) {
   return pass(`Only ${total} aces between us — stopping here`);
 }
 
+// Partner answered the king ask. All four aces are already known, so the only
+// question left is whether to go all the way.
+function afterKingAsk(a, ctx) {
+  const { bids, partner } = ctx;
+  const real = bids.filter(c => c.type === 'bid');
+  const last = real[real.length - 1];
+  if (!last || last.player !== partner) return null;
+  if (classifyCall(bids, bids.lastIndexOf(last)) !== 'kingShow') return null;
+
+  const myKings = ALL_SUITS.filter(su => a.bySuit[su].includes('K')).length;
+  const shown = KING_REPLIES[last.suit];
+  const partnerKings = (last.suit === 'C' && myKings === 0) ? 4 : shown;
+  const kings = myKings + partnerKings;
+  const combined = a.hcp + ctx.partnerRange.min;
+  const strain = ctx.agreedSuit && ctx.agreedSuit !== 'NT' ? ctx.agreedSuit : 'NT';
+
+  if (kings >= 3 && combined >= 37 && ctx.cheapest(strain) <= 7) {
+    return call(7, strain, `All four aces and ${kings} kings — bidding the grand slam`);
+  }
+  if (ctx.cheapest(strain) <= 6) {
+    return call(6, strain, `${kings} kings is not enough for seven — stopping at six`);
+  }
+  return pass('Stopping here');
+}
+
 export function chooseCall(seat, hand, bids) {
   const a = analyzeHand(hand);
   const ctx = buildContext(seat, bids, a);
@@ -1268,6 +1355,8 @@ export function chooseCall(seat, hand, bids) {
   if (answer) return answer;
   const placed = afterBlackwood(a, ctx);
   if (placed) return placed;
+  const grand = afterKingAsk(a, ctx);
+  if (grand) return grand;
 
   let result;
   switch (ctx.role) {

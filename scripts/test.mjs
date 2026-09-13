@@ -599,7 +599,7 @@ function houseRulesTest(boards = 600) {
     // A question must never go unanswered — the whole auction depends on it
     bids.forEach((c, i) => {
       const asked = meaning[i];
-      if (asked !== 'stayman' && asked !== 'blackwood' && asked !== 'strong2C') return;
+      if (!['stayman', 'blackwood', 'strong2C', 'kingAsk', 'transfer'].includes(asked)) return;
       const reply = bids.slice(i + 1).find(x => x.player === partnerOf(c.player));
       const replyMeaning = reply ? meaning[bids.indexOf(reply)] : null;
       // The opponents are allowed to bid over a question, and partner is then
@@ -610,12 +610,26 @@ function houseRulesTest(boards = 600) {
       const theyInterfered = partnerTurnAt < 0 || e.bids
         .slice(askAt + 1, partnerTurnAt)
         .some(x => x.type === 'bid' && !sameSideAs(x.player, c.player));
+      if (asked === 'transfer' && !theyInterfered) {
+        check(replyMeaning === 'transferDone',
+          `a transfer went uncompleted (got ${reply ? reply.level + reply.suit : 'a pass'}) — ${auction}`);
+      }
       if (asked === 'stayman' && !theyInterfered) {
         check(replyMeaning === 'staymanReply',
           `Stayman went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'}) — ${auction}`);
       }
       if (asked === 'strong2C' && !theyInterfered) {
         check(!!reply, `the 2 Clubs opening was passed out — ${auction}`);
+      }
+      if (asked === 'kingAsk' && !theyInterfered) {
+        check(replyMeaning === 'kingShow',
+          `5 No Trump went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'}) — ${auction}`);
+        if (replyMeaning === 'kingShow') {
+          const shown = ACE_SUIT[reply.suit];
+          const held = dealt[reply.player].filter(c => c.rank === 'K').length;
+          check(held === shown || (reply.suit === 'C' && held === 4),
+            `${reply.player} showed ${shown} kings holding ${held} — ${auction}`);
+        }
       }
       if (asked === 'blackwood' && !theyInterfered) {
         check(replyMeaning === 'aceShow',
