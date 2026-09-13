@@ -11,12 +11,16 @@
   box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
   border: 12px solid var(--table-border);
   border-radius: 24px; /* Soft edges for iPad feel */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Header bar for game state */
 .game-header {
   min-height: 85px;
   flex-shrink: 0; /* never let the buttons spill out over the table */
+  /* Installed on the home screen the status bar sits over the page, so keep
+     the badges clear of the clock and battery */
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
   background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   flex-wrap: wrap;
@@ -255,7 +259,8 @@
 @media (max-width: 950px) {
   .game-header {
     min-height: 0;
-    padding: 6px 10px;
+    /* keep the safe-area inset that the narrow layout would otherwise drop */
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 6px;
     gap: 6px 8px;
   }
   .header-stats { gap: 6px; }

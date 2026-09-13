@@ -26,31 +26,10 @@ const HCP_VALUE = { A: 4, K: 3, Q: 2, J: 1 };
 const MAJORS = ['H', 'S'];
 const ALL_SUITS = ['C', 'D', 'H', 'S'];
 
-// Betty's rule is "13 points to open". What counts toward the 13 is the one
-// genuinely open question in her system, so it lives here as a single value:
-//
-//   'length' — high cards plus one for every card past the fourth in a suit.
-//              Modern Standard American. Opens 35% of hands; 8% of those hold
-//              11 or fewer high cards, and the thinnest are freak two-suiters
-//              anyone would open. About 4% of boards pass out.
-//   'hcp'    — high cards only, the strictest reading. Opens 27% of hands,
-//              never on fewer than 13 high cards, but 13% of boards pass out
-//              with nothing to play.
-//   'short'  — high cards plus the Goren 3-2-1 for a void, singleton and
-//              doubleton, which is what her 16-18 No Trump range pairs with
-//              historically. Barely any dead boards, but it opens 41% of
-//              hands and 17% of those on 11 or fewer high cards, which is
-//              the sort of thing that reads as the computer bidding badly.
-//
-// Tests override it through globalThis; nothing sets that in the browser.
-export const OPENING_COUNT = globalThis.BETTY_OPENING_COUNT || 'length';
-
-// Standard teaching puts a floor under the count: thirteen points to open,
-// but a minimum number of them in high cards. Without it a freak shape can
-// reach thirteen on almost no honours, which is what makes a computer look
-// like it is bidding nonsense. At eleven the thinnest hand the computer will
-// ever open is the textbook one — eleven high cards and a six-card suit.
-export const MIN_HCP_TO_OPEN = Number(globalThis.BETTY_MIN_HCP ?? 11);
+// Betty settled this herself: "When opening bid is made, just high card
+// points matter. Later distribution is counted." So the opening bid is a
+// straight 13 high cards — no length, no shortness — and distribution only
+// comes into it once a fit is found and a hand is being raised.
 
 const seatIndex = (s) => SEATS.indexOf(s);
 const partnerOf = (s) => SEATS[(seatIndex(s) + 2) % 4];
@@ -61,6 +40,8 @@ const call = (level, suit, why) => ({ type: 'bid', level, suit, explanation: why
 const dbl = (why) => ({ type: 'double', explanation: why });
 
 const pts = (n) => `${n} point${n === 1 ? '' : 's'}`;
+// The middle of a shown range, with very wide ranges treated cautiously
+const midOf = (r) => Math.round((r.min + Math.min(r.max, r.min + 6)) / 2);
 const SUIT_WORDS_ONE = { C: 'Club', D: 'Diamond', H: 'Heart', S: 'Spade', NT: 'No Trump' };
 const named = (level, suit) => `${level} ${level === 1 ? SUIT_WORDS_ONE[suit] : SUIT_WORDS[suit]}`;
 
@@ -84,19 +65,6 @@ export function analyzeHand(hand) {
   // Length points: one extra for every card past the fifth in a suit
   let lengthPts = 0;
   for (const s of ALL_SUITS) if (len[s] > 5) lengthPts += len[s] - 5;
-
-  // How "13 points to open" is counted. See OPENING_COUNT below.
-  let lengthCount = hcp;
-  for (const s of ALL_SUITS) if (len[s] > 4) lengthCount += len[s] - 4;
-  let shortCount = hcp;
-  for (const s of ALL_SUITS) {
-    if (len[s] === 0) shortCount += 3;
-    else if (len[s] === 1) shortCount += 2;
-    else if (len[s] === 2) shortCount += 1;
-  }
-  const openPts = OPENING_COUNT === 'hcp' ? hcp
-    : OPENING_COUNT === 'short' ? shortCount
-      : lengthCount;
 
   // Shortness points, counted only when raising partner's trump suit
   const shortnessPts = (trump) => {
@@ -132,11 +100,8 @@ export function analyzeHand(hand) {
 
   const ruleOf20 = hcp + shape[0] + shape[1] >= 20;
 
-  // Which suits earn length points, for explaining the count on screen
-  const longSuits = ALL_SUITS.filter(s => len[s] > 4).sort((a, b) => len[b] - len[a]);
-
   return {
-    hcp, len, bySuit, balanced, lengthPts, openPts, longSuits, shortnessPts,
+    hcp, len, bySuit, balanced, lengthPts, shortnessPts,
     hasStopper, longest, longMajor, ruleOf20,
     total: hcp + lengthPts
   };
@@ -176,8 +141,7 @@ function rangeForCall(seat, c, prior) {
   if (!opening) {
     if (c.suit === 'NT' && c.level === 1) return { min: 16, max: 18 };
     if (c.suit === 'NT' && c.level === 2) return { min: 22, max: 24 };
-    if (c.suit === 'C' && c.level === 2) return { min: 22, max: 37 };
-    return { min: 11, max: 21 };
+    return { min: 13, max: 21 };
   }
 
   if (partnerOpened && firstSinceOpening) {
@@ -200,7 +164,6 @@ function rangeForCall(seat, c, prior) {
       if (c.level >= 6) return { min: 13, max: 37 };
       return { min: 4, max: 12 };
     }
-    if (opening.level === 2 && oSuit === 'C') return { min: 0, max: 37 }; // waiting bid, says nothing
     // Partner opened one of a suit
     if (c.suit === oSuit) {
       if (c.level === 2) return { min: 6, max: 10 };
@@ -292,7 +255,7 @@ function rangeForCall(seat, c, prior) {
     if (c.level >= gameLevel) return null; // could be a stretch, so read nothing into it
     if (jump >= 2) return { min: 19, max: 21 };
     if (jump === 1) return { min: 16, max: 18 };
-    return { min: 11, max: 15 };
+    return { min: 13, max: 15 };
   }
 
   return null;
@@ -400,16 +363,10 @@ function buildContext(seat, bids, a) {
 // --- OPENING THE BIDDING ----------------------------------------------
 
 function openingCall(a) {
-  const { hcp, len, balanced, longMajor, openPts } = a;
+  const { hcp, len, balanced, longMajor } = a;
 
-  if (hcp >= 25) {
-    return call(2, 'C', `${pts(hcp)} — a huge hand, so I open 2 Clubs to force a reply`);
-  }
-  if (hcp >= 22 && hcp <= 24 && balanced) {
+  if (hcp >= 22 && balanced) {
     return call(2, 'NT', `${pts(hcp)}, even distribution — opening 2 No Trump`);
-  }
-  if (hcp >= 22) {
-    return call(2, 'C', `${pts(hcp)} — a huge hand, so I open 2 Clubs to force a reply`);
   }
   // 1 No Trump shows 16 to 18 with even distribution. With a five-card
   // major, open the major instead so we can still find the major fit.
@@ -417,12 +374,12 @@ function openingCall(a) {
     return call(1, 'NT', `${pts(hcp)}, even distribution — opening 1 No Trump`);
   }
 
-  if (openPts < 13 || hcp < MIN_HCP_TO_OPEN) {
-    return pass(`Only ${pts(openPts)} — you need 13 to open`);
+  if (hcp < 13) {
+    return pass(`Only ${pts(hcp)} in high cards — you need 13 to open`);
   }
 
   if (longMajor) {
-    return call(1, longMajor, `${pts(openPts)} and ${len[longMajor]} ${SUIT_WORDS[longMajor]} — opening ${named(1, longMajor)}`);
+    return call(1, longMajor, `${pts(hcp)} and ${len[longMajor]} ${SUIT_WORDS[longMajor]} — opening ${named(1, longMajor)}`);
   }
 
   // No five-card major: open the better minor
@@ -432,7 +389,7 @@ function openingCall(a) {
   else if (len.D >= 4 && len.C >= 4) minor = 'D';
   else if (len.D > len.C) minor = 'D';
   else minor = 'C';
-  return call(1, minor, `${pts(openPts)} but no five-card major — opening ${named(1, minor)}`);
+  return call(1, minor, `${pts(hcp)} but no five-card major — opening ${named(1, minor)}`);
 }
 
 // --- RESPONDING TO PARTNER'S OPENING ----------------------------------
@@ -449,7 +406,7 @@ function respondToNoTrump(a, ctx, openingLevel) {
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
 
   if (longMajor) {
-    if (combined >= 25) {
+    if (combined >= 26) {
       const c = want(3, longMajor, `${pts(hcp)} and ${len[longMajor]} ${SUIT_WORDS[longMajor]} — enough for game, let partner choose`);
       if (c) return c;
     } else if (openingLevel === 1) {
@@ -466,7 +423,7 @@ function respondToNoTrump(a, ctx, openingLevel) {
     const c = want(4, 'NT', `${pts(hcp)} — inviting partner to a slam`);
     if (c) return c;
   }
-  if (combined >= 25 && theirSuitsStopped) {
+  if (combined >= 26 && theirSuitsStopped) {
     const c = want(3, 'NT', `${pts(hcp)} opposite ${lo}+ — that is game`);
     if (c) return c;
   }
@@ -475,10 +432,6 @@ function respondToNoTrump(a, ctx, openingLevel) {
     if (c) return c;
   }
   return pass(`Only ${pts(hcp)} — partner's No Trump is high enough`);
-}
-
-function respondToStrongClub() {
-  return call(2, 'D', 'Waiting — partner has a huge hand, so I let them describe it');
 }
 
 function respondToSuitOpening(a, ctx) {
@@ -571,7 +524,6 @@ function respondToSuitOpening(a, ctx) {
 function firstResponse(a, ctx) {
   const o = ctx.opening;
   if (o.suit === 'NT') return respondToNoTrump(a, ctx, o.level);
-  if (o.level === 2 && o.suit === 'C') return respondToStrongClub();
   return respondToSuitOpening(a, ctx);
 }
 
@@ -587,20 +539,8 @@ function openerRebid(a, ctx) {
     return pass('Partner has nothing to say, so I stop here');
   }
 
-  // Strong 2 Clubs opening: describe the hand now
-  if (o.level === 2 && o.suit === 'C' && ctx.myBids.length === 1) {
-    if (balanced) {
-      const c = want(3, 'NT', `${pts(hcp)}, even distribution — straight to game`);
-      if (c) return c;
-    }
-    const suit = a.longMajor || a.longest;
-    const c = want(ctx.cheapest(suit), suit, `${pts(hcp)} and ${len[suit]} ${SUIT_WORDS[suit]}`);
-    if (c) return c;
-    return pass('Nothing safe to add');
-  }
-
   const partnerMin = ctx.partnerRange.min;
-  const combined = hcp + partnerMin;
+  const combined = hcp + midOf(ctx.partnerRange);
   const flatEnough = balanced || ALL_SUITS.every(s2 => hasStopper(s2) || len[s2] >= 3);
 
   // Partner raised my suit
@@ -609,12 +549,12 @@ function openerRebid(a, ctx) {
     const gameLevel = isMajor ? 4 : 5;
     const mine = hcp + a.lengthPts;
     if (r.level >= gameLevel) return pass('Partner has taken us to game — that is plenty');
-    if (combined >= 25 && isMajor) {
+    if (combined >= 26 && isMajor) {
       const c = want(4, o.suit, `${pts(mine)} opposite partner's ${partnerMin}+ — enough for game`);
       if (c) return c;
     }
     // With a minor fit, 3 No Trump is a far easier game than five of a minor
-    if (combined >= 25 && !isMajor && flatEnough) {
+    if (combined >= 26 && !isMajor && flatEnough) {
       const c = want(3, 'NT', `${pts(mine)} opposite partner's ${partnerMin}+ — 3 No Trump is the easier game`);
       if (c) return c;
     }
@@ -629,7 +569,7 @@ function openerRebid(a, ctx) {
   if (r.suit === 'NT') {
     if (r.level >= 3) return pass('Partner has bid game — that is enough');
     if (r.level === 2) {
-      if (combined >= 25) {
+      if (combined >= 26) {
         const c = want(3, 'NT', `${pts(hcp)} opposite partner's ${partnerMin}+ — accepting the invitation`);
         if (c) return c;
       }
@@ -666,11 +606,11 @@ function openerRebid(a, ctx) {
       const c = want(4, r.suit, `${pts(raisePts)} with ${support} ${SUIT_WORDS[r.suit]} — straight to game`);
       if (c) return c;
     }
-    if (combined >= 25 && isMajorFit) {
+    if (combined >= 26 && isMajorFit) {
       const c = want(4, r.suit, `${pts(raisePts)} with ${support} ${SUIT_WORDS[r.suit]} — raising to game`);
       if (c) return c;
     }
-    if (raisePts >= 16 && hcp >= 15 && combined >= 22) {
+    if (raisePts >= 16 && hcp >= 15 && combined >= 23) {
       const c = want(r.level + 2, r.suit, `${pts(raisePts)} with ${support} ${SUIT_WORDS[r.suit]} — a strong raise`);
       if (c) return c;
     }
@@ -678,7 +618,7 @@ function openerRebid(a, ctx) {
     if (c) return c;
   }
 
-  if (combined >= 25 && balanced && ALL_SUITS.every(s => hasStopper(s) || len[s] >= 3)) {
+  if (combined >= 26 && balanced && ALL_SUITS.every(s => hasStopper(s) || len[s] >= 3)) {
     const c = want(3, 'NT', `${pts(hcp)} opposite partner's ${partnerMin}+ — 3 No Trump`);
     if (c) return c;
   }
@@ -716,16 +656,28 @@ function openerRebid(a, ctx) {
     if (c) return c;
   }
 
-  // Partner's two-level answer promised real values, so I owe them a reply
+  // Partner's two-level answer promised real values, so I owe them a reply.
+  // Never by naming my own suit again on five — that promises six.
   if (r.level >= 2 && ctx.partnerRange.min >= 10) {
     if (len[r.suit] >= 3) {
       const c = want(r.level + 1, r.suit, `${pts(hcp)} with ${len[r.suit]} ${SUIT_WORDS[r.suit]} — supporting partner`);
       if (c) return c;
     }
-    if (o.suit !== 'NT') {
-      const c = want(ctx.cheapest(o.suit), o.suit, `${len[o.suit]} ${SUIT_WORDS[o.suit]} — back to my own suit`);
+    if (o.suit !== 'NT' && len[o.suit] >= 6) {
+      const c = want(ctx.cheapest(o.suit), o.suit, `${len[o.suit]} ${SUIT_WORDS[o.suit]} — back to my own long suit`);
       if (c) return c;
     }
+    let other = null;
+    for (const s2 of ALL_SUITS) {
+      if (s2 === o.suit || s2 === r.suit) continue;
+      if (len[s2] >= 4 && (!other || len[s2] > len[other])) other = s2;
+    }
+    if (other) {
+      const c = want(ctx.cheapest(other), other, `${pts(hcp)} and ${len[other]} ${SUIT_WORDS[other]} — my other suit`);
+      if (c) return c;
+    }
+    const c = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — nothing else to show`);
+    if (c) return c;
   }
 
   return pass(`${pts(hcp)} — nothing more to say`);
@@ -819,7 +771,7 @@ function advance(a, ctx) {
     const isMajor = MAJORS.includes(pSuit);
     const combined = hcp + ctx.partnerRange.min;
     let target = ctx.partnerLastBid.level + 1;
-    if (raisePts >= 13 && hcp >= 10 && combined >= 25 && isMajor) target = 4;
+    if (raisePts >= 13 && hcp >= 10 && combined >= 26 && isMajor) target = 4;
     else if (raisePts >= 10 && hcp >= 8) target = Math.min(ctx.partnerLastBid.level + 2, 3);
     else if (raisePts < 6) return pass(`Only ${pts(hcp)} — leaving partner alone`);
     const c = want(target, pSuit, `${pts(raisePts)} with ${len[pSuit]} ${SUIT_WORDS[pSuit]} — supporting partner`);
@@ -855,6 +807,9 @@ function laterCall(a, ctx) {
   const { hcp, len, balanced, hasStopper } = a;
   const pr = ctx.partnerRange;
   const combined = hcp + pr.min;
+  // "It takes 26 to make a game" is about the real total, so estimate partner
+  // from the middle of what they have shown rather than assuming the worst.
+  const combinedMid = hcp + midOf(pr);
   const highest = ctx.highest;
   const weOwnIt = !!highest && sameSide(highest.player, ctx.seat);
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
@@ -875,8 +830,7 @@ function laterCall(a, ctx) {
   // 1. Partner invited game — accept it if we have anything to spare.
   //    An invitation describes a narrow range, so judge it on the middle of
   //    that range rather than assuming partner has the bare minimum.
-  const combinedMid = hcp + Math.round((pr.min + Math.min(pr.max, pr.min + 6)) / 2);
-  if (weOwnIt && last && combinedMid >= 24) {
+  if (weOwnIt && last && combinedMid >= 25) {
     if (last.suit === 'NT' && last.level === 2) {
       const c = want(3, 'NT', `${pts(hcp)} opposite partner's ${pr.min}+ — accepting the invitation`);
       if (c) return c;
@@ -890,7 +844,7 @@ function laterCall(a, ctx) {
 
   // 2. Enough for a slam — and only when one of us has shown real power,
   //    never off two limited hands that happen to add up
-  if (combined >= 33 && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
+  if (combinedMid >= 33 && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
     if (strain && strain !== 'NT' && suitFit >= 8) {
       const c = want(6, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — enough for a slam`);
       if (c) return c;
@@ -902,7 +856,7 @@ function laterCall(a, ctx) {
   }
 
   // 3. Enough for game
-  if (combined >= 25) {
+  if (combinedMid >= 26) {
     if (isMajor && suitFit >= 8 && highest.level < 4) {
       const c = want(4, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — bidding the game`);
       if (c) return c;
@@ -911,14 +865,14 @@ function laterCall(a, ctx) {
       const c = want(3, 'NT', `${pts(hcp)} opposite partner's ${pr.min}+ — 3 No Trump is game`);
       if (c) return c;
     }
-    if (strain && !isMajor && strain !== 'NT' && suitFit >= 8 && combined >= 28 && highest.level < 5) {
+    if (strain && !isMajor && strain !== 'NT' && suitFit >= 8 && combined >= 29 && highest.level < 5) {
       const c = want(5, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — bidding the game`);
       if (c) return c;
     }
   }
 
   // 4. Close but not certain — invite and let partner decide
-  if (combined >= 22 && combined < 25 && weOwnIt) {
+  if (combinedMid >= 23 && combinedMid < 26 && weOwnIt) {
     if (isMajor && suitFit >= 8 && highest.level < 3) {
       const c = want(3, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — inviting game`);
       if (c) return c;
@@ -960,11 +914,11 @@ function applySafety(c, a, ctx) {
   // rules above decide what to bid, this only blocks the impossible.
   let cap = 1;
   if (combinedMax >= 18) cap = 2;
-  if (combinedMax >= 22) cap = 3;
-  if (combinedMax >= 25) cap = 4;
-  if (combinedMax >= 28) cap = 5;
-  if (combinedMax >= 32) cap = 6;
-  if (combinedMax >= 36) cap = 7;
+  if (combinedMax >= 23) cap = 3;
+  if (combinedMax >= 26) cap = 4;
+  if (combinedMax >= 29) cap = 5;
+  if (combinedMax >= 33) cap = 6;
+  if (combinedMax >= 37) cap = 7;
   // A suit contract at game level or beyond needs a real fit behind it
   if (c.suit !== 'NT' && fit < 7) cap = Math.min(cap, 3);
 

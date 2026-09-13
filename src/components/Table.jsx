@@ -83,11 +83,17 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
   const humanControls = (player) => humanPlaysSeat(gameState, player);
 
   const announceCard = (card) => {
-    if ('speechSynthesis' in window) {
+    // Guarded for the same reason as everywhere else: a tap must select the
+    // card even if the browser refuses to say its name.
+    try {
+      if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
       const utterance = new SpeechSynthesisUtterance(`${rankNames[card.rank]} of ${suitNames[card.suit]}`);
       utterance.rate = 0.9;
       window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error('Speech failed:', err);
     }
   };
 

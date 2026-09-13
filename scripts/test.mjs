@@ -504,6 +504,59 @@ function replayTest(boards = 60) {
   check(e4.speed === 1, 'an unknown speed did not fall back to normal');
 }
 
+// --- Betty's own rules, checked on every board ---------------------------
+// "When opening bid is made, just high card points matter" and "if you repeat
+// your 5 card major it means you have 6 cards". Both are things she will spot
+// instantly at the table, so both are asserted rather than assumed.
+function houseRulesTest(boards = 600) {
+  const partnerOf = (s) => PLAYERS[(PLAYERS.indexOf(s) + 2) % 4];
+  const hcpOf = (h) => h.reduce((s, c) => s + ({ A: 4, K: 3, Q: 2, J: 1 }[c.rank] || 0), 0);
+
+  for (let board = 1; board <= boards; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+
+    const dealt = {};
+    for (const p of PLAYERS) dealt[p] = e.hands[p].slice();
+    const lenIn = (p, suit) => dealt[p].filter(c => c.suit === suit).length;
+    const bids = e.bids.filter(c => c.type === 'bid');
+    if (!bids.length) continue;
+
+    // Nobody opens on fewer than thirteen high cards
+    const opener = bids[0];
+    check(hcpOf(dealt[opener.player]) >= 13,
+      `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
+      `${hcpOf(dealt[opener.player])} high cards`);
+
+    // Naming your own suit a second time, without partner ever having bid it,
+    // promises six
+    const firstAt = {};
+    bids.forEach((c, i) => {
+      const k = `${c.player}${c.suit}`;
+      if (firstAt[k] !== undefined && c.suit !== 'NT') {
+        const partnerBidIt = bids.slice(0, i)
+          .some(x => x.player === partnerOf(c.player) && x.suit === c.suit);
+        if (!partnerBidIt) {
+          check(lenIn(c.player, c.suit) >= 6,
+            `board ${board}: ${c.player} rebid ${c.level}${c.suit} holding only ` +
+            `${lenIn(c.player, c.suit)} — a repeat promises six`);
+        }
+      }
+      if (firstAt[k] === undefined) firstAt[k] = i;
+    });
+
+    // No artificial calls: every suit bid means that suit
+    check(!bids.some(c => c.level === 2 && c.suit === 'C' && c === bids[0]),
+      `board ${board}: an artificial 2 Clubs opening slipped back in`);
+  }
+}
+
 // --- Run ---------------------------------------------------------------
 console.log(`Playing ${BOARDS} boards…\n`);
 const results = [];
@@ -515,6 +568,7 @@ for (let b = 1; b <= BOARDS; b++) {
 undoTest();
 saveResumeTest();
 replayTest();
+houseRulesTest();
 
 const isGame = c => (c.suit === 'NT' && c.level >= 3) ||
   (['H', 'S'].includes(c.suit) && c.level >= 4) ||

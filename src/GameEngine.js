@@ -88,8 +88,14 @@ export class GameEngine {
   // for a fresh event but wrong for a follow-on — "Sarah wins the trick" must
   // not swallow the score that comes straight after it. Pass queued for those.
   announce(text, queued = false) {
-    if (this.announceCallback) {
+    if (!this.announceCallback) return;
+    // Speaking is a nicety layered on top of the game. If the browser's
+    // speech engine misbehaves — and Safari's does — it must not take a
+    // half-played trick down with it.
+    try {
       this.announceCallback(text, queued);
+    } catch (err) {
+      console.error('Announcement failed:', err);
     }
   }
 
@@ -397,8 +403,13 @@ export class GameEngine {
   }
 
   notifyUpdate() {
-    if (this.updateCallback) {
+    if (!this.updateCallback) return;
+    // Same reasoning: whatever the interface does with a new state, the
+    // engine's own state must survive it intact.
+    try {
       this.updateCallback(this.getState());
+    } catch (err) {
+      console.error('Update failed:', err);
     }
   }
 

@@ -5,7 +5,6 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
-import { analyzeHand } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -37,20 +36,15 @@ const HCP_VALUE = { A: 4, K: 3, Q: 2, J: 1 };
 const SUIT_ORDER = ['S', 'H', 'C', 'D'];
 
 function HandSummary({ hand }) {
+  // High cards only, which is exactly how Betty counts and exactly what the
+  // opening rule uses — the number on screen is the number that decides.
   const points = hand.reduce((sum, c) => sum + (HCP_VALUE[c.rank] || 0), 0);
-  // The count on screen has to be the same count the bidding rule uses, or
-  // the panel says eleven while the hint says thirteen and it reads as a bug.
-  const { longSuits, openPts } = analyzeHand(hand);
-  const lengthNote = longSuits.length > 0 && openPts !== points
-    ? `With your ${longSuits.map(su => `${hand.filter(c => c.suit === su).length} ${SUIT_WORDS[su]}`).join(' and ')}, that counts as ${openPts} for opening.`
-    : null;
 
   return (
     <div className="hand-summary">
       <div className="hand-summary-head">
         YOUR HAND — <span className="hand-points">{points} point{points === 1 ? '' : 's'}</span>
       </div>
-      {lengthNote && <div className="hand-summary-note">{lengthNote}</div>}
       <div className="hand-summary-rows">
         {SUIT_ORDER.map(suit => {
           const ranks = hand.filter(c => c.suit === suit).map(c => c.rank);
@@ -97,8 +91,20 @@ function App() {
 
   // Read the saved board once, before the engine is built, so the menu can
   // offer to carry on from it
+  // Opening the app deals a board straight away, so a save exists before she
+  // has touched anything. Only offer to carry on when there is something to
+  // carry on with — otherwise the very first launch says "right where you
+  // left off" to someone who has never played.
+  const hasProgress = (g) => !!g && (
+    g.boardNumber > 1 ||
+    (Array.isArray(g.bids) && g.bids.length > 0) ||
+    (Array.isArray(g.playedCards) && g.playedCards.length > 0)
+  );
   const pendingRestoreRef = useRef(undefined);
-  if (pendingRestoreRef.current === undefined) pendingRestoreRef.current = loadSavedGame();
+  if (pendingRestoreRef.current === undefined) {
+    const loaded = loadSavedGame();
+    pendingRestoreRef.current = hasProgress(loaded) ? loaded : null;
+  }
   const [savedBoard, setSavedBoard] = useState(
     () => (pendingRestoreRef.current ? pendingRestoreRef.current.boardNumber : null)
   );
@@ -128,21 +134,28 @@ function App() {
     if (engine) engine.setSpeed(speed);
   }, [engine, speed]);
 
-  const speak = (text) => {
+  // Safari's speech engine is unreliable: it can be left paused after the app
+  // has been in the background, and it throws in situations it has no business
+  // throwing in. Every call is guarded, because losing the spoken card name is
+  // an annoyance while losing the hand is not.
+  const say = (text, queued) => {
     if (!soundEnabledRef.current) return;
-    window.speechSynthesis.cancel(); // Stop current speech
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9; // Slightly slower for readability
-    window.speechSynthesis.speak(utterance);
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      if (!queued) synth.cancel();
+      synth.resume(); // undo the paused state iOS can leave behind
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9; // Slightly slower for readability
+      synth.speak(utterance);
+    } catch (err) {
+      console.error('Speech failed:', err);
+    }
   };
 
+  const speak = (text) => say(text, false);
   // Like speak(), but queues after current speech instead of cutting it off
-  const speakQueued = (text) => {
-    if (!soundEnabledRef.current) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
-  };
+  const speakQueued = (text) => say(text, true);
 
   // PBN Mode State
   const [pbnDatabase, setPbnDatabase] = useState(null);
@@ -315,8 +328,9 @@ function App() {
   const toggleSound = () => {
     if (!soundEnabled) {
       // iOS Safari requires a gesture to unlock speech synthesis
-      const utterance = new SpeechSynthesisUtterance('');
-      window.speechSynthesis.speak(utterance);
+      try {
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+      } catch { /* no speech available; the game plays on silently */ }
     }
     setSoundEnabled(!soundEnabled);
   };
@@ -334,8 +348,9 @@ function App() {
   // 'watch' carries on with the computer playing Betty's seat too
   const handleStartGame = (mode) => {
     // Unlock speech synthesis on iOS — this tap is the gesture it needs
-    const utterance = new SpeechSynthesisUtterance('');
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    } catch { /* no speech available; the game plays on silently */ }
 
     // From here the live game is the truth, not the snapshot we loaded with
     pendingRestoreRef.current = null;
@@ -627,14 +642,14 @@ function App() {
               <p>Ace 4 · King 3 · Queen 2 · Jack 1.</p>
 
               <h3>Opening the bidding</h3>
-              <p>You need <b>13 points</b> to open. Count your high cards, then add
-                 one for every card past the fourth in a suit — so 11 points with
-                 six Spades counts as 13 and opens.</p>
-              <p>At least <b>11 of the 13 must be high cards</b>, so a long suit on
-                 its own is never enough.</p>
+              <p>You need <b>13 high card points</b> to open. Only the aces, kings,
+                 queens and jacks count — a long suit does not add anything yet.</p>
+              <p>Once a fit is found, <b>then</b> you count your distribution.</p>
               <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
               <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
               <p>Open <b>1 No Trump with 16 to 18 points</b> and even distribution.</p>
+
+              <p>Repeating your own five-card major says you actually have <b>six</b>.</p>
 
               <h3>Suit order</h3>
               <p>Clubs · Diamonds · Hearts · Spades · No Trump. Over 1 Spade you can bid
@@ -644,6 +659,8 @@ function App() {
               <p>Bid 1 of a suit and you must win <b>7 tricks</b> out of 13. Each level adds one more.</p>
               <p>Game is <b>4 Hearts or 4 Spades</b> (120 points), <b>5 Clubs or 5 Diamonds</b> (100 points),
                  or <b>3 No Trump</b> (100 points).</p>
+              <p>Between the two of you it takes about <b>26 points to make a game</b>
+                 and <b>33 for a slam</b>.</p>
               <p>A game scores <b>300 extra</b> — or <b>500</b> when you are vulnerable.</p>
 
               <h3>Playing the hand</h3>
