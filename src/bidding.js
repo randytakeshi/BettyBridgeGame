@@ -175,7 +175,7 @@ export function classifyCall(bids, i) {
 // Does this call name a suit it actually holds?
 const namesItsSuit = (bids, i) => {
   const meaning = classifyCall(bids, i);
-  return meaning === null || meaning === 'staymanReply' && bids[i].suit !== 'D';
+  return meaning === null || (meaning === 'staymanReply' && bids[i].suit !== 'D');
 };
 
 // --- READING THE AUCTION ----------------------------------------------
@@ -459,7 +459,7 @@ function buildContext(seat, bids, a) {
 
   return {
     seat, partner, bids, highest, opening, lastAction,
-    myCalls, myBids, partnerCalls, partnerBids, partnerLastBid, partnerDoubled,
+    myCalls, myBids, partnerCalls, partnerBids, partnerLastBid, partnerLastNatural, partnerDoubled,
     weOpened, iOpened, partnerOpened, oppsBid, role, cheapest,
     partnerRange, myTurnNumber, agreedSuit,
     partnerLength: (s) => estimateLength(partner, bids, s)
@@ -677,13 +677,12 @@ function firstResponse(a, ctx) {
 
 function openerRebid(a, ctx) {
   const o = ctx.opening;
-  const r = ctx.partnerLastBid;
+  // Partner's last call that means the suit it names. Raising a Stayman 2
+  // Clubs as though partner held clubs is exactly the sort of thing that
+  // makes a partner feel unreliable.
+  const r = ctx.partnerLastNatural;
   const { hcp, len, balanced, hasStopper } = a;
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
-
-  if (!r) {
-    return pass('Partner has nothing to say, so I stop here');
-  }
 
   // I opened 2 Clubs and partner made the waiting answer; now describe it
   if (o.level === 2 && o.suit === 'C' && classifyCall(ctx.bids, ctx.bids.indexOf(o)) === 'strong2C') {
@@ -698,6 +697,10 @@ function openerRebid(a, ctx) {
     const nt = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — no suit to show`);
     if (nt) return nt;
     return pass('Nothing safe to add');
+  }
+
+  if (!r) {
+    return pass('Partner has nothing to say, so I stop here');
   }
 
   const partnerMin = ctx.partnerRange.min;
@@ -927,16 +930,16 @@ function advance(a, ctx) {
   const oppSuits = ctx.bids
     .filter(c => c.type === 'bid' && !sameSide(c.player, ctx.seat))
     .map(c => c.suit);
-  const pSuit = ctx.partnerLastBid ? ctx.partnerLastBid.suit : null;
+  const pSuit = ctx.partnerLastNatural ? ctx.partnerLastNatural.suit : null;
   if (!pSuit) return pass('Nothing to add');
 
   if (pSuit !== 'NT' && len[pSuit] >= 3) {
     const raisePts = hcp + (len[pSuit] >= 4 ? a.shortnessPts(pSuit) : 0);
     const isMajor = MAJORS.includes(pSuit);
     const combined = hcp + ctx.partnerRange.min;
-    let target = ctx.partnerLastBid.level + 1;
+    let target = ctx.partnerLastNatural.level + 1;
     if (raisePts >= 13 && hcp >= 10 && combined >= 26 && isMajor) target = 4;
-    else if (raisePts >= 10 && hcp >= 8) target = Math.min(ctx.partnerLastBid.level + 2, 3);
+    else if (raisePts >= 10 && hcp >= 8) target = Math.min(ctx.partnerLastNatural.level + 2, 3);
     else if (raisePts < 6) return pass(`Only ${pts(hcp)} — leaving partner alone`);
     const c = want(target, pSuit, `${pts(raisePts)} with ${len[pSuit]} ${SUIT_WORDS[pSuit]} — supporting partner`);
     if (c) return c;
@@ -1024,17 +1027,26 @@ function laterCall(a, ctx) {
       const c = want(3, 'NT', `${pts(hcp)} opposite partner's ${pr.min}+ — accepting the invitation`);
       if (c) return c;
     }
-    if (strain && last.suit === strain && strain !== 'NT' &&
-        last.level >= gameLevel - 1 && last.level < gameLevel && suitFit >= 8) {
+    const inv = ctx.partnerLastNatural;
+    if (inv && strain && inv.suit === strain && strain !== 'NT' &&
+        inv.level >= gameLevel - 1 && inv.level < gameLevel && suitFit >= 8) {
       const c = want(gameLevel, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — accepting the invitation`);
       if (c) return c;
     }
   }
 
+  // I asked for aces and the opponents talked over the answer. Without an
+  // answer I have no business bidding a slam.
+  const askedForAces = ctx.myBids.some(b =>
+    b.level === 4 && b.suit === 'NT' && classifyCall(ctx.bids, ctx.bids.lastIndexOf(b)) === 'blackwood');
+  const gotAnAnswer = ctx.partnerBids.some(b =>
+    classifyCall(ctx.bids, ctx.bids.lastIndexOf(b)) === 'aceShow');
+  const slamBarred = askedForAces && !gotAnAnswer;
+
   // 2. Enough for a slam. Judged on what partner has actually promised, not
   //    the middle of their range — a game bid off a point is a part score,
   //    a slam bid off a point is a disaster.
-  if (combined >= 33 && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
+  if (combined >= 33 && !slamBarred && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
     if (strain && strain !== 'NT' && suitFit >= 8) {
       const c = want(6, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — enough for a slam`);
       if (c) return c;
