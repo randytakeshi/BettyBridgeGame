@@ -723,8 +723,10 @@ function App() {
                  all four, 5 Diamonds with one, 5 Hearts with two, 5 Spades with three.</p>
               <p><b>5 No Trump after that asks for kings</b>, answered the same way one
                  level up — 6 Clubs with none or all four, and so on.</p>
-              <p>Over 1 No Trump, <b>2 Diamonds means diamonds</b>. There is another
-                 system where it tells partner to bid Hearts instead:</p>
+              <p>Over 1 No Trump, <b>2 Diamonds means you have at least five diamonds</b>
+                 and a weak hand. Partner with three can raise — but No Trump is where
+                 game is, so with the points for it you bid No Trump instead.</p>
+              <p>There is another system where 2 Diamonds tells partner to bid Hearts:</p>
               <div className="rules-setting">
                 <span>
                   {transfers

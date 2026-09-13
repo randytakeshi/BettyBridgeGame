@@ -603,6 +603,14 @@ function respondToNoTrump(a, ctx, openingLevel) {
     }
   }
 
+  // Betty: "I have at least 5 diamonds." Two Diamonds over partner's No Trump
+  // is her own suit and a weak hand — she would rather play there than in a
+  // No Trump she cannot make.
+  if (openingLevel === 1 && len.D >= 5 && hcp <= 7 && ctx.cheapest('D') <= 2) {
+    return call(2, 'D',
+      `${pts(hcp)} and ${len.D} Diamonds — safer playing in Diamonds than in No Trump`);
+  }
+
   if (longMajor) {
     if (combined >= 26) {
       const c = want(3, longMajor, `${pts(hcp)} and ${len[longMajor]} ${SUIT_WORDS[longMajor]} — enough for game, let partner choose`);
@@ -836,6 +844,20 @@ function openerRebid(a, ctx) {
       return call(ctx.cheapest(second), second, `${pts(hcp)} and ${len[second]} ${SUIT_WORDS[second]} — showing my second suit`);
     }
     return pass(`${pts(hcp)} — partner is weak, so I stop here`);
+  }
+
+  // A suit at the two level over my 1 No Trump is partner saying "this is
+  // where I want to play". Betty: partner "can bid diamonds" with three, "but
+  // no trumps is game so lots more points" — so No Trump is the prize, and
+  // when it is out of reach the right answer is to leave partner alone rather
+  // than push the suit higher.
+  if (o.suit === 'NT' && o.level === 1 && r.level === 2 && r.suit !== 'NT') {
+    const support = len[r.suit];
+    if (hcp >= noTrumpHigh() && support >= 4) {
+      const c = want(3, r.suit, `${pts(hcp)} with ${support} ${SUIT_WORDS[r.suit]} — raising once`);
+      if (c) return c;
+    }
+    return pass(`Partner wants to play in ${SUIT_WORDS[r.suit]} — leaving them there`);
   }
 
   // Partner bid a new suit

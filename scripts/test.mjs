@@ -584,6 +584,19 @@ function houseRulesTest(boards = 600) {
       if (firstAt[k] === undefined) firstAt[k] = i;
     });
 
+    // A suit bid at the two level over partner's 1 No Trump is that suit, and
+    // she was specific: at least five of them.
+    bids.forEach((c, i) => {
+      if (meaning[i] !== null) return;                 // artificial calls name nothing
+      if (i === 0 || c.level !== 2 || c.suit === 'NT') return;
+      const prev = bids[i - 1];
+      if (!(prev && prev === bids[0] && prev.level === 1 && prev.suit === 'NT')) return;
+      if (!sameSideAs(prev.player, c.player)) return;
+      check(dealt[c.player].filter(x => x.suit === c.suit).length >= 5,
+        `${c.player} answered 1 No Trump with ${c.level}${c.suit} holding only ` +
+        `${dealt[c.player].filter(x => x.suit === c.suit).length} — that shows five — ${auction}`);
+    });
+
     // Partner never pulls a penalty double. She was explicit: at the three
     // level, or once both sides have bid, a double means she can beat them.
     e.bids.forEach((c, i) => {
