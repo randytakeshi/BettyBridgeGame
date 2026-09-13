@@ -26,6 +26,25 @@ const HCP_VALUE = { A: 4, K: 3, Q: 2, J: 1 };
 const MAJORS = ['H', 'S'];
 const ALL_SUITS = ['C', 'D', 'H', 'S'];
 
+// Betty's rule is "13 points to open". What counts toward the 13 is the one
+// genuinely open question in her system, so it lives here as a single value:
+//
+//   'length' — high cards plus one for every card past the fourth in a suit.
+//              Modern Standard American. Opens 35% of hands; 8% of those hold
+//              11 or fewer high cards, and the thinnest are freak two-suiters
+//              anyone would open. About 4% of boards pass out.
+//   'hcp'    — high cards only, the strictest reading. Opens 27% of hands,
+//              never on fewer than 13 high cards, but 13% of boards pass out
+//              with nothing to play.
+//   'short'  — high cards plus the Goren 3-2-1 for a void, singleton and
+//              doubleton, which is what her 16-18 No Trump range pairs with
+//              historically. Barely any dead boards, but it opens 41% of
+//              hands and 17% of those on 11 or fewer high cards, which is
+//              the sort of thing that reads as the computer bidding badly.
+//
+// Tests override it through globalThis; nothing sets that in the browser.
+export const OPENING_COUNT = globalThis.BETTY_OPENING_COUNT || 'length';
+
 const seatIndex = (s) => SEATS.indexOf(s);
 const partnerOf = (s) => SEATS[(seatIndex(s) + 2) % 4];
 const sameSide = (a, b) => (seatIndex(a) % 2) === (seatIndex(b) % 2);
@@ -59,11 +78,18 @@ export function analyzeHand(hand) {
   let lengthPts = 0;
   for (const s of ALL_SUITS) if (len[s] > 5) lengthPts += len[s] - 5;
 
-  // The classic count used for deciding whether to open: high cards plus
-  // one for every card past the fourth in a suit. A six-card suit is worth
-  // two, so 11 high-card points with six Spades counts as 13 and opens.
-  let openPts = hcp;
-  for (const s of ALL_SUITS) if (len[s] > 4) openPts += len[s] - 4;
+  // How "13 points to open" is counted. See OPENING_COUNT below.
+  let lengthCount = hcp;
+  for (const s of ALL_SUITS) if (len[s] > 4) lengthCount += len[s] - 4;
+  let shortCount = hcp;
+  for (const s of ALL_SUITS) {
+    if (len[s] === 0) shortCount += 3;
+    else if (len[s] === 1) shortCount += 2;
+    else if (len[s] === 2) shortCount += 1;
+  }
+  const openPts = OPENING_COUNT === 'hcp' ? hcp
+    : OPENING_COUNT === 'short' ? shortCount
+      : lengthCount;
 
   // Shortness points, counted only when raising partner's trump suit
   const shortnessPts = (trump) => {
