@@ -429,3 +429,13 @@
   color: #e2e8f0;
   margin: 0;
 }
+
+.hand-summary-note {
+  margin: 2px 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffe9a8;
+}
+@media (max-width: 950px) {
+  .hand-summary-note { font-size: 0.9rem; margin-bottom: 6px; }
+}

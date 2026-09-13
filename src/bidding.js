@@ -45,6 +45,13 @@ const ALL_SUITS = ['C', 'D', 'H', 'S'];
 // Tests override it through globalThis; nothing sets that in the browser.
 export const OPENING_COUNT = globalThis.BETTY_OPENING_COUNT || 'length';
 
+// Standard teaching puts a floor under the count: thirteen points to open,
+// but a minimum number of them in high cards. Without it a freak shape can
+// reach thirteen on almost no honours, which is what makes a computer look
+// like it is bidding nonsense. At eleven the thinnest hand the computer will
+// ever open is the textbook one — eleven high cards and a six-card suit.
+export const MIN_HCP_TO_OPEN = Number(globalThis.BETTY_MIN_HCP ?? 11);
+
 const seatIndex = (s) => SEATS.indexOf(s);
 const partnerOf = (s) => SEATS[(seatIndex(s) + 2) % 4];
 const sameSide = (a, b) => (seatIndex(a) % 2) === (seatIndex(b) % 2);
@@ -125,8 +132,11 @@ export function analyzeHand(hand) {
 
   const ruleOf20 = hcp + shape[0] + shape[1] >= 20;
 
+  // Which suits earn length points, for explaining the count on screen
+  const longSuits = ALL_SUITS.filter(s => len[s] > 4).sort((a, b) => len[b] - len[a]);
+
   return {
-    hcp, len, bySuit, balanced, lengthPts, openPts, shortnessPts,
+    hcp, len, bySuit, balanced, lengthPts, openPts, longSuits, shortnessPts,
     hasStopper, longest, longMajor, ruleOf20,
     total: hcp + lengthPts
   };
@@ -407,7 +417,7 @@ function openingCall(a) {
     return call(1, 'NT', `${pts(hcp)}, even distribution — opening 1 No Trump`);
   }
 
-  if (openPts < 13) {
+  if (openPts < 13 || hcp < MIN_HCP_TO_OPEN) {
     return pass(`Only ${pts(openPts)} — you need 13 to open`);
   }
 

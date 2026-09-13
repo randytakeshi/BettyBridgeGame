@@ -5,6 +5,7 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
+import { analyzeHand } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -37,11 +38,19 @@ const SUIT_ORDER = ['S', 'H', 'C', 'D'];
 
 function HandSummary({ hand }) {
   const points = hand.reduce((sum, c) => sum + (HCP_VALUE[c.rank] || 0), 0);
+  // The count on screen has to be the same count the bidding rule uses, or
+  // the panel says eleven while the hint says thirteen and it reads as a bug.
+  const { longSuits, openPts } = analyzeHand(hand);
+  const lengthNote = longSuits.length > 0 && openPts !== points
+    ? `With your ${longSuits.map(su => `${hand.filter(c => c.suit === su).length} ${SUIT_WORDS[su]}`).join(' and ')}, that counts as ${openPts} for opening.`
+    : null;
+
   return (
     <div className="hand-summary">
       <div className="hand-summary-head">
         YOUR HAND — <span className="hand-points">{points} point{points === 1 ? '' : 's'}</span>
       </div>
+      {lengthNote && <div className="hand-summary-note">{lengthNote}</div>}
       <div className="hand-summary-rows">
         {SUIT_ORDER.map(suit => {
           const ranks = hand.filter(c => c.suit === suit).map(c => c.rank);
@@ -618,9 +627,11 @@ function App() {
               <p>Ace 4 · King 3 · Queen 2 · Jack 1.</p>
 
               <h3>Opening the bidding</h3>
-              <p>You need <b>13 points</b> to open, counting your high cards plus
-                 one extra for every card past the fourth in a suit — so 11 points
-                 with six Spades counts as 13.</p>
+              <p>You need <b>13 points</b> to open. Count your high cards, then add
+                 one for every card past the fourth in a suit — so 11 points with
+                 six Spades counts as 13 and opens.</p>
+              <p>At least <b>11 of the 13 must be high cards</b>, so a long suit on
+                 its own is never enough.</p>
               <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
               <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
               <p>Open <b>1 No Trump with 16 to 18 points</b> and even distribution.</p>
