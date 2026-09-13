@@ -853,11 +853,25 @@ function openerRebid(a, ctx) {
   // than push the suit higher.
   if (o.suit === 'NT' && o.level === 1 && r.level === 2 && r.suit !== 'NT') {
     const support = len[r.suit];
-    if (hcp >= noTrumpHigh() && support >= 4) {
-      const c = want(3, r.suit, `${pts(hcp)} with ${support} ${SUIT_WORDS[r.suit]} — raising once`);
+    // A genuine maximum. Partner's two-level bid is usually a weak hand
+    // wanting to play there, so pushing on needs more than a spare point —
+    // but her route to 3 No Trump has to stay open when the hand is really
+    // worth it.
+    const extras = hcp >= noTrumpHigh();
+    // Raising a major is worth it because game is only four of it. Raising a
+    // minor is not: Betty's own reason is that "no trumps is game so lots more
+    // points" — nine tricks rather than eleven.
+    if (extras && support >= 4 && MAJORS.includes(r.suit)) {
+      const c = want(3, r.suit, `${pts(hcp)} with ${support} ${SUIT_WORDS[r.suit]} — raising towards game`);
       if (c) return c;
     }
-    return pass(`Partner wants to play in ${SUIT_WORDS[r.suit]} — leaving them there`);
+    // "He can bid 2 No Trump, and partner can bid 3 No Trump if he has 10 or
+    // 11 points." With anything to spare, show it and leave the rest to her.
+    if (extras) {
+      const c = want(2, 'NT', `${pts(hcp)} — better than a minimum, and No Trump is where game is`);
+      if (c) return c;
+    }
+    return pass(`${pts(hcp)} is a minimum — partner wants to play in ${SUIT_WORDS[r.suit]}, so I leave them there`);
   }
 
   // Partner bid a new suit
