@@ -8,7 +8,7 @@
  *   node scripts/test.mjs [boards]
  */
 import { GameEngine, PLAYERS } from '../src/GameEngine.js';
-import { chooseCall } from '../src/bidding.js';
+import { chooseCall, classifyCall } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
 
@@ -505,12 +505,14 @@ function replayTest(boards = 60) {
 }
 
 // --- Betty's own rules, checked on every board ---------------------------
-// "When opening bid is made, just high card points matter" and "if you repeat
-// your 5 card major it means you have 6 cards". Both are things she will spot
-// instantly at the table, so both are asserted rather than assumed.
+// "Just high card points matter" to open, "if you repeat your 5 card major it
+// means you have 6 cards", 2 Clubs for 22, Stayman, and 4 No Trump for aces.
+// All of them are things she will spot instantly, so all are asserted.
 function houseRulesTest(boards = 600) {
   const partnerOf = (s) => PLAYERS[(PLAYERS.indexOf(s) + 2) % 4];
   const hcpOf = (h) => h.reduce((s, c) => s + ({ A: 4, K: 3, Q: 2, J: 1 }[c.rank] || 0), 0);
+  const acesOf = (h) => h.filter(c => c.rank === 'A').length;
+  const ACE_SUIT = { C: 0, D: 1, H: 2, S: 3 };
 
   for (let board = 1; board <= boards; board++) {
     const e = new GameEngine(() => {});
@@ -527,6 +529,7 @@ function houseRulesTest(boards = 600) {
     const lenIn = (p, suit) => dealt[p].filter(c => c.suit === suit).length;
     const bids = e.bids.filter(c => c.type === 'bid');
     if (!bids.length) continue;
+    const meaning = bids.map((_, i) => classifyCall(bids, i));
 
     // Nobody opens on fewer than thirteen high cards
     const opener = bids[0];
@@ -534,14 +537,21 @@ function houseRulesTest(boards = 600) {
       `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
       `${hcpOf(dealt[opener.player])} high cards`);
 
+    // The 2 Clubs opening means 22 or more, not clubs
+    if (meaning[0] === 'strong2C') {
+      check(hcpOf(dealt[opener.player]) >= 22,
+        `board ${board}: opened 2 Clubs on only ${hcpOf(dealt[opener.player])} points`);
+    }
+
     // Naming your own suit a second time, without partner ever having bid it,
-    // promises six
+    // promises six. Artificial calls name no suit, so they do not count.
     const firstAt = {};
     bids.forEach((c, i) => {
+      if (meaning[i] !== null) return;            // artificial, says nothing about the suit
       const k = `${c.player}${c.suit}`;
       if (firstAt[k] !== undefined && c.suit !== 'NT') {
         const partnerBidIt = bids.slice(0, i)
-          .some(x => x.player === partnerOf(c.player) && x.suit === c.suit);
+          .some((x, j) => meaning[j] === null && x.player === partnerOf(c.player) && x.suit === c.suit);
         if (!partnerBidIt) {
           check(lenIn(c.player, c.suit) >= 6,
             `board ${board}: ${c.player} rebid ${c.level}${c.suit} holding only ` +
@@ -551,9 +561,31 @@ function houseRulesTest(boards = 600) {
       if (firstAt[k] === undefined) firstAt[k] = i;
     });
 
-    // No artificial calls: every suit bid means that suit
-    check(!bids.some(c => c.level === 2 && c.suit === 'C' && c === bids[0]),
-      `board ${board}: an artificial 2 Clubs opening slipped back in`);
+    // A question must never go unanswered — the whole auction depends on it
+    bids.forEach((c, i) => {
+      const asked = meaning[i];
+      if (asked !== 'stayman' && asked !== 'blackwood' && asked !== 'strong2C') return;
+      const reply = bids.slice(i + 1).find(x => x.player === partnerOf(c.player));
+      const replyMeaning = reply ? meaning[bids.indexOf(reply)] : null;
+      if (asked === 'stayman') {
+        check(replyMeaning === 'staymanReply',
+          `board ${board}: Stayman went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'})`);
+      }
+      if (asked === 'strong2C') {
+        check(!!reply, `board ${board}: the 2 Clubs opening was passed out`);
+      }
+      if (asked === 'blackwood') {
+        check(replyMeaning === 'aceShow',
+          `board ${board}: 4 No Trump went unanswered (got ${reply ? reply.level + reply.suit : 'a pass'})`);
+        if (replyMeaning === 'aceShow') {
+          // and the answer must be the truth
+          const shown = ACE_SUIT[reply.suit];
+          const held = acesOf(dealt[reply.player]);
+          check(held === shown || (reply.suit === 'C' && held === 4),
+            `board ${board}: ${reply.player} showed ${shown} aces holding ${held}`);
+        }
+      }
+    });
   }
 }
 

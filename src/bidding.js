@@ -38,6 +38,9 @@ const sameSide = (a, b) => (seatIndex(a) % 2) === (seatIndex(b) % 2);
 const pass = (why) => ({ type: 'pass', explanation: why });
 const call = (level, suit, why) => ({ type: 'bid', level, suit, explanation: why });
 const dbl = (why) => ({ type: 'double', explanation: why });
+// An artificial call says nothing about the suit named, so the strength cap
+// that governs natural bidding must not gag it — partner is waiting for it.
+const convention = (level, suit, why) => ({ type: 'bid', level, suit, explanation: why, artificial: true });
 
 const pts = (n) => `${n} point${n === 1 ? '' : 's'}`;
 // The middle of a shown range, with very wide ranges treated cautiously
@@ -107,6 +110,57 @@ export function analyzeHand(hand) {
   };
 }
 
+// --- THE CONVENTIONS BETTY PLAYS --------------------------------------
+// Her words: "We use 2 club opening for 22 pts. We use stayman. 4 no trump to
+// ask for aces." Everything else in the system is natural, so each of these
+// is recognised by its exact position in the auction and nowhere else.
+
+const ACE_REPLIES = { C: 0, D: 1, H: 2, S: 3 }; // 5C shows none or all four
+
+// What an already-made call meant, judged from the calls before it
+export function classifyCall(bids, i) {
+  const c = bids[i];
+  if (!c || c.type !== 'bid') return null;
+  const before = bids.slice(0, i);
+  const realBefore = before.filter(b => b.type === 'bid');
+  const partner = partnerOf(c.player);
+  const lastByPartner = [...realBefore].reverse().find(b => b.player === partner) || null;
+  const opening = realBefore[0] || null;
+
+  // 2 Clubs as the opening bid: 22 or more, and says nothing about clubs
+  if (!opening && c.level === 2 && c.suit === 'C') return 'strong2C';
+
+  if (lastByPartner) {
+    const partnerIdx = realBefore.lastIndexOf(lastByPartner);
+    const partnerMeant = classifyCall(realBefore, partnerIdx);
+
+    // 2 Diamonds in answer to the strong 2 Clubs: waiting, says nothing
+    if (partnerMeant === 'strong2C' && c.level === 2 && c.suit === 'D') return 'waiting';
+
+    // 2 Clubs over partner's 1 No Trump opening: Stayman, asking for a major
+    if (lastByPartner === opening && opening.level === 1 && opening.suit === 'NT'
+      && c.level === 2 && c.suit === 'C') return 'stayman';
+
+    // The answer to Stayman
+    if (partnerMeant === 'stayman' && c.level === 2 && ['D', 'H', 'S'].includes(c.suit)) {
+      return 'staymanReply';
+    }
+
+    // The answer to Blackwood
+    if (partnerMeant === 'blackwood' && c.level === 5 && c.suit !== 'NT') return 'aceShow';
+  }
+
+  // 4 No Trump always asks for aces
+  if (c.level === 4 && c.suit === 'NT') return 'blackwood';
+  return null;
+}
+
+// Does this call name a suit it actually holds?
+const namesItsSuit = (bids, i) => {
+  const meaning = classifyCall(bids, i);
+  return meaning === null || meaning === 'staymanReply' && bids[i].suit !== 'D';
+};
+
 // --- READING THE AUCTION ----------------------------------------------
 
 // What the computer assumes a call promises. Used both to read partner
@@ -140,7 +194,8 @@ function rangeForCall(seat, c, prior) {
   // --- an actual bid ---
   if (!opening) {
     if (c.suit === 'NT' && c.level === 1) return { min: 16, max: 18 };
-    if (c.suit === 'NT' && c.level === 2) return { min: 22, max: 24 };
+    if (c.suit === 'NT' && c.level === 2) return { min: 20, max: 21 };
+    if (c.suit === 'C' && c.level === 2) return { min: 22, max: 37 };
     return { min: 13, max: 21 };
   }
 
@@ -218,6 +273,25 @@ function rangeForCall(seat, c, prior) {
   }
 
   if (partnerOpened && !firstSinceOpening) {
+    if (opening.level === 2 && opening.suit === 'C'
+      && classifyCall(bidsSoFar, 0) === 'strong2C') {
+      // Only a bid past game says anything; everything below it is forced
+      const gameLevel = c.suit === 'NT' ? 3 : (MAJORS.includes(c.suit) ? 4 : 5);
+      return c.level > gameLevel ? { min: 8, max: 20 } : { min: 0, max: 12 };
+    }
+
+    // Having asked Stayman, what they say next is on the 1 No Trump scale:
+    // eight or nine to invite, ten or more to insist on game.
+    const myPriorBids = prior.filter(x => x.player === seat && x.type === 'bid');
+    const lastMine = myPriorBids[myPriorBids.length - 1];
+    if (lastMine) {
+      const realPrior = prior.filter(x => x.type === 'bid');
+      if (classifyCall(realPrior, realPrior.lastIndexOf(lastMine)) === 'stayman') {
+        if (c.suit === 'NT') return c.level === 2 ? { min: 8, max: 9 } : { min: 10, max: 15 };
+        return c.level <= 3 ? { min: 8, max: 9 } : { min: 10, max: 15 };
+      }
+    }
+
     // Responder saying more. A jump shows values; a quiet rebid does not.
     const prevHighest = bidsSoFar[bidsSoFar.length - 1];
     let cheapest = 1;
@@ -267,11 +341,19 @@ export function estimateRange(seat, bids) {
   const prior = [];
   for (const c of bids) {
     if (c.player === seat) {
-      const r = rangeForCall(seat, c, prior);
+      const meaning = classifyCall(bids, bids.indexOf(c));
+      // A waiting bid, a Stayman ask and its answer, and an ace count all say
+      // nothing about how strong the hand is
+      const silent = ['waiting', 'stayman', 'staymanReply', 'aceShow'].includes(meaning);
+      const r = silent ? null : rangeForCall(seat, c, prior);
       if (r) {
-        min = Math.max(min, r.min);
-        max = Math.min(max, r.max);
-        if (max < min) max = min;
+        // A hand that has already limited itself cannot promise more later.
+        // Accepting an invitation says "I am at the top of what I showed",
+        // not "I have a new and better hand" — reading it the other way was
+        // producing slams on twenty-nine points.
+        const claimed = Math.min(r.min, max);
+        min = Math.max(min, claimed);
+        max = Math.min(max, Math.max(r.max, min));
       }
     }
     prior.push(c);
@@ -282,7 +364,7 @@ export function estimateRange(seat, bids) {
 // How many cards partner has promised in a suit, judging from their calls
 function estimateLength(seat, bids, suit) {
   let best = 0;
-  const bidsOfSeat = bids.filter(c => c.player === seat && c.type === 'bid');
+  const bidsOfSeat = bids.filter((c, i) => c.player === seat && c.type === 'bid' && namesItsSuit(bids, i));
   const allBids = bids.filter(c => c.type === 'bid');
   const opening = allBids[0] || null;
   const timesBid = bidsOfSeat.filter(c => c.suit === suit).length;
@@ -340,15 +422,20 @@ function buildContext(seat, bids, a) {
   const myTurnNumber = myCalls.length + 1;
 
   // The suit our side has agreed on, if any: a strain both partners bid
+  const natural = bids.filter((c, i) => c.type === 'bid' && namesItsSuit(bids, i));
+  const myNatural = natural.filter(c => c.player === seat);
+  const partnerNatural = natural.filter(c => c.player === partner);
   let agreedSuit = null;
   for (const s of ['S', 'H', 'D', 'C', 'NT']) {
-    const mine = myBids.some(c => c.suit === s);
-    const theirs = partnerBids.some(c => c.suit === s);
+    const mine = myNatural.some(c => c.suit === s);
+    const theirs = partnerNatural.some(c => c.suit === s);
     if (mine && theirs) { agreedSuit = s; break; }
   }
   // Support for partner's suit also counts as agreement
-  if (!agreedSuit && partnerLastBid && partnerLastBid.suit !== 'NT' && a.len[partnerLastBid.suit] >= 4) {
-    agreedSuit = partnerLastBid.suit;
+  const partnerLastNatural = partnerNatural.length ? partnerNatural[partnerNatural.length - 1] : null;
+  if (!agreedSuit && partnerLastNatural && partnerLastNatural.suit !== 'NT'
+    && a.len[partnerLastNatural.suit] >= 4) {
+    agreedSuit = partnerLastNatural.suit;
   }
 
   return {
@@ -365,7 +452,10 @@ function buildContext(seat, bids, a) {
 function openingCall(a) {
   const { hcp, len, balanced, longMajor } = a;
 
-  if (hcp >= 22 && balanced) {
+  if (hcp >= 22) {
+    return convention(2, 'C', `${pts(hcp)} — 2 Clubs asks partner to answer; it says nothing about Clubs`);
+  }
+  if (hcp >= 20 && hcp <= 21 && balanced) {
     return call(2, 'NT', `${pts(hcp)}, even distribution — opening 2 No Trump`);
   }
   // 1 No Trump shows 16 to 18 with even distribution. With a five-card
@@ -396,7 +486,7 @@ function openingCall(a) {
 
 function respondToNoTrump(a, ctx, openingLevel) {
   const { hcp, len, longMajor, hasStopper } = a;
-  const lo = openingLevel === 1 ? 16 : 22;
+  const lo = openingLevel === 1 ? 16 : 20;
   // If they have overcalled, we need their suit stopped before No Trump
   const theirSuits = ctx.bids
     .filter(c => c.type === 'bid' && !sameSide(c.player, ctx.seat) && c.suit !== 'NT')
@@ -404,6 +494,13 @@ function respondToNoTrump(a, ctx, openingLevel) {
   const theirSuitsStopped = theirSuits.every(s => hasStopper(s));
   const combined = hcp + lo;
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
+
+  // Stayman: over partner's 1 No Trump, 2 Clubs asks for a four-card major.
+  // Only with a four-card major and no five-card one, which we bid naturally.
+  if (openingLevel === 1 && !longMajor && (len.H >= 4 || len.S >= 4) && hcp >= 8
+    && ctx.cheapest('C') <= 2 && theirSuitsStopped) {
+    return convention(2, 'C', `${pts(hcp)} and a four-card major — Stayman asks partner for theirs`);
+  }
 
   if (longMajor) {
     if (combined >= 26) {
@@ -537,6 +634,21 @@ function openerRebid(a, ctx) {
 
   if (!r) {
     return pass('Partner has nothing to say, so I stop here');
+  }
+
+  // I opened 2 Clubs and partner made the waiting answer; now describe it
+  if (o.level === 2 && o.suit === 'C' && classifyCall(ctx.bids, ctx.bids.indexOf(o)) === 'strong2C') {
+    if (balanced) {
+      const lvl = hcp >= 25 ? 3 : 2;
+      const c = want(lvl, 'NT', `${pts(hcp)}, even distribution`);
+      if (c) return c;
+    }
+    const suit = a.longMajor || a.longest;
+    const c = want(ctx.cheapest(suit), suit, `${pts(hcp)} and ${len[suit]} ${SUIT_WORDS[suit]}`);
+    if (c) return c;
+    const nt = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — no suit to show`);
+    if (nt) return nt;
+    return pass('Nothing safe to add');
   }
 
   const partnerMin = ctx.partnerRange.min;
@@ -826,6 +938,31 @@ function laterCall(a, ctx) {
   const ourSuits = new Set([...ctx.myBids, ...ctx.partnerBids].map(b => b.suit));
   const unbidCovered = ALL_SUITS.every(s => ourSuits.has(s) || hasStopper(s) || len[s] >= 3);
   const last = ctx.partnerLastBid;
+  const lastMeaning = last ? classifyCall(ctx.bids, ctx.bids.lastIndexOf(last)) : null;
+
+  // 0a. Partner has answered my Stayman ask
+  if (lastMeaning === 'staymanReply') {
+    const combinedNT = hcp + 16; // they opened 1 No Trump
+    if (last.suit !== 'D' && len[last.suit] >= 4) {
+      const target = combinedNT >= 26 ? 4 : 3;
+      const c = want(target, last.suit, `${pts(hcp)} and ${len[last.suit]} ${SUIT_WORDS[last.suit]} — we have our fit`);
+      if (c) return c;
+    }
+    if (combinedNT >= 26) {
+      const c = want(3, 'NT', `${pts(hcp)} opposite 16 to 18 — no major fit, so 3 No Trump`);
+      if (c) return c;
+    }
+    const c = want(2, 'NT', `${pts(hcp)} — no major fit, inviting game`);
+    if (c) return c;
+    return pass(`${pts(hcp)} — no fit and not enough to go on`);
+  }
+
+  // 0b. Slam values and a fit: ask for aces before committing
+  if (strain && strain !== 'NT' && suitFit >= 8 && combined >= 32
+    && highest.level < 4 && weOwnIt && ctx.cheapest('NT') <= 4
+    && !ctx.myBids.some(b => b.level === 4 && b.suit === 'NT')) {
+    return convention(4, 'NT', `${pts(hcp)} opposite partner's ${pr.min}+ — asking for aces`);
+  }
 
   // 1. Partner invited game — accept it if we have anything to spare.
   //    An invitation describes a narrow range, so judge it on the middle of
@@ -842,9 +979,10 @@ function laterCall(a, ctx) {
     }
   }
 
-  // 2. Enough for a slam — and only when one of us has shown real power,
-  //    never off two limited hands that happen to add up
-  if (combinedMid >= 33 && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
+  // 2. Enough for a slam. Judged on what partner has actually promised, not
+  //    the middle of their range — a game bid off a point is a part score,
+  //    a slam bid off a point is a disaster.
+  if (combined >= 33 && highest.level < 6 && (pr.min >= 19 || hcp >= 18)) {
     if (strain && strain !== 'NT' && suitFit >= 8) {
       const c = want(6, strain, `${pts(hcp)} opposite partner's ${pr.min}+ — enough for a slam`);
       if (c) return c;
@@ -898,6 +1036,9 @@ function laterCall(a, ctx) {
 // partnership cannot possibly have the strength for.
 function applySafety(c, a, ctx) {
   if (c.type !== 'bid') return c;
+  // Stayman, the strong 2 Clubs, Blackwood and their answers are asked for
+  // and must always be given
+  if (c.artificial) return c;
   if (!c.level || c.level < 1 || c.level > 7 || !BID_SUITS.includes(c.suit)) {
     return pass('Pass');
   }
@@ -931,9 +1072,85 @@ function applySafety(c, a, ctx) {
 
 // --- ENTRY POINT -------------------------------------------------------
 
+// Partner has asked a question. Answering it outranks everything else in the
+// system — leaving Stayman or Blackwood unanswered is far worse than any
+// judgement call about strength.
+function answerConvention(a, ctx) {
+  const { bids, partner } = ctx;
+  const real = bids.filter(c => c.type === 'bid');
+  if (!real.length) return null;
+  const last = real[real.length - 1];
+  if (last.player !== partner) return null;
+  const meaning = classifyCall(bids, bids.lastIndexOf(last));
+
+  if (meaning === 'blackwood') {
+    const aces = ALL_SUITS.filter(su => a.bySuit[su].includes('A')).length;
+    const suit = ['C', 'D', 'H', 'S'][aces % 4];
+    const word = aces === 0 ? 'no aces' : `${aces} ace${aces === 1 ? '' : 's'}`;
+    return convention(5, suit, `Answering partner's ask — I have ${word}`);
+  }
+
+  if (meaning === 'stayman') {
+    if (a.len.H >= 4 && a.len.H >= a.len.S) {
+      return convention(2, 'H', `Answering Stayman — I have 4 Hearts`);
+    }
+    if (a.len.S >= 4) {
+      return convention(2, 'S', `Answering Stayman — I have 4 Spades`);
+    }
+    return convention(2, 'D', 'Answering Stayman — I have no four-card major');
+  }
+
+  if (meaning === 'strong2C') {
+    return convention(2, 'D', 'Waiting — partner has a huge hand, so I let them describe it');
+  }
+
+  return null;
+}
+
+// Partner answered Blackwood; count the aces and place the contract
+function afterBlackwood(a, ctx) {
+  const { bids, partner } = ctx;
+  const real = bids.filter(c => c.type === 'bid');
+  const last = real[real.length - 1];
+  if (!last || last.player !== partner) return null;
+  if (classifyCall(bids, bids.lastIndexOf(last)) !== 'aceShow') return null;
+
+  const myAces = ALL_SUITS.filter(su => a.bySuit[su].includes('A')).length;
+  const shown = ACE_REPLIES[last.suit];
+  const partnerAces = (last.suit === 'C' && myAces === 0) ? 4 : shown;
+  const total = myAces + partnerAces;
+
+  // The suit we agreed before asking
+  const strain = ctx.agreedSuit && ctx.agreedSuit !== 'NT' ? ctx.agreedSuit : null;
+  const combined = a.hcp + ctx.partnerRange.min;
+
+  if (!strain) {
+    if (total >= 3 && combined >= 33) {
+      const c = ctx.cheapest('NT') <= 6 ? call(6, 'NT', `${total} aces between us — bidding the slam`) : null;
+      if (c) return c;
+    }
+    return pass(`Only ${total} aces between us — stopping here`);
+  }
+  if (total === 4 && combined >= 37 && ctx.cheapest(strain) <= 7) {
+    return call(7, strain, 'All four aces and the values for a grand slam');
+  }
+  if (total >= 3 && combined >= 33 && ctx.cheapest(strain) <= 6) {
+    return call(6, strain, `${total} aces between us — bidding the slam`);
+  }
+  if (ctx.cheapest(strain) <= 5) {
+    return call(5, strain, `Only ${total} aces between us — stopping below the slam`);
+  }
+  return pass(`Only ${total} aces between us — stopping here`);
+}
+
 export function chooseCall(seat, hand, bids) {
   const a = analyzeHand(hand);
   const ctx = buildContext(seat, bids, a);
+
+  const answer = answerConvention(a, ctx);
+  if (answer) return answer;
+  const placed = afterBlackwood(a, ctx);
+  if (placed) return placed;
 
   let result;
   switch (ctx.role) {

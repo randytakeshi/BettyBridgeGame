@@ -651,6 +651,16 @@ function App() {
 
               <p>Repeating your own five-card major says you actually have <b>six</b>.</p>
 
+              <h3>The three conventions we play</h3>
+              <p><b>2 Clubs to open</b> means 22 points or more. It says nothing about
+                 Clubs — partner answers 2 Diamonds and waits to hear more.</p>
+              <p><b>Stayman.</b> Over partner's 1 No Trump, 2 Clubs asks whether they
+                 hold a four-card major. They answer 2 Hearts or 2 Spades if they do,
+                 2 Diamonds if they do not.</p>
+              <p><b>4 No Trump asks for aces.</b> Partner answers 5 Clubs with none or
+                 all four, 5 Diamonds with one, 5 Hearts with two, 5 Spades with three.</p>
+              <p>Everything else means exactly what it says.</p>
+
               <h3>Suit order</h3>
               <p>Clubs · Diamonds · Hearts · Spades · No Trump. Over 1 Spade you can bid
                  1 No Trump, or go to 2 of another suit.</p>
