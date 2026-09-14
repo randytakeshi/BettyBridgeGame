@@ -94,11 +94,35 @@ const lowestOf = (hand, indices) =>
 const highestOf = (hand, indices) =>
   indices.reduce((best, i) => (rankValue(hand[i].rank) > rankValue(hand[best].rank) ? i : best), indices[0]);
 
-// The least useful card to throw away: never a trump if avoidable, then
-// the lowest card out of the suit holding the fewest honours.
-function discardIndex(hand, indices, trump) {
+// The least useful card to throw away.
+//
+// The order of the tests matters, and getting it wrong is visible from
+// across the room. This used to weigh the SUIT first — throw from whichever
+// suit held the fewest honours — and only then take the lowest card in it.
+// A singleton ace makes its own suit look cheap beside a long holding with
+// two honours in it, so the ace went straight in the bin: Betty watched an
+// opponent discard the ace of hearts while sitting on K Q 10 9 8 of spades.
+//
+// So the value of the CARD is settled first and the suit only breaks ties:
+// never a trump if there is anything else, never a card that is the best
+// one left in its suit, never an honour while a spot card is there to go
+// instead — and only then throw from the suit that can spare it.
+function discardIndex(hand, indices, trump, view) {
   const nonTrump = indices.filter(i => hand[i].suit !== trump);
-  const pool = nonTrump.length > 0 ? nonTrump : indices;
+  let pool = nonTrump.length > 0 ? nonTrump : indices;
+
+  // A card nothing outstanding can beat is a trick already in hand
+  if (view) {
+    const notMaster = pool.filter(i => {
+      const top = view.topHidden(hand[i].suit);
+      return top !== null && rankValue(hand[i].rank) < rankValue(top);
+    });
+    if (notMaster.length > 0) pool = notMaster;
+  }
+
+  // Spot cards before honours, whatever suit they are in
+  const plain = pool.filter(i => !HONOUR[hand[i].rank]);
+  if (plain.length > 0) pool = plain;
 
   const honourValue = {};
   for (const s of ALL_SUITS) honourValue[s] = 0;
@@ -108,7 +132,11 @@ function discardIndex(hand, indices, trump) {
   for (const i of pool) {
     const a = hand[i];
     const b = hand[best];
-    if (honourValue[a.suit] !== honourValue[b.suit]) {
+    const ha = HONOUR[a.rank] || 0;
+    const hb = HONOUR[b.rank] || 0;
+    if (ha !== hb) {
+      if (ha < hb) best = i;
+    } else if (honourValue[a.suit] !== honourValue[b.suit]) {
       if (honourValue[a.suit] < honourValue[b.suit]) best = i;
     } else if (rankValue(a.rank) < rankValue(b.rank)) {
       best = i;
@@ -256,7 +284,7 @@ function chooseFollow(hand, indices, view, info) {
   }
 
   // --- Void in the suit led ---
-  if (partnerWinning && position === 3) return discardIndex(hand, indices, trumpSuit);
+  if (partnerWinning && position === 3) return discardIndex(hand, indices, trumpSuit, view);
 
   if (trumpSuit && !partnerWinning) {
     const trumps = indices.filter(i => hand[i].suit === trumpSuit);
@@ -267,7 +295,7 @@ function chooseFollow(hand, indices, view, info) {
     }
   }
 
-  return discardIndex(hand, indices, trumpSuit);
+  return discardIndex(hand, indices, trumpSuit, view);
 }
 
 /**
