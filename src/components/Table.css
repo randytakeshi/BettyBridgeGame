@@ -400,6 +400,14 @@
   .played-card.S { bottom: 5%; left: 50%; transform: translateX(-50%); }
   .played-card.E { right: 5%; top: 50%; transform: translateY(-50%); }
   .played-card.W { left: 5%; top: 50%; transform: translateY(-50%); }
+  /* David's and Robert's name cards float over the sides of the table, and
+     on a narrow screen they reach far enough in to sit on top of the card
+     that seat has just played — 32px of it, measured on an iPad Air in
+     portrait. Bring the side cards in far enough to clear them. Scoped to
+     the compass layout: in a row the cards are in normal flow and an inset
+     would simply shove them sideways. */
+  .layout-cross .played-card.E { right: 15%; }
+  .layout-cross .played-card.W { left: 15%; }
   .suit-rows-big .suit-row-symbol { font-size: 1.9rem; width: 2rem; }
   .rank-chip { min-width: 46px; min-height: 46px; font-size: 1.5rem; padding: 3px 7px; }
   .your-hand-tag { font-size: 0.95rem; padding: 4px 12px; }
