@@ -243,6 +243,35 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useHistoricalMode]);
 
+  // A new version of the game installs itself quietly in the background, but
+  // the copy already on screen goes on running the old code until the page
+  // is loaded again. So the first time she opened the app after a fix she
+  // still got the broken one, and only the second time got the fix — which
+  // is no use to someone who is not going to know to close it and try again.
+  //
+  // Reload as soon as the new version takes charge, but only while she is on
+  // the opening screen. The page restarting in the middle of a hand is
+  // exactly the sort of thing that looks like the game breaking, and the new
+  // version will be there anyway the next time she opens it.
+  const appStateRef = useRef(appState);
+  appStateRef.current = appState;
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    // Nothing was controlling this page, so it is already running the newest
+    // code it could and there is nothing to reload into
+    if (!navigator.serviceWorker.controller) return;
+    let done = false;
+    const onUpdate = () => {
+      if (done || appStateRef.current !== 'menu') return;
+      done = true;
+      try {
+        window.location.reload();
+      } catch { /* nothing to be done; the next launch will pick it up */ }
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onUpdate);
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onUpdate);
+  }, []);
+
   // Coming back to the app is the moment a stalled timer shows up as "it was
   // David's turn and nothing happened" — iPads throttle and drop timers in
   // backgrounded tabs. Restart the move rather than waiting on a timer that
