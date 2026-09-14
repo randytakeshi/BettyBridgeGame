@@ -67,7 +67,7 @@ function useTrickLayout() {
   return mode;
 }
 
-export default function Table({ gameState, onPlayCard, showAllCards, activeHint, selectedCard, setSelectedCard }) {
+export default function Table({ gameState, onPlayCard, showAllCards, activeHint, selectedCard, setSelectedCard, isAutoPlaying }) {
   const trickLayout = useTrickLayout();
   const { hands, currentTrick, currentTurn, dummy, phase, declarer, dummyVisible, trumpSuit } = gameState;
   const playerHand = hands['S'] || [];
@@ -149,7 +149,7 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
 
   // The card she has chosen, if it is genuinely hers to play right now
   const chosenCard = (
-    isPlaying && selectedCard && currentTrick.length < 4 &&
+    isPlaying && !isAutoPlaying && selectedCard && currentTrick.length < 4 &&
     humanControls(selectedCard.player) && currentTurn === selectedCard.player
   ) ? (hands[selectedCard.player] || [])[selectedCard.index] : null;
 
@@ -163,7 +163,11 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
       ? { main: `${PLAYER_NAMES[winner.player]} ${winner.player === 'S' ? 'win' : 'wins'} this trick` }
       : null;
   } else if (isPlaying) {
-    if (humanControls(currentTurn)) {
+    if (isAutoPlaying) {
+      // Saying "YOUR TURN" and then playing the card yourself is the most
+      // confusing thing the game could do
+      turnBanner = { main: 'The computer is playing for you', sub: 'tap "Let me play" above to take over' };
+    } else if (humanControls(currentTurn)) {
       turnBanner = currentTurn === 'S'
         ? { main: 'YOUR TURN', sub: 'play from your own cards below' }
         : { main: 'YOUR TURN', sub: "now play one of Sarah's cards above" };
@@ -252,7 +256,9 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
             const middle = (total - 1) / 2;
             const offset = i - middle;
             const rotation = offset * 2;
-            const yOffset = Math.abs(offset) * 2;
+            // Arc the outer cards upward, not down. Dropping them pushed the
+            // ends of the fan below the bottom of the screen on a short one.
+            const yOffset = -Math.abs(offset) * 2;
             const selected = selectedCard?.player === 'S' && selectedCard?.index === i;
 
             return (

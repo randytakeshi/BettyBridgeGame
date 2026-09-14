@@ -435,8 +435,9 @@ function App() {
             {savedBoard !== null && <span className="menu-btn-sub">board 1, scores back to nothing</span>}
           </button>
 
-          <button className="menu-btn menu-btn-watch" onClick={() => handleStartGame('watch')}>
-            Auto-Play / Watch 👀
+          <button className="menu-btn menu-btn-plain menu-btn-watch" onClick={() => handleStartGame('watch')}>
+            Just Watch 👀
+            <span className="menu-btn-sub">the computer plays every hand — you only watch</span>
           </button>
 
           {pbnDatabase && pbnDatabase.length > 0 && (
@@ -502,7 +503,7 @@ function App() {
             {soundEnabled ? 'Sound 🔊' : 'Muted 🔇'}
           </button>
           <button className="header-btn btn-show" onClick={cycleSpeed}>Speed: {speedLabel} ⏱️</button>
-          <button className={`header-btn ${isAutoPlaying ? 'btn-stop-auto' : 'btn-auto-play'}`} onClick={toggleAutoPlay}>{isAutoPlaying ? 'Stop Auto ⏹️' : 'Auto-Play ▶️'}</button>
+          <button className={`header-btn ${isAutoPlaying ? 'btn-stop-auto' : 'btn-show'}`} onClick={toggleAutoPlay}>{isAutoPlaying ? 'Stop Auto ⏹️' : 'Watch 👀'}</button>
           <button className="header-btn btn-hint" onClick={handleHint}>Hint 💡</button>
           {gameState.canUndo && (
             <button className="header-btn btn-undo" onClick={() => engine.undo()}>Undo ↩️</button>
@@ -515,6 +516,17 @@ function App() {
         </div>
       </header>
 
+      {isAutoPlaying && (
+        <div className="autoplay-bar">
+          <span className="autoplay-bar-text">
+            <b>The computer is playing your cards for you.</b> You are just watching.
+          </span>
+          <button className="autoplay-bar-btn" onClick={() => setIsAutoPlaying(false)}>
+            Let me play ✋
+          </button>
+        </div>
+      )}
+
       {hintText && (
         <div className="hint-bar" onClick={() => setHintText(null)}>
           <span className="hint-bar-label">HINT</span>
@@ -524,7 +536,7 @@ function App() {
       )}
 
       <main className="table-area">
-        <Table gameState={gameState} onPlayCard={handlePlayCard} showAllCards={showAllCards} activeHint={activeHint} selectedCard={selectedCard} setSelectedCard={setSelectedCard} />
+        <Table gameState={gameState} onPlayCard={handlePlayCard} showAllCards={showAllCards} activeHint={activeHint} selectedCard={selectedCard} setSelectedCard={setSelectedCard} isAutoPlaying={isAutoPlaying} />
 
       {/* Bidding Modal Overlay */}
       {phase === 'bidding' && (

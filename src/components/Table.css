@@ -16,7 +16,7 @@
 .table-center {
   width: min(62%, 640px);
   flex: 1 1 auto;
-  min-height: 140px;
+  min-height: 110px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -200,8 +200,8 @@
   transform: none;
 }
 .layout-row .played-card .card {
-  width: clamp(66px, min(8vw, 14vh), 120px);
-  height: clamp(99px, min(12vw, 21vh), 180px);
+  width: clamp(60px, min(8vw, 11vh), 120px);
+  height: clamp(90px, min(12vw, 16.5vh), 180px);
 }
 
 /* Tall screens keep the compass cross: each card at its own seat */
@@ -210,8 +210,8 @@
   container-type: size;
 }
 .layout-cross .played-card .card {
-  width: clamp(70px, min(13vw, 10.5vh), 130px);
-  height: clamp(105px, min(19.5vw, 16vh), 195px);
+  width: clamp(64px, min(13vw, 9vh), 130px);
+  height: clamp(96px, min(19.5vw, 14vh), 195px);
 }
 /* Where the browser supports it, tie the card size to the trick area itself
    so North and South can never grow into each other, whatever else is on
@@ -350,6 +350,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+  /* room for the rotated corners of the fan, which reach below the row */
   padding-bottom: 26px;
   z-index: 10;
 }
@@ -380,8 +381,8 @@
 
 /* Enhanced playable card hover */
 .playable-card-wrapper .card {
-  width: clamp(66px, min(9.5vw, 13vh), 140px);
-  height: clamp(99px, min(14vw, 19.5vh), 210px);
+  width: clamp(58px, min(9.5vw, 10.5vh), 140px);
+  height: clamp(87px, min(14vw, 15.5vh), 210px);
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
 }
 .playable-card-wrapper .card-top-left,
