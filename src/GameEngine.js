@@ -59,14 +59,39 @@ export class GameEngine {
     this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
     this.aiTimer = null;
     this.trickTimer = null;
+    this.watchdogTimer = null;
     this.speed = 1;
     this.resetGame();
   }
 
   destroy() {
+    if (this.watchdogTimer) {
+      clearInterval(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
     this.clearTimers();
     this.updateCallback = null;
     this.announceCallback = null;
+  }
+
+  // Every computer move lives in a timer, and a timer does not always survive
+  // the iPad sleeping or the app being switched away from. Nothing else would
+  // ever restart one, which leaves the game sitting on somebody's turn with
+  // nothing coming. So it watches itself and starts the move again.
+  startWatchdog() {
+    if (this.watchdogTimer) return;
+    this.watchdogTimer = setInterval(() => this.nudge(), 3000);
+  }
+
+  nudge() {
+    if (this.phase !== 'bidding' && this.phase !== 'playing') return;
+    if (this.aiTimer || this.trickTimer) return;        // a move is already on its way
+    if (this.phase === 'playing' && this.currentTrick.length >= 4) {
+      this.scheduleTrickResolution();
+      return;
+    }
+    if (this.humanControlsSeat(this.currentTurn)) return;  // waiting on Betty, as it should
+    this.checkAITurn();
   }
 
   clearTimers() {
@@ -890,9 +915,24 @@ export class GameEngine {
   }
 
   makeAIPlay() {
-    const cardIndexToPlay = this.determineAIPlay(this.currentTurn);
-    if (cardIndexToPlay !== null) {
-      this.playCard(this.currentTurn, cardIndexToPlay);
+    const seat = this.currentTurn;
+    const hand = this.hands[seat];
+    if (!hand || hand.length === 0) return;
+
+    const chosen = this.determineAIPlay(seat);
+    if (chosen !== null && this.playCard(seat, chosen)) return;
+
+    // Whichever card it wanted was refused, or it could not choose one. A
+    // seat that fails to move stops the entire game with no way back, so
+    // play anything legal rather than leaving Betty staring at the table.
+    const led = this.currentTrick.length > 0 ? this.currentTrick[0].card.suit : null;
+    const order = hand.map((c, i) => i).sort((a, b) => {
+      if (!led) return 0;
+      return (hand[b].suit === led ? 1 : 0) - (hand[a].suit === led ? 1 : 0);
+    });
+    for (const i of order) {
+      if (this.playCard(seat, i)) return;
     }
+    console.error(`No legal card could be played for ${seat}`);
   }
 }

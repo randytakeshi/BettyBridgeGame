@@ -659,6 +659,88 @@ function houseRulesTest(boards = 600) {
   }
 }
 
+// --- Never sitting there with nothing coming -----------------------------
+// Betty reported "it was David's turn and nothing was played". Every computer
+// move lives in a timer, and a timer does not survive an iPad going to sleep,
+// so the game has to be able to start itself again.
+function noFreezeTest(boards = 120) {
+  for (let board = 1; board <= boards; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    if (e.phase !== 'playing') continue;
+
+    // A move was due and the timer is gone. One nudge has to restart it.
+    const before = e.playedCards.length;
+    e.nudge();
+    check(e.playedCards.length > before || e.phase === 'finished',
+      `board ${board}: a stranded computer turn did not restart`);
+  }
+
+  // It must never play for Betty, however stranded it looks
+  for (let board = 1; board <= 60; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    if (e.phase !== 'playing') continue;
+    // Move the turn to a seat Betty controls
+    while (!e.humanControlsSeat(e.currentTurn)) {
+      const before = e.playedCards.length;
+      e.nudge();
+      if (e.playedCards.length === before || e.phase !== 'playing') break;
+    }
+    if (e.phase !== 'playing' || !e.humanControlsSeat(e.currentTurn)) continue;
+    const hers = e.playedCards.length;
+    e.nudge();
+    e.nudge();
+    check(e.playedCards.length === hers,
+      `board ${board}: the game played a card for Betty while waiting on her`);
+  }
+
+  // Nothing to do once the board is over
+  const done = new GameEngine(() => {});
+  done.resetGame();
+  done.humanControlsSeat = () => false;
+  done.deal();
+  if (done.phase === 'finished') {
+    const snapshot = JSON.stringify(done.serialize());
+    done.nudge();
+    check(JSON.stringify(done.serialize()) === snapshot,
+      'nudging a finished board changed it');
+  }
+
+  // And if the chosen card is refused, something legal still gets played
+  for (let board = 1; board <= 40; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    if (e.phase !== 'playing') continue;
+
+    const realCheck = e.checkAITurn.bind(e);
+    e.checkAITurn = () => {};
+    e.determineAIPlay = () => null;          // as if it could not choose
+    const before = e.playedCards.length;
+    e.makeAIPlay();
+    check(e.playedCards.length === before + 1,
+      `board ${board}: nothing was played when the chosen card came back empty`);
+    e.checkAITurn = realCheck;
+  }
+}
+
 // --- Run ---------------------------------------------------------------
 console.log(`Playing ${BOARDS} boards…\n`);
 const results = [];
@@ -671,6 +753,7 @@ undoTest();
 saveResumeTest();
 replayTest();
 houseRulesTest();
+noFreezeTest();
 
 const isGame = c => (c.suit === 'NT' && c.level >= 3) ||
   (['H', 'S'].includes(c.suit) && c.level >= 4) ||

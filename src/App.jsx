@@ -223,6 +223,7 @@ function App() {
     }, useHistoricalMode ? pbnRef.current : null, (text, queued) => (queued ? speakQueued(text) : speak(text)));
 
     ge.setSpeed(speedRef.current);
+    ge.startWatchdog();
     setEngine(ge);
     // Handy for poking at a game from the dev console; never ships
     if (import.meta.env.DEV) window.__engine = ge;
@@ -242,6 +243,24 @@ function App() {
     return () => ge.destroy(); // Kill old timers so two games never fight
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useHistoricalMode]);
+
+  // Coming back to the app after it has been away is the moment a lost timer
+  // shows up as "it was David's turn and nothing happened". Restart it at once
+  // rather than making her wait for the watchdog to notice.
+  useEffect(() => {
+    if (!engine) return;
+    const wake = () => {
+      if (document.visibilityState === 'visible') engine.nudge();
+    };
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('focus', wake);
+    window.addEventListener('pageshow', wake);
+    return () => {
+      document.removeEventListener('visibilitychange', wake);
+      window.removeEventListener('focus', wake);
+      window.removeEventListener('pageshow', wake);
+    };
+  }, [engine]);
 
   // Spoken "your turn" prompts so Mom always knows when to act
   const prevHumanSeatRef = useRef(null);
