@@ -57,6 +57,7 @@ body {
 button,
 .card,
 .playable-card-wrapper,
+.play-confirm,
 .rank-chip {
   touch-action: manipulation;
 }

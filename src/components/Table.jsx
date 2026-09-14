@@ -147,6 +147,12 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
     return '';
   };
 
+  // The card she has chosen, if it is genuinely hers to play right now
+  const chosenCard = (
+    isPlaying && selectedCard && currentTrick.length < 4 &&
+    humanControls(selectedCard.player) && currentTurn === selectedCard.player
+  ) ? (hands[selectedCard.player] || [])[selectedCard.index] : null;
+
   // Big status line so it is always obvious whose turn it is and, just as
   // importantly, whose hand Betty is being asked to play from.
   let turnBanner = null;
@@ -212,9 +218,23 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
         ))}
       </div>
 
-      {/* Whose turn it is — always directly above Betty's own cards, so it
-          can never sit on top of a played card */}
-      {turnBanner && (
+      {/* Once she has chosen a card, the way to play it is a button she
+          cannot miss. Tapping the same card again works too, but the cards
+          overlap and the chosen one grows and lifts as she picks it, so the
+          second tap lands on a neighbour and simply re-chooses — which from
+          her side looks like the game refusing to play the card at all. */}
+      {chosenCard ? (
+        <button
+          className="play-confirm"
+          onClick={() => {
+            onPlayCard(selectedCard.player, selectedCard.index);
+            setSelectedCard(null);
+          }}
+        >
+          Play the {rankNames[chosenCard.rank]} of {suitNames[chosenCard.suit]}
+          <span className="play-confirm-sub">or tap a different card to change your mind</span>
+        </button>
+      ) : turnBanner && (
         <div className="turn-banner">
           {turnBanner.main}
           {turnBanner.sub && <span className="turn-banner-sub">{turnBanner.sub}</span>}
