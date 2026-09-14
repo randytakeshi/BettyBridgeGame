@@ -244,13 +244,16 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useHistoricalMode]);
 
-  // Coming back to the app after it has been away is the moment a lost timer
-  // shows up as "it was David's turn and nothing happened". Restart it at once
-  // rather than making her wait for the watchdog to notice.
+  // Coming back to the app is the moment a stalled timer shows up as "it was
+  // David's turn and nothing happened" — iPads throttle and drop timers in
+  // backgrounded tabs. Restart the move rather than waiting on a timer that
+  // may never fire.
   useEffect(() => {
     if (!engine) return;
     const wake = () => {
-      if (document.visibilityState === 'visible') engine.nudge();
+      // Only on the way back in. A timer that was pending while the app was
+      // in the background cannot be trusted, so restart rather than nudge.
+      if (document.visibilityState === 'visible') engine.resume();
     };
     document.addEventListener('visibilitychange', wake);
     window.addEventListener('focus', wake);

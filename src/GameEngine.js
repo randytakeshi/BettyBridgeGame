@@ -83,6 +83,21 @@ export class GameEngine {
     this.watchdogTimer = setInterval(() => this.nudge(), 3000);
   }
 
+  // Coming back after the app has been away. A timer set while the iPad was
+  // asleep or the tab was in the background may have been stretched to
+  // minutes or dropped altogether — and it still looks "pending", so trusting
+  // it would leave her waiting on a move that is never coming. Throw away
+  // whatever is pending and start again from where the board actually is.
+  resume() {
+    if (this.phase !== 'bidding' && this.phase !== 'playing') return;
+    this.clearTimers();
+    if (this.phase === 'playing' && this.currentTrick.length >= 4) {
+      this.scheduleTrickResolution();
+      return;
+    }
+    this.checkAITurn();
+  }
+
   nudge() {
     if (this.phase !== 'bidding' && this.phase !== 'playing') return;
     if (this.aiTimer || this.trickTimer) return;        // a move is already on its way
@@ -848,10 +863,22 @@ export class GameEngine {
       this.aiTimer = null;
       // Re-check at fire time: the situation may have changed
       if (this.humanControlsSeat(this.currentTurn)) return;
-      if (this.phase === 'bidding') {
-        this.makeAIBid();
-      } else if (this.phase === 'playing') {
-        this.makeAIPlay();
+      const wasAt = this.playedCards.length + this.bids.length;
+      try {
+        if (this.phase === 'bidding') {
+          this.makeAIBid();
+        } else if (this.phase === 'playing') {
+          this.makeAIPlay();
+        }
+      } catch (err) {
+        // Anything at all going wrong in here used to stop the game dead,
+        // because this timer was the only thing that would ever move that
+        // seat and nothing would fire again. Whatever happened, the hand has
+        // to go on.
+        console.error('The computer failed to move:', err);
+      }
+      if (this.playedCards.length + this.bids.length === wasAt) {
+        this.forceProgress();
       }
     };
 
@@ -912,6 +939,35 @@ export class GameEngine {
       dummyVisible: this.openingLeadMade,
       playedCards: this.playedCards
     });
+  }
+
+  // Last resort when a computer seat has somehow failed to act: make the
+  // simplest legal move there is, so the hand can never stall.
+  forceProgress() {
+    if (this.humanControlsSeat(this.currentTurn)) return;
+    try {
+      if (this.phase === 'bidding') {
+        this.placeBid({ type: 'pass', explanation: 'Pass' });
+        return;
+      }
+      if (this.phase !== 'playing') return;
+      if (this.currentTrick.length >= 4) {
+        this.scheduleTrickResolution();
+        return;
+      }
+      const seat = this.currentTurn;
+      const hand = this.hands[seat] || [];
+      const led = this.currentTrick.length > 0 ? this.currentTrick[0].card.suit : null;
+      const order = hand.map((c, i) => i).sort((a, b) => {
+        if (!led) return 0;
+        return (hand[b].suit === led ? 1 : 0) - (hand[a].suit === led ? 1 : 0);
+      });
+      for (const i of order) {
+        if (this.playCard(seat, i)) return;
+      }
+    } catch (err) {
+      console.error('Could not force the game onwards:', err);
+    }
   }
 
   makeAIPlay() {

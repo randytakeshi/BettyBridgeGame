@@ -718,6 +718,77 @@ function noFreezeTest(boards = 120) {
       'nudging a finished board changed it');
   }
 
+  // An iPad in the background does not cancel timers, it stretches them —
+  // sometimes to minutes. Such a timer still looks pending, so the watchdog
+  // rightly leaves it alone; only coming back to the app can tell the
+  // difference. This is the shape of what Betty actually saw.
+  for (let board = 1; board <= 60; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+    if (e.phase !== 'playing') continue;
+
+    // Leave a computer seat on move with a timer that will never usefully fire
+    const realCheck = e.checkAITurn.bind(e);
+    e.checkAITurn = () => {};
+    for (let i = 0; i < 3 && e.phase === 'playing'; i++) {
+      const idx = e.determineAIPlay(e.currentTurn);
+      if (idx === null) break;
+      e.playCard(e.currentTurn, idx);
+    }
+    e.checkAITurn = realCheck;
+    e.clearTimers();
+    e.aiTimer = setTimeout(() => {}, 600000);
+
+    const stalled = e.playedCards.length;
+    e.nudge();
+    check(e.playedCards.length === stalled,
+      `board ${board}: the watchdog interfered with a timer that was still pending`);
+
+    e.resume();
+    clearTimeout(e.aiTimer);
+    check(e.playedCards.length > stalled || e.phase === 'finished',
+      `board ${board}: coming back to the app did not restart a stalled turn`);
+    e.destroy();
+  }
+
+  // Whatever goes wrong inside a computer's turn, the hand must go on. That
+  // timer is the only thing that would ever move the seat, so an exception in
+  // there used to stop the game dead with no way back.
+  {
+    const quiet = console.error;
+    console.error = () => {};
+    for (const breakWhat of ['play', 'bid']) {
+      let finished = 0, correct = 0, boards = 0;
+      for (let board = 1; board <= 40; board++) {
+        const e = new GameEngine(() => {});
+        e.boardNumber = board;
+        e.resetGame();
+        e.humanControlsSeat = () => false;
+        if (breakWhat === 'play') e.determineAIPlay = () => { throw new Error('boom'); };
+        else e.determineAIBid = () => { throw new Error('boom'); };
+        e.deal();
+        let guard = 0;
+        while (e.phase !== 'finished' && guard++ < 400) e.checkAITurn();
+        boards++;
+        if (e.phase === 'finished') finished++;
+        if (!e.contract || e.tricksWon['N/S'] + e.tricksWon['E/W'] === 13) correct++;
+      }
+      console.error = quiet;
+      check(finished === boards,
+        `with the ${breakWhat} chooser throwing, only ${finished} of ${boards} boards finished`);
+      check(correct === boards,
+        `with the ${breakWhat} chooser throwing, ${boards - correct} boards scored the wrong tricks`);
+      console.error = () => {};
+    }
+    console.error = quiet;
+  }
+
   // And if the chosen card is refused, something legal still gets played
   for (let board = 1; board <= 40; board++) {
     const e = new GameEngine(() => {});
