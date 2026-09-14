@@ -283,6 +283,15 @@
   font-weight: bold;
   color: #ffd66b;
 }
+/* Sarah's own hand, shown to Betty only while Betty is the dummy and has
+   nothing left to decide. Framed in her partner's green so it is never
+   mistaken for a dummy Betty is meant to play from. */
+.dummy-band.partner {
+  border-color: #4ade80;
+}
+.dummy-band.partner .name { color: #86efac; }
+.dummy-band.partner .name-hint { color: #bbf7d0; }
+
 .dummy-band.opponent {
   border-color: rgba(255, 255, 255, 0.35);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
@@ -306,18 +315,21 @@
   /* An opponent's dummy is read, never tapped, and it shares the screen
      with Sarah's line as well — so it spreads one suit per column and
      stays shallow, leaving the trick and Betty's own hand their height. */
-  .dummy-band.opponent .suit-rows {
+  .dummy-band.opponent .suit-rows,
+  .dummy-band.partner .suit-rows {
     grid-template-columns: repeat(4, auto);
     column-gap: clamp(10px, 1.8vw, 26px);
     justify-content: center;
     align-items: start;
   }
-  .dummy-band.opponent .rank-chip {
+  .dummy-band.opponent .rank-chip,
+  .dummy-band.partner .rank-chip {
     min-width: 40px;
     min-height: 40px;
     font-size: 1.35rem;
   }
-  .dummy-band.opponent .suit-rows-big .suit-row-symbol {
+  .dummy-band.opponent .suit-rows-big .suit-row-symbol,
+  .dummy-band.partner .suit-rows-big .suit-row-symbol {
     font-size: 1.6rem;
     width: 1.6rem;
   }

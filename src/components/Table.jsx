@@ -138,13 +138,23 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
   // Dummy N means she is declaring and dummy S means Sarah is, so a dummy
   // sitting East or West always means she is defending.
   const bandDummy = isPlaying && dummyVisible && dummy !== 'S' ? dummy : null;
+
+  // When Betty's own hand is the dummy, Sarah has won the contract and is
+  // playing both hands — which left Betty looking at an empty table with
+  // nothing of the hand to see and no way to tell how it was going. She
+  // makes no decisions at all in that seat, so showing her Sarah's cards
+  // cannot change a single card that gets played. It is simply the only way
+  // she can follow the hand and count the tricks, which is what she asked
+  // for: the winner of the bid works from both hands, so let her see them.
+  const bandPartner = isPlaying && humanIsDummy && dummyVisible ? 'N' : null;
+  const bandSeat = bandDummy || bandPartner;
   const northPlayable = bandDummy === 'N' && humanIsDeclarer;
 
   const renderHand = (player, inBand = false) => {
     if (!hands[player]) return null;
     // The dummy's hand is public in bridge — but not before the opening
     // lead, and it is drawn in the band, never again in the side panel
-    if (player === bandDummy) {
+    if (player === bandSeat) {
       if (!inBand) return <div className="cards-left">{hands[player].length} cards</div>;
       return (
         <SuitRows
@@ -194,7 +204,7 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
     } else if (humanIsDummy) {
       turnBanner = {
         main: `${PLAYER_NAMES[declarer]} is playing this hand`,
-        sub: 'your cards are the dummy — sit back and watch'
+        sub: 'her cards are above and yours below — watch the tricks come in'
       };
     } else {
       turnBanner = { main: `${PLAYER_NAMES[currentTurn]} is thinking…` };
@@ -202,26 +212,30 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
   }
 
   return (
-    <div className={`table-layout layout-${trickLayout} ${bandDummy ? 'with-dummy-band' : ''}`}>
+    <div className={`table-layout layout-${trickLayout} ${bandSeat ? 'with-dummy-band' : ''}`}>
       {/* The face-up dummy, big enough to read across the top of the table:
           Sarah's when Betty declares and she plays it herself, an
           opponent's when she is defending and needs to count against it. */}
-      {bandDummy && (
-        <div className={`dummy-band ${northPlayable ? '' : 'opponent'} ${getActiveClass(bandDummy)}`}>
+      {bandSeat && (
+        <div className={`dummy-band ${northPlayable ? '' : (bandPartner ? 'partner' : 'opponent')} ${getActiveClass(bandSeat)}`}>
           <div className="name">
-            {PLAYER_NAMES[bandDummy].toUpperCase()}'S HAND — DUMMY
+            {bandPartner
+              ? "SARAH'S HAND — SHE WON THE CONTRACT"
+              : `${PLAYER_NAMES[bandSeat].toUpperCase()}'S HAND — DUMMY`}
             <span className="name-hint">
               {northPlayable
                 ? ' · you play these · tap a card twice'
-                : ' · face up for everyone to see'}
+                : bandPartner
+                  ? ' · she plays hers and yours'
+                  : ' · face up for everyone to see'}
             </span>
           </div>
-          {renderHand(bandDummy, true)}
+          {renderHand(bandSeat, true)}
         </div>
       )}
 
       {/* North */}
-      {bandDummy !== 'N' && (
+      {bandSeat !== 'N' && (
         <div className={`player-info info-N ${getActiveClass('N')}`}>
           <div className="name">SARAH (N) — Your Partner{seatTag('N')}</div>
           {renderHand('N')}
@@ -229,7 +243,7 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
       )}
 
       {/* West */}
-      {bandDummy !== 'W' && (
+      {bandSeat !== 'W' && (
         <div className={`player-info info-W ${getActiveClass('W')}`}>
           <div className="name">DAVID (W){seatTag('W')}</div>
           {renderHand('W')}
@@ -237,7 +251,7 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
       )}
 
       {/* East */}
-      {bandDummy !== 'E' && (
+      {bandSeat !== 'E' && (
         <div className={`player-info info-E ${getActiveClass('E')}`}>
           <div className="name">ROBERT (E){seatTag('E')}</div>
           {renderHand('E')}

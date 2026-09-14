@@ -29,7 +29,7 @@ function isHumanTurn(state) {
 function roleOf(state) {
   if (state.phase !== 'playing') return null;
   if (state.declarer === 'S') return { label: 'You are DECLARER', tone: '#4ade80' };
-  if (state.dummy === 'S') return { label: `You are DUMMY — ${PLAYER_NAMES[state.declarer]} plays`, tone: '#fbd38d' };
+  if (state.dummy === 'S') return { label: 'You are DUMMY', tone: '#fbd38d' };
   return { label: 'You are DEFENDING', tone: '#93c5fd' };
 }
 
