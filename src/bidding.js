@@ -745,6 +745,29 @@ function respondToPreempt(a, ctx) {
     const c = want(4, o.suit, `${pts(hcp)} with ${support} ${SUIT_WORDS[o.suit]} — raising to game`);
     if (c) return c;
   }
+
+  // A good hand with a major of its own does not have to sit there. Partner's
+  // bid showed six to twelve and a long suit; opposite real values that is
+  // often simply the wrong strain, and a major is worth more than a minor.
+  // Without this the answer to a weak Two Diamonds was to pass holding
+  // fourteen points and five spades, and the eight-card major fit was never
+  // found — Betty's "should have bid hearts".
+  let mine = null;
+  for (const s2 of MAJORS) {
+    if (s2 === o.suit) continue;
+    if (len[s2] >= 5 && (!mine || len[s2] > len[mine])) mine = s2;
+  }
+  if (mine) {
+    const lvl = ctx.cheapest(mine);
+    // Two of a major is cheap enough for a good hand; three is a level higher
+    // than partner promised to make, so it has to be worth more.
+    const need = lvl <= 2 ? 11 : 16;
+    if (lvl <= 3 && hcp >= need) {
+      return call(lvl, mine,
+        `${pts(hcp)} and ${len[mine]} ${SUIT_WORDS[mine]} — partner's bid was weak, so I show my own suit`);
+    }
+  }
+
   return pass('Partner bid three to take away their room, not to be raised — leaving it alone');
 }
 
