@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Table from './components/Table';
 import BiddingBox from './components/BiddingBox';
-import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED, speedMultiplier } from './GameEngine';
+import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
 import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos, DEFAULT_TRANSFERS, setTransfers } from './bidding';
@@ -84,7 +84,6 @@ function App() {
   const [showAuction, setShowAuction] = useState(false);
   const [selectedBid, setSelectedBid] = useState(null);
   const [activeHint, setActiveHint] = useState(null);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [appState, setAppState] = useState('menu');
   const [hintText, setHintText] = useState(null);
@@ -274,46 +273,14 @@ function App() {
     }
     const { phase, currentTurn } = gameState;
     const seatKey = isHumanTurn(gameState) ? `${phase}:${currentTurn}` : null;
-    if (seatKey && seatKey !== prevHumanSeatRef.current && !isAutoPlaying) {
+    if (seatKey && seatKey !== prevHumanSeatRef.current) {
       if (phase === 'bidding') speakQueued('Your turn to bid.');
       else if (currentTurn === 'N') speakQueued("Your turn. Play one of Sarah's cards from the dummy at the top.");
       else speakQueued('Your turn.');
     }
     prevHumanSeatRef.current = seatKey;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, isAutoPlaying, appState]);
-
-  // Auto-Play Logic
-  useEffect(() => {
-    if (!isAutoPlaying || !gameState) return;
-    // Never act while a completed trick is waiting to be cleared
-    if (gameState.phase === 'playing' && gameState.currentTrick.length >= 4) return;
-
-    let timer1, timer2;
-    const { currentTurn } = gameState;
-
-    if (isHumanTurn(gameState)) {
-      const hint = engine.getHint(currentTurn);
-
-      const pace = speedMultiplier(speed);
-      if (hint && hint.type === 'bid') {
-        timer1 = setTimeout(() => engine.placeBid(hint.value), 1200 * pace);
-      } else if (hint && hint.type === 'card') {
-        timer1 = setTimeout(() => {
-          setSelectedCard({ player: currentTurn, index: hint.value });
-          timer2 = setTimeout(() => {
-            engine.playCard(currentTurn, hint.value);
-            setSelectedCard(null);
-          }, 1000 * pace);
-        }, 800 * pace);
-      }
-    }
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [gameState, isAutoPlaying, engine, speed]);
+  }, [gameState, appState]);
 
   if (!gameState) return <div style={{ color: 'white', fontSize: '2rem', padding: '40px', textAlign: 'center' }}>Loading…</div>;
 
@@ -362,7 +329,6 @@ function App() {
     setShowAuction(!showAuction);
     if (showAuction) setSelectedBid(null);
   };
-  const toggleAutoPlay = () => setIsAutoPlaying(!isAutoPlaying);
 
   // One button cycling Slow / Normal / Fast, like the Sound and Deals toggles
   const cycleSpeed = () => {
@@ -391,8 +357,7 @@ function App() {
   const canDouble = !!lastAction && lastAction.type === 'bid' && (lastAction.player === 'E' || lastAction.player === 'W');
   const canRedouble = !!lastAction && lastAction.type === 'double' && (lastAction.player === 'E' || lastAction.player === 'W');
 
-  // 'continue' picks up the saved board, 'new' starts a fresh session,
-  // 'watch' carries on with the computer playing Betty's seat too
+  // 'continue' picks up the saved board, 'new' starts a fresh session
   const handleStartGame = (mode) => {
     // Unlock speech synthesis on iOS — this tap is the gesture it needs
     try {
@@ -407,7 +372,6 @@ function App() {
       setSavedBoard(null);
       engine.newSession();
     }
-    if (mode === 'watch') setIsAutoPlaying(true);
     setAppState('game');
     // A restored board has been sitting idle — get the table moving again
     engine.checkAITurn();
@@ -433,11 +397,6 @@ function App() {
           >
             {savedBoard === null ? 'Play Bridge ♠️' : 'Start a New Game ♠️'}
             {savedBoard !== null && <span className="menu-btn-sub">board 1, scores back to nothing</span>}
-          </button>
-
-          <button className="menu-btn menu-btn-plain menu-btn-watch" onClick={() => handleStartGame('watch')}>
-            Just Watch 👀
-            <span className="menu-btn-sub">the computer plays every hand — you only watch</span>
           </button>
 
           {pbnDatabase && pbnDatabase.length > 0 && (
@@ -503,7 +462,6 @@ function App() {
             {soundEnabled ? 'Sound 🔊' : 'Muted 🔇'}
           </button>
           <button className="header-btn btn-show" onClick={cycleSpeed}>Speed: {speedLabel} ⏱️</button>
-          <button className={`header-btn ${isAutoPlaying ? 'btn-stop-auto' : 'btn-show'}`} onClick={toggleAutoPlay}>{isAutoPlaying ? 'Stop Auto ⏹️' : 'Watch 👀'}</button>
           <button className="header-btn btn-hint" onClick={handleHint}>Hint 💡</button>
           {gameState.canUndo && (
             <button className="header-btn btn-undo" onClick={() => engine.undo()}>Undo ↩️</button>
@@ -516,17 +474,6 @@ function App() {
         </div>
       </header>
 
-      {isAutoPlaying && (
-        <div className="autoplay-bar">
-          <span className="autoplay-bar-text">
-            <b>The computer is playing your cards for you.</b> You are just watching.
-          </span>
-          <button className="autoplay-bar-btn" onClick={() => setIsAutoPlaying(false)}>
-            Let me play ✋
-          </button>
-        </div>
-      )}
-
       {hintText && (
         <div className="hint-bar" onClick={() => setHintText(null)}>
           <span className="hint-bar-label">HINT</span>
@@ -536,7 +483,7 @@ function App() {
       )}
 
       <main className="table-area">
-        <Table gameState={gameState} onPlayCard={handlePlayCard} showAllCards={showAllCards} activeHint={activeHint} selectedCard={selectedCard} setSelectedCard={setSelectedCard} isAutoPlaying={isAutoPlaying} />
+        <Table gameState={gameState} onPlayCard={handlePlayCard} showAllCards={showAllCards} activeHint={activeHint} selectedCard={selectedCard} setSelectedCard={setSelectedCard} />
 
       {/* Bidding Modal Overlay */}
       {phase === 'bidding' && (

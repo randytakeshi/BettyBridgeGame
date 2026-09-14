@@ -386,7 +386,6 @@
   color: #e2e8f0;
   font-size: 1.6rem;
 }
-.menu-btn-watch { background-color: #3b82f6; }
 .menu-btn-toggle {
   background-color: transparent;
   border: 2px solid #475569;
@@ -469,40 +468,3 @@
   font-size: 1.15rem;
 }
 
-/* While the computer is playing her cards, say so plainly and give her one
-   tap to take over. The only previous sign was a header button changing
-   colour, which is not enough to explain why her cards are playing
-   themselves. */
-.autoplay-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 6px 16px 0;
-  padding: 8px 16px;
-  background: rgba(231, 76, 60, 0.2);
-  border: 2px solid #e74c3c;
-  border-radius: 12px;
-  color: #ffe3e0;
-  font-size: 1.2rem;
-}
-.autoplay-bar-text { flex: 1 1 auto; }
-.autoplay-bar-btn {
-  flex: 0 0 auto;
-  padding: 9px 20px;
-  min-height: 46px;
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #08240f;
-  background: #4ade80;
-  border: 2px solid #ffffff;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.autoplay-bar-btn:hover { background: #6ee7a0; }
-.menu-btn-watch { font-size: 1.5rem; }
-
-@media (max-width: 950px) {
-  .autoplay-bar { margin: 6px 10px 0; padding: 9px 12px; font-size: 1.02rem; gap: 10px; }
-  .autoplay-bar-btn { padding: 9px 14px; min-height: 44px; font-size: 1.05rem; }
-}
