@@ -7,7 +7,7 @@
  *
  *   node scripts/test.mjs [boards]
  */
-import { GameEngine, PLAYERS } from '../src/GameEngine.js';
+import { GameEngine, PLAYERS, humanPlaysSeat } from '../src/GameEngine.js';
 import { chooseCall, classifyCall, classifyDouble } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
@@ -80,7 +80,13 @@ function runBoard(boardNumber, humanSeatsPlay) {
   // Watch every play for legality and for the dummy reveal rule
   const plays = [];
   const realPlay = engine.playCard.bind(engine);
+  // Set only for the call Betty herself makes. The engine runs the rest of
+  // the hand before that call returns, so it is cleared immediately and any
+  // play nested inside is correctly recorded as the computer's.
+  let bettyIsPlaying = false;
   engine.playCard = function (player, index) {
+    const by = bettyIsPlaying ? 'betty' : 'computer';
+    bettyIsPlaying = false;
     // The engine plays the rest of the hand before this call returns, so the
     // record has to be taken now, not after.
     const trickBefore = this.currentTrick.slice();
@@ -88,7 +94,7 @@ function runBoard(boardNumber, humanSeatsPlay) {
     const card = handBefore[index];
     const leadMadeBefore = this.openingLeadMade;
     const myIndex = plays.length;
-    const record = { player, card, turnIndex: myIndex };
+    const record = { player, card, turnIndex: myIndex, by };
     plays.push(record);
 
     const ok = realPlay(player, index);
@@ -115,7 +121,10 @@ function runBoard(boardNumber, humanSeatsPlay) {
         engine.placeBid(chooseCall(engine.currentTurn, engine.hands[engine.currentTurn], engine.bids));
       } else if (engine.phase === 'playing' && engine.humanControlsSeat(engine.currentTurn)) {
         const idx = engine.determineAIPlay(engine.currentTurn);
-        if (idx === null || !engine.playCard(engine.currentTurn, idx)) {
+        bettyIsPlaying = true;
+        const played = idx !== null && engine.playCard(engine.currentTurn, idx);
+        bettyIsPlaying = false;
+        if (!played) {
           check(false, `board ${boardNumber}: Betty could not play a legal card from ${engine.currentTurn}`);
           return;
         }
@@ -163,6 +172,28 @@ function runBoard(boardNumber, humanSeatsPlay) {
     const a = realBids[i - 1], b = realBids[i];
     check(b.level > a.level || (b.level === a.level && SUIT_RANK[b.suit] > SUIT_RANK[a.suit]),
       `board ${boardNumber}: ${b.level}${b.suit} did not beat ${a.level}${a.suit}`);
+  }
+
+  // --- "The winner always plays his and his partner's hand" (Betty) ---
+  // From Betty's chair in the South seat that means she plays two hands when
+  // she declares, none at all when her own hand is the dummy, and only her
+  // own when she is defending. Checked on the boards where she is playing
+  // her seats for real; on the others every seat is automated by design.
+  if (humanSeatsPlay) {
+    const hers = engine.declarer === 'S' ? ['S', 'N']
+      : engine.dummy === 'S' ? []
+      : ['S'];
+    const label = hers.length ? hers.join(' and ') : 'no hands at all';
+    for (const pl of plays) {
+      const shouldBeHers = hers.includes(pl.player);
+      check(shouldBeHers ? pl.by === 'betty' : pl.by === 'computer',
+        `board ${boardNumber}: ${pl.card.rank}${pl.card.suit} from ${pl.player} was played by ` +
+        `${pl.by === 'betty' ? 'Betty' : 'the computer'}, but with ${engine.declarer} declaring ` +
+        `she plays ${label}`);
+    }
+    check(plays.filter(pl => pl.by === 'betty').length === hers.length * 13,
+      `board ${boardNumber}: Betty played ${plays.filter(pl => pl.by === 'betty').length} cards ` +
+      `with ${engine.declarer} declaring, expected ${hers.length * 13}`);
   }
 
   // --- Every card was played exactly once ---
@@ -812,6 +843,36 @@ function noFreezeTest(boards = 120) {
   }
 }
 
+// --- Who plays which hand ------------------------------------------------
+// Betty: "The winner always plays his and his partner's hand." She sits
+// South, so the rule seen from her chair is fixed by who declares. This
+// checks it straight off the shared rule the engine and the screen both
+// use, for every seating, rather than waiting for a deal to produce one.
+function bothHandsTest() {
+  for (const declarer of PLAYERS) {
+    const dummy = PLAYERS[(PLAYERS.indexOf(declarer) + 2) % 4];
+    const playing = { phase: 'playing', declarer, dummy };
+    for (const seat of PLAYERS) {
+      const want = declarer === 'S' ? (seat === 'S' || seat === 'N')
+        : dummy === 'S' ? false
+        : seat === 'S';
+      check(humanPlaysSeat(playing, seat) === want,
+        `with ${declarer} declaring, Betty ${want ? 'must' : 'must not'} play ${seat}` +
+        ` — the rule says ${humanPlaysSeat(playing, seat) ? 'she does' : 'she does not'}`);
+    }
+    // Whoever ends up declaring, the auction is always hers to bid
+    for (const seat of PLAYERS) {
+      check(humanPlaysSeat({ phase: 'bidding', declarer, dummy }, seat) === (seat === 'S'),
+        `during the auction Betty should bid for South and nobody else (seat ${seat})`);
+    }
+    // Before a card is led there is no declarer yet, and still only her seat
+    for (const seat of PLAYERS) {
+      check(humanPlaysSeat({ phase: 'bidding', declarer: null, dummy: null }, seat) === (seat === 'S'),
+        `before the auction settles Betty owns South alone (seat ${seat})`);
+    }
+  }
+}
+
 // --- Run ---------------------------------------------------------------
 console.log(`Playing ${BOARDS} boards…\n`);
 const results = [];
@@ -820,6 +881,7 @@ for (let b = 1; b <= BOARDS; b++) {
   const r = runBoard(b, b % 2 === 0);
   if (r && !r.passedOut) results.push(r);
 }
+bothHandsTest();
 undoTest();
 saveResumeTest();
 replayTest();
