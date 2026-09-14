@@ -37,6 +37,19 @@ function SuitRows({ hand, onPick, selectedIndex, hintIndex, big }) {
                   </button>
                 ))}
               </span>
+            ) : big ? (
+              // A dummy she is only reading, not playing: same big chips so
+              // it is just as easy on the eye, but nothing to tap
+              <span className="suit-row-ranks">
+                {entries.map(e => (
+                  <span
+                    key={e.i}
+                    className={`rank-chip static ${suit === 'H' || suit === 'D' ? 'red' : ''}`}
+                  >
+                    {e.c.rank}
+                  </span>
+                ))}
+              </span>
             ) : (
               <span className="suit-row-ranks">{entries.map(e => e.c.rank).join(' ')}</span>
             )}
@@ -117,20 +130,27 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
     (activeHint && activeHint.type === 'card' && currentTurn === player) ? activeHint.value : null;
   const isHintCard = (player, index) => hintIndexFor(player) === index;
 
-  // North's cards only go face up once the opening lead is on the table,
-  // and only Betty gets to tap them — and only when she is the declarer.
-  const northIsDummy = isPlaying && dummy === 'N' && dummyVisible;
-  const northPlayable = northIsDummy && humanIsDeclarer;
+  // Once the opening lead is on the table the dummy is face up for
+  // everybody, and Betty has to be able to READ it whoever it belongs to:
+  // when she declares she plays from it, and when she defends she counts
+  // her tricks against it. So any dummy but her own gets a big band across
+  // the top of the table instead of being squeezed into a side panel.
+  // Dummy N means she is declaring and dummy S means Sarah is, so a dummy
+  // sitting East or West always means she is defending.
+  const bandDummy = isPlaying && dummyVisible && dummy !== 'S' ? dummy : null;
+  const northPlayable = bandDummy === 'N' && humanIsDeclarer;
 
-  const renderHand = (player) => {
+  const renderHand = (player, inBand = false) => {
     if (!hands[player]) return null;
-    // The dummy's hand is public in bridge — but not before the opening lead
-    if (isPlaying && dummy === player && dummyVisible) {
+    // The dummy's hand is public in bridge — but not before the opening
+    // lead, and it is drawn in the band, never again in the side panel
+    if (player === bandDummy) {
+      if (!inBand) return <div className="cards-left">{hands[player].length} cards</div>;
       return (
         <SuitRows
           hand={hands[player]}
-          big={player === 'N' && northPlayable}
-          onPick={player === 'N' && northPlayable ? (i) => handleCardClick('N', i) : undefined}
+          big
+          onPick={northPlayable ? (i) => handleCardClick('N', i) : undefined}
           selectedIndex={selectedCard?.player === player ? selectedCard.index : null}
           hintIndex={hintIndexFor(player)}
         />
@@ -182,18 +202,26 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
   }
 
   return (
-    <div className={`table-layout layout-${trickLayout} ${northPlayable ? 'with-dummy-band' : ''}`}>
-      {/* North. When Betty is declaring, Sarah's dummy becomes a band across
-          the top of the table instead of a floating name panel. */}
-      {northPlayable ? (
-        <div className={`dummy-band ${getActiveClass('N')}`}>
+    <div className={`table-layout layout-${trickLayout} ${bandDummy ? 'with-dummy-band' : ''}`}>
+      {/* The face-up dummy, big enough to read across the top of the table:
+          Sarah's when Betty declares and she plays it herself, an
+          opponent's when she is defending and needs to count against it. */}
+      {bandDummy && (
+        <div className={`dummy-band ${northPlayable ? '' : 'opponent'} ${getActiveClass(bandDummy)}`}>
           <div className="name">
-            SARAH'S HAND — DUMMY
-            <span className="name-hint"> · you play these · tap a card twice</span>
+            {PLAYER_NAMES[bandDummy].toUpperCase()}'S HAND — DUMMY
+            <span className="name-hint">
+              {northPlayable
+                ? ' · you play these · tap a card twice'
+                : ' · face up for everyone to see'}
+            </span>
           </div>
-          {renderHand('N')}
+          {renderHand(bandDummy, true)}
         </div>
-      ) : (
+      )}
+
+      {/* North */}
+      {bandDummy !== 'N' && (
         <div className={`player-info info-N ${getActiveClass('N')}`}>
           <div className="name">SARAH (N) — Your Partner{seatTag('N')}</div>
           {renderHand('N')}
@@ -201,16 +229,20 @@ export default function Table({ gameState, onPlayCard, showAllCards, activeHint,
       )}
 
       {/* West */}
-      <div className={`player-info info-W ${getActiveClass('W')}`}>
-        <div className="name">DAVID (W){seatTag('W')}</div>
-        {renderHand('W')}
-      </div>
+      {bandDummy !== 'W' && (
+        <div className={`player-info info-W ${getActiveClass('W')}`}>
+          <div className="name">DAVID (W){seatTag('W')}</div>
+          {renderHand('W')}
+        </div>
+      )}
 
       {/* East */}
-      <div className={`player-info info-E ${getActiveClass('E')}`}>
-        <div className="name">ROBERT (E){seatTag('E')}</div>
-        {renderHand('E')}
-      </div>
+      {bandDummy !== 'E' && (
+        <div className={`player-info info-E ${getActiveClass('E')}`}>
+          <div className="name">ROBERT (E){seatTag('E')}</div>
+          {renderHand('E')}
+        </div>
+      )}
 
       <div className="table-center">
         {/* The current trick — each card labelled with who played it */}

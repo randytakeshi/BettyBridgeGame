@@ -133,6 +133,15 @@
 }
 .rank-chip.red { color: #d32f2f; }
 .rank-chip:hover { border-color: var(--ui-accent); }
+/* A dummy she is reading rather than playing: same size and contrast, but
+   plainly not a button, so she does not tap at an opponent's cards. */
+.rank-chip.static {
+  cursor: default;
+  background: #eef2f7;
+  border-color: #94a3b8;
+  box-shadow: none;
+}
+.rank-chip.static:hover { border-color: #94a3b8; }
 .rank-chip.selected {
   background: #ffd66b;
   border-color: #ffffff;
@@ -186,6 +195,7 @@
   flex-direction: row;
   gap: clamp(8px, 1.6vw, 26px);
   width: min(58%, 760px);
+  container-type: size;
 }
 .layout-row .played-card,
 .layout-row .played-card.N,
@@ -273,6 +283,12 @@
   font-weight: bold;
   color: #ffd66b;
 }
+.dummy-band.opponent {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.dummy-band.opponent .name { color: #cbd5e1; }
+.dummy-band.opponent .name-hint { color: #94a3b8; }
 .dummy-band .suit-rows {
   align-items: flex-start;
   margin-top: 8px;
@@ -287,6 +303,24 @@
     column-gap: 28px;
     justify-items: start;
   }
+  /* An opponent's dummy is read, never tapped, and it shares the screen
+     with Sarah's line as well — so it spreads one suit per column and
+     stays shallow, leaving the trick and Betty's own hand their height. */
+  .dummy-band.opponent .suit-rows {
+    grid-template-columns: repeat(4, auto);
+    column-gap: clamp(10px, 1.8vw, 26px);
+    justify-content: center;
+    align-items: start;
+  }
+  .dummy-band.opponent .rank-chip {
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 1.35rem;
+  }
+  .dummy-band.opponent .suit-rows-big .suit-row-symbol {
+    font-size: 1.6rem;
+    width: 1.6rem;
+  }
   .dummy-band .rank-chip {
     min-width: 48px;
     min-height: 48px;
@@ -297,6 +331,23 @@
     width: 2rem;
   }
 }
+/* With the dummy across the top there is no room for a three-line name
+   card as well, so Sarah's sits on a single line and the table keeps the
+   height it needs for the trick and for Betty's own hand. */
+.table-layout.with-dummy-band .info-N {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  max-width: none;
+  padding: 6px 18px;
+  white-space: nowrap;
+}
+.table-layout.with-dummy-band .info-N .name,
+.table-layout.with-dummy-band .info-N .cards-left {
+  font-size: 1.15rem;
+}
+
 /* Smaller trick cards while the dummy takes up the top of the screen */
 .table-layout.with-dummy-band .played-card .card {
   width: clamp(60px, min(7vw, 10vh), 104px);
@@ -451,4 +502,27 @@
   font-weight: 600;
   color: #0b3d1a;
   opacity: 0.85;
+}
+
+/* Last word on trick-card size: whatever the rules above ask for, the four
+   cards and their name labels have to fit inside the trick area itself.
+   Without this they spill over Sarah's line above and the turn banner
+   below as soon as a face-up dummy takes the top of a short screen.
+   Specificity and position both deliberately beat .with-dummy-band. */
+@container (min-height: 1px) {
+  .table-layout .played-card .card-top-left,
+  .table-layout .played-card .card-bottom-right {
+    font-size: min(clamp(2.2rem, 5vw, 3.5rem), 26cqh);
+  }
+  .table-layout .played-card .card-suit {
+    font-size: min(clamp(1.8rem, 4vw, 3rem), 21cqh);
+  }
+  .table-layout.layout-row .played-card .card {
+    height: min(clamp(70px, min(12vw, 16.5vh), 180px), 64cqh);
+    width: min(clamp(47px, min(8vw, 11vh), 120px), 43cqh);
+  }
+  .table-layout.layout-cross .played-card .card {
+    height: min(clamp(80px, min(19.5vw, 14vh), 195px), 36cqh);
+    width: min(clamp(54px, min(13vw, 9vh), 130px), 24cqh);
+  }
 }
