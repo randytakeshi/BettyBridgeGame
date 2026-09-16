@@ -8,12 +8,13 @@
  *   node scripts/test.mjs [boards]
  */
 import { GameEngine, PLAYERS, humanPlaysSeat } from '../src/GameEngine.js';
-import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS } from '../src/bidding.js';
+import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS, analyzeHand } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
 
 const BOARDS = Number(process.argv[2] || 1500);
 const SUIT_RANK = { C: 0, D: 1, H: 2, S: 3, NT: 4 };
+const ALL_SUITS_ORDER = ['S', 'H', 'D', 'C'];
 const failures = [];
 let checks = 0;
 
@@ -843,6 +844,72 @@ function noFreezeTest(boards = 120) {
   }
 }
 
+// --- Distribution points --------------------------------------------------
+// Betty: "to answer your partner, this responder should have at least three of
+// the suit to support it. You try to have at least eight in your big suit,
+// usually five in your hand and three in your partner's hand. After the first
+// bid you can count the distributional points... if you have none of one of
+// the suits you get either five or three points."
+//
+// Five is the number for the hand supporting partner, which is the only place
+// the game counts shortness at all. These are the figures printed in the Rules
+// card, so if the table here changes, what she is told becomes a lie.
+function distributionTest() {
+  const handOf = (spec) => {
+    const out = [];
+    for (const suit of ALL_SUITS_ORDER) for (const rank of (spec[suit] || [])) out.push({ rank, suit });
+    return out;
+  };
+
+  const cases = [
+    { name: 'a void', want: 5, spec: { S: ['K', '7', '2'], H: [], D: ['Q', '8', '6', '5', '4'], C: ['J', '9', '8', '4', '3'] } },
+    { name: 'a singleton', want: 3, spec: { S: ['K', '7', '2'], H: ['4'], D: ['Q', '8', '6', '5', '4'], C: ['J', '9', '8', '4'] } },
+    { name: 'a doubleton', want: 1, spec: { S: ['K', '7', '2'], H: ['4', '3'], D: ['Q', '8', '6', '5'], C: ['J', '9', '8', '4'] } },
+    { name: 'nothing short', want: 0, spec: { S: ['K', '7', '2'], H: ['4', '3', '2'], D: ['Q', '8', '6', '5'], C: ['J', '9', '8'] } }
+  ];
+  for (const c of cases) {
+    const hand = handOf(c.spec);
+    check(hand.length === 13, `distribution fixture "${c.name}" has ${hand.length} cards, not 13`);
+    const got = analyzeHand(hand).shortnessPts('S');
+    check(got === c.want, `supporting Spades with ${c.name} should add ${c.want}, the game added ${got}`);
+  }
+
+  // Shortness in the trump suit itself is worth nothing — you cannot ruff
+  // with the suit you are ruffing into.
+  const shortTrumps = handOf({ S: ['K', '2'], H: ['A', '9', '7', '5', '3'], D: ['Q', '8', '6'], C: ['J', '9', '4'] });
+  check(shortTrumps.length === 13, 'trump-shortness fixture is not thirteen cards');
+  check(analyzeHand(shortTrumps).shortnessPts('S') === 0,
+    'a doubleton in the trump suit was counted as distribution, and it must not be');
+
+  // "When opening bid is made, just high card points matter." A void must not
+  // push a 12-point hand into opening.
+  const twelveWithVoid = handOf({ S: ['K', 'Q', '7', '5', '3'], H: [], D: ['A', '8', '6', '4'], C: ['K', '9', '7', '2'] });
+  check(twelveWithVoid.length === 13, 'opening fixture is not thirteen cards');
+  check(analyzeHand(twelveWithVoid).hcp === 12, `opening fixture should be 12 high card points, it is ${analyzeHand(twelveWithVoid).hcp}`);
+  const openCall = chooseCall('N', twelveWithVoid, []);
+  check(openCall.type === 'pass',
+    `12 points and a void opened ${openCall.type === 'bid' ? openCall.level + openCall.suit : openCall.type} — ` +
+    'distribution must not count towards the 13 needed to open');
+
+  // Three of partner's major is support; two is not.
+  const openedOneSpade = [
+    { player: 'N', type: 'bid', level: 1, suit: 'S' },
+    { player: 'E', type: 'pass' }
+  ];
+  const three = handOf({ S: ['K', '7', '2'], H: ['A', '9', '4'], D: ['Q', '8', '6', '5'], C: ['9', '4', '3'] });
+  check(three.length === 13, 'three-card-support fixture is not thirteen cards');
+  const raised = chooseCall('S', three, openedOneSpade);
+  check(raised.type === 'bid' && raised.suit === 'S',
+    `three spades opposite a 1 Spade opening should support partner, the game bid ` +
+    `${raised.type === 'bid' ? raised.level + raised.suit : raised.type}`);
+
+  const two = handOf({ S: ['K', '7'], H: ['A', '9', '4', '3'], D: ['Q', '8', '6', '5'], C: ['9', '4', '3'] });
+  check(two.length === 13, 'two-card-support fixture is not thirteen cards');
+  const notRaised = chooseCall('S', two, openedOneSpade);
+  check(!(notRaised.type === 'bid' && notRaised.suit === 'S'),
+    'two spades is not support, but the game raised partner anyway');
+}
+
 // --- Weak twos, switched off and on --------------------------------------
 // Betty: "I won't use weak two bid anymore after I found out it was a
 // defensive bid with 6 to 9 pts." Off is now the default, so it has to be
@@ -969,6 +1036,7 @@ for (let b = 1; b <= BOARDS; b++) {
   const r = runBoard(b, b % 2 === 0);
   if (r && !r.passedOut) results.push(r);
 }
+distributionTest();
 bothHandsTest();
 weakTwoTest();
 undoTest();

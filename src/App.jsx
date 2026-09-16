@@ -722,6 +722,21 @@ function App() {
                 </button>
               </div>
 
+              <h3>Supporting your partner</h3>
+              <p>To raise partner's suit you need <b>at least three</b> of it. You are
+                 aiming for <b>eight between you</b> — usually five in their hand and
+                 three in yours.</p>
+              <p>Once you have that fit, <b>then</b> count your short suits. Only the
+                 ones that are not trumps count:</p>
+              <ul className="rules-list">
+                <li><b>Void</b> — none at all in a suit — <b>5 points</b></li>
+                <li><b>Singleton</b> — just one card — <b>3 points</b></li>
+                <li><b>Doubleton</b> — two cards — <b>1 point</b></li>
+              </ul>
+              <p>Short suits are only worth anything once you have a fit, because that
+                 is when you can trump with the short one. Before the fit, count the
+                 high cards alone.</p>
+
               <h3>Doubling</h3>
               <p>Double their <b>1 or 2 level</b> opening and it means "I have a good
                  hand — partner, pick a suit."</p>

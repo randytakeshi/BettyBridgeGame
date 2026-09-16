@@ -112,8 +112,8 @@ export function analyzeHand(hand) {
     let p = 0;
     for (const s of ALL_SUITS) {
       if (s === trump) continue;
-      if (len[s] === 0) p += 3;
-      else if (len[s] === 1) p += 2;
+      if (len[s] === 0) p += 5;
+      else if (len[s] === 1) p += 3;
       else if (len[s] === 2) p += 1;
     }
     return p;
@@ -652,7 +652,13 @@ function respondToSuitOpening(a, ctx) {
   const want = (lvl, suit, why) => (ctx.cheapest(suit) <= lvl ? call(lvl, suit, why) : null);
 
   // Raising partner counts shortness as extra value
-  const raisePts = support >= 4 ? hcp + a.shortnessPts(oSuit) : hcp;
+  // Betty: "to answer your partner, this responder should have at least three
+  // of the suit to support it... at least eight in your big suit, usually five
+  // in your hand and three in your partner's hand. After the first bid you can
+  // count the distributional points." Her major openings promise five, so three
+  // in hand is already the eight-card fit and the shortness counts.
+  const fitForShortness = support >= 4 || (isMajor && support >= 3);
+  const raisePts = fitForShortness ? hcp + a.shortnessPts(oSuit) : hcp;
 
   if (hcp <= 5) return pass(`Only ${pts(hcp)} — too weak to answer`);
 

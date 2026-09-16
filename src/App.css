@@ -449,6 +449,18 @@
 }
 
 /* A rule she can change from inside the rules card */
+/* The distribution table. She asked for these numbers and could not
+   remember them, so they are set out one to a line, big enough to read
+   at a glance rather than buried in a sentence. */
+.rules-list {
+  margin: 8px 0 14px;
+  padding-left: 22px;
+  line-height: 1.75;
+}
+.rules-list li {
+  margin-bottom: 4px;
+}
+
 .rules-setting {
   display: flex;
   flex-direction: column;
