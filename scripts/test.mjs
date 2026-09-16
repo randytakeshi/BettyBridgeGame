@@ -852,6 +852,53 @@ function noFreezeTest(boards = 120) {
   }
 }
 
+// --- A new suit from partner is forcing -----------------------------------
+// Betty: "If responder has 10 pts game is a possibility after a one bid."
+// They cannot show that if opener is allowed to pass their answer. Opener
+// used to: 1 Club — 1 Heart — pass, twenty-seven points between them and
+// eleven tricks in the hand. A new suit says nothing about strength yet, so
+// opener always owes one more call.
+function forcingResponseTest(boards = 900) {
+  let seen = 0;
+  const failures = [];
+  for (let board = 1; board <= boards; board++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = board;
+    e.resetGame();
+    e.humanControlsSeat = () => false;
+    const holdPlay = e.startPlayingPhase.bind(e);
+    e.startPlayingPhase = function () { this.phase = 'playing'; };
+    e.deal();
+    e.startPlayingPhase = holdPlay;
+
+    const bids = e.bids;
+    const openIdx = bids.findIndex(c => c.type === 'bid');
+    if (openIdx < 0) continue;
+    const opener = bids[openIdx];
+    if (opener.level !== 1 || opener.suit === 'NT') continue;   // a plain one-bid
+    const lho = bids[openIdx + 1];
+    const answer = bids[openIdx + 2];
+    const rho = bids[openIdx + 3];
+    const rebid = bids[openIdx + 4];
+    if (!lho || lho.type !== 'pass') continue;                  // uncontested only
+    if (!rho || rho.type !== 'pass') continue;
+    if (!answer || answer.type !== 'bid') continue;
+    if (answer.suit === opener.suit || answer.suit === 'NT') continue;  // must be a NEW suit
+    seen++;
+    if (!rebid || rebid.type === 'pass') {
+      if (failures.length < 4) {
+        failures.push(`board ${board}: ` + bids
+          .map(c => `${c.player}:${c.type === 'bid' ? c.level + c.suit : c.type === 'double' ? 'X' : 'p'}`)
+          .join(' '));
+      }
+    }
+  }
+  check(seen > 0, `no uncontested new-suit answer came up in ${boards} boards, so nothing was tested`);
+  check(failures.length === 0,
+    `opener passed partner's new suit ${failures.length} time(s) — a new suit is forcing: ` +
+    failures.join(' | '));
+}
+
 // --- A passed-out board is dealt again ------------------------------------
 // Betty: "Game one passed out — redeal if it has not been played. We all play
 // the same cards." Nobody has seen the cards, so the board is dealt again by
@@ -1104,6 +1151,7 @@ for (let b = 1; b <= BOARDS; b++) {
   const r = runBoard(b, b % 2 === 0);
   if (r && !r.passedOut) results.push(r);
 }
+forcingResponseTest();
 redealTest();
 distributionTest();
 bothHandsTest();

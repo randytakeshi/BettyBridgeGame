@@ -965,27 +965,34 @@ function openerRebid(a, ctx) {
     if (c) return c;
   }
 
-  // Partner's two-level answer promised real values, so I owe them a reply.
-  // Never by naming my own suit again on five — that promises six.
-  if (r.level >= 2 && ctx.partnerRange.min >= 10) {
-    if (len[r.suit] >= 3) {
-      const c = want(r.level + 1, r.suit, `${pts(hcp)} with ${len[r.suit]} ${SUIT_WORDS[r.suit]} — supporting partner`);
-      if (c) return c;
-    }
-    if (o.suit !== 'NT' && len[o.suit] >= 6) {
-      const c = want(ctx.cheapest(o.suit), o.suit, `${len[o.suit]} ${SUIT_WORDS[o.suit]} — back to my own long suit`);
-      if (c) return c;
-    }
-    let other = null;
-    for (const s2 of ALL_SUITS) {
-      if (s2 === o.suit || s2 === r.suit) continue;
-      if (len[s2] >= 4 && (!other || len[s2] > len[other])) other = s2;
-    }
-    if (other) {
-      const c = want(ctx.cheapest(other), other, `${pts(hcp)} and ${len[other]} ${SUIT_WORDS[other]} — my other suit`);
-      if (c) return c;
-    }
-    const c = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — nothing else to show`);
+  // Everything from here on is partner naming a NEW suit, and that is forcing:
+  // they may hold four cards and six points or five and sixteen, and until I
+  // speak again they have no way to tell me apart from a minimum. Passing here
+  // is how 1 Club — 1 Heart — pass happened with twenty-seven points between
+  // us, and the hand made eleven tricks. Opener always has one more call.
+  if (len[r.suit] >= 3) {
+    const c = want(r.level + 1, r.suit, `${pts(hcp)} with ${len[r.suit]} ${SUIT_WORDS[r.suit]} — supporting partner`);
+    if (c) return c;
+  }
+  if (o.suit !== 'NT' && len[o.suit] >= 6) {
+    const c = want(ctx.cheapest(o.suit), o.suit, `${len[o.suit]} ${SUIT_WORDS[o.suit]} — back to my own long suit`);
+    if (c) return c;
+  }
+  let other = null;
+  for (const s2 of ALL_SUITS) {
+    if (s2 === o.suit || s2 === r.suit) continue;
+    if (len[s2] >= 4 && (!other || len[s2] > len[other])) other = s2;
+  }
+  if (other) {
+    const c = want(ctx.cheapest(other), other, `${pts(hcp)} and ${len[other]} ${SUIT_WORDS[other]} — my other suit`);
+    if (c) return c;
+  }
+  const nt = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — no fit to show, so No Trump`);
+  if (nt) return nt;
+  // Last resort. Repeating a five-card suit overstates it, but leaving partner
+  // in a forcing bid is worse.
+  if (o.suit !== 'NT' && len[o.suit] >= 5) {
+    const c = want(ctx.cheapest(o.suit), o.suit, `${len[o.suit]} ${SUIT_WORDS[o.suit]} — nothing better to say`);
     if (c) return c;
   }
 
