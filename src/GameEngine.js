@@ -22,6 +22,11 @@ const DISPLAY_SUIT_ORDER = { S: 3, H: 2, C: 1, D: 0 };
 const SAVE_VERSION = 1;
 const SAVED_HISTORY = 8;
 
+// How many times a board may be dealt again after being passed out before the
+// game gives up and scores it. Five is far beyond anything that happens by
+// chance; it exists so a fault can never turn into an endless reshuffle.
+export const MAX_REDEALS = 5;
+
 // How long the computer players pause, as a multiple of the normal pace.
 // Slow gives the spoken card names plenty of room; Fast is for when Betty
 // is the dummy and just wants to see how the hand comes out.
@@ -57,6 +62,7 @@ export class GameEngine {
     this.announceCallback = announceCallback;
     this.boardNumber = 1;
     this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
+    this.redealCount = 0;
     this.aiTimer = null;
     this.trickTimer = null;
     this.watchdogTimer = null;
@@ -196,6 +202,27 @@ export class GameEngine {
     this.firstResult = null;
   }
 
+  // Betty: "Game one passed out — redeal if it has not been played. We all
+  // play the same cards." Nobody has seen these cards, so there is nothing to
+  // score and no reason to move on a board: the same board number is dealt
+  // again, by the same dealer, exactly as at a table.
+  //
+  // Capped, because the one failure that must never happen is dealing for
+  // ever. If something ever made every hand pass out, she would sit watching
+  // the cards reshuffle with no way in, which from her side is the game
+  // hanging. After the cap it scores the pass-out and moves on instead.
+  redealPassedOutBoard() {
+    if (this.isReplay) return false;          // she asked to see THIS deal again
+    if (this.redealCount >= MAX_REDEALS) return false;
+    this.redealCount++;
+    this.announce('Nobody has played these cards, so we deal this board again.', true);
+    this.resetGame();                          // leaves boardNumber alone
+    // deal() tells the screen and starts the new auction by itself. Calling
+    // either again here would run the whole next board inside this one.
+    this.deal();
+    return true;
+  }
+
   humanControlsSeat(seat) {
     return humanPlaysSeat(this, seat);
   }
@@ -295,6 +322,7 @@ export class GameEngine {
       trumpSuit: this.trumpSuit,
       playedCards: this.playedCards,
       openingLeadMade: this.openingLeadMade,
+      redealCount: this.redealCount,
       doubledStatus: this.doubledStatus,
       duplicateScore: this.duplicateScore,
       dealtHands: this.dealtHands,
@@ -344,6 +372,7 @@ export class GameEngine {
     this.trumpSuit = data.trumpSuit;
     this.playedCards = data.playedCards;
     this.openingLeadMade = !!data.openingLeadMade;
+    this.redealCount = data.redealCount || 0;
     this.doubledStatus = data.doubledStatus || 'none';
     this.duplicateScore = data.duplicateScore || null;
     this.historyStack = Array.isArray(data.history) ? data.history : [];
@@ -357,6 +386,7 @@ export class GameEngine {
   // Start the session over from board one with a clean scorecard
   newSession() {
     this.boardNumber = 1;
+    this.redealCount = 0;
     this.cumulativeScore = { 'N/S': 0, 'E/W': 0 };
     this.resetGame();
     this.deal();
@@ -429,6 +459,7 @@ export class GameEngine {
     this.hands = hands;
     this.dealtHands = JSON.parse(JSON.stringify(hands));
     this.isReplay = true;
+    this.redealCount = 0;
     this.firstResult = first;
     this.phase = 'bidding';
     this.notifyUpdate();
@@ -438,6 +469,7 @@ export class GameEngine {
 
   nextBoard() {
     this.boardNumber++;
+    this.redealCount = 0;
     this.resetGame();
     this.deal();
   }
@@ -542,8 +574,9 @@ export class GameEngine {
 
     if (this.checkBiddingFinished()) {
       this.startPlayingPhase();
-    } else if (this.phase === 'finished') {
-      // Passed out
+    } else if (this.phase === 'finished' && !this.contract) {
+      // Passed out — deal it again rather than scoring a board nobody played
+      this.redealPassedOutBoard();
       return true;
     } else {
       this.advanceTurn();

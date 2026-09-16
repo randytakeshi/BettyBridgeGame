@@ -7,7 +7,7 @@
  *
  *   node scripts/test.mjs [boards]
  */
-import { GameEngine, PLAYERS, humanPlaysSeat } from '../src/GameEngine.js';
+import { GameEngine, PLAYERS, humanPlaysSeat, MAX_REDEALS } from '../src/GameEngine.js';
 import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS, analyzeHand } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
@@ -69,13 +69,12 @@ function runBoard(boardNumber, humanSeatsPlay) {
   engine.resetGame();
   if (!humanSeatsPlay) engine.humanControlsSeat = () => false;
 
-  // Deal without letting the auction start, so the hands can be recorded
+  // Deal without letting the auction start. The hands themselves are read
+  // later from engine.dealtHands: a board that is passed out is dealt again,
+  // and snapshotting here would record a deal that was then thrown away.
   const realCheck = engine.checkAITurn.bind(engine);
   engine.checkAITurn = () => {};
   engine.deal();
-  const dealt = JSON.parse(JSON.stringify(engine.hands));
-  const startHcp = {};
-  for (const p of PLAYERS) startHcp[p] = hcpOf(dealt[p]);
   engine.checkAITurn = realCheck;
 
   // Watch every play for legality and for the dummy reveal rule
@@ -144,9 +143,18 @@ function runBoard(boardNumber, humanSeatsPlay) {
     `board ${boardNumber}: game never finished (phase ${engine.phase}, turn ${engine.currentTurn})`);
   if (engine.phase !== 'finished') return null;
 
+  // The deal as it came off the shuffle. The engine replaces this on a redeal,
+  // so it always describes the cards that were really played.
+  const dealt = engine.dealtHands;
+  const startHcp = {};
+  for (const p of PLAYERS) startHcp[p] = hcpOf(dealt[p]);
+
   if (!engine.contract) {
     check(engine.bids.length === 4 && engine.bids.every(b => b.type === 'pass'),
       `board ${boardNumber}: no contract but the auction was not four passes`);
+    check(engine.redealCount === MAX_REDEALS,
+      `board ${boardNumber}: given up after only ${engine.redealCount} redeal(s) — a board nobody ` +
+      `has played should be dealt again up to ${MAX_REDEALS} times first`);
     return { passedOut: true };
   }
 
@@ -844,6 +852,66 @@ function noFreezeTest(boards = 120) {
   }
 }
 
+// --- A passed-out board is dealt again ------------------------------------
+// Betty: "Game one passed out — redeal if it has not been played. We all play
+// the same cards." Nobody has seen the cards, so the board is dealt again by
+// the same dealer rather than scored and skipped.
+function redealTest() {
+  const allPass = (e) => {
+    e.determineAIBid = () => ({ type: 'pass', explanation: 'Pass' });
+  };
+  const dealt = (e) => e.hands.S.map(c => c.rank + c.suit).join(' ');
+  const sitAndPass = (e, limit) => {
+    const seen = new Set();
+    let guard = 0;
+    while (e.phase !== 'finished' && guard++ < limit) {
+      seen.add(dealt(e));
+      if (!humanPlaysSeat(e, e.currentTurn)) break;
+      e.placeBid({ type: 'pass', explanation: 'Pass' });
+    }
+    return seen;
+  };
+
+  const e = new GameEngine(() => {});
+  e.boardNumber = 7;
+  e.resetGame();
+  const realCheck = e.checkAITurn.bind(e);
+  e.checkAITurn = () => {};
+  e.deal();
+  e.checkAITurn = realCheck;
+  allPass(e);
+  e.checkAITurn();
+  const seen = sitAndPass(e, 60);
+
+  check(e.phase === 'finished',
+    `a board passed out over and over never settled — it would reshuffle in front of her for ever`);
+  check(e.boardNumber === 7,
+    `the board number moved to ${e.boardNumber}: a passed-out board is dealt again, not skipped`);
+  check(seen.size === MAX_REDEALS + 1,
+    `passing everything out should deal ${MAX_REDEALS + 1} hands before giving up, it dealt ${seen.size}`);
+  check(e.redealCount === MAX_REDEALS,
+    `the redeal count finished at ${e.redealCount}, expected ${MAX_REDEALS}`);
+  check(!!e.duplicateScore && e.duplicateScore.side === 'None',
+    'once it gives up redealing, the pass-out has to be scored so the game can move on');
+
+  // A replay is a particular deal she asked to see again. Swapping it for a
+  // different one would defeat the whole point of the button.
+  const r = new GameEngine(() => {});
+  r.boardNumber = 3;
+  r.resetGame();
+  const rCheck = r.checkAITurn.bind(r);
+  r.checkAITurn = () => {};
+  r.deal();
+  r.checkAITurn = rCheck;
+  allPass(r);
+  r.replayBoard();
+  const replayed = dealt(r);
+  sitAndPass(r, 20);
+  check(r.phase === 'finished', 'a replayed board that was passed out never settled');
+  check(dealt(r) === replayed,
+    'a replayed board was dealt again after being passed out — she asked to see that exact deal');
+}
+
 // --- Distribution points --------------------------------------------------
 // Betty: "to answer your partner, this responder should have at least three of
 // the suit to support it. You try to have at least eight in your big suit,
@@ -1036,6 +1104,7 @@ for (let b = 1; b <= BOARDS; b++) {
   const r = runBoard(b, b % 2 === 0);
   if (r && !r.passedOut) results.push(r);
 }
+redealTest();
 distributionTest();
 bothHandsTest();
 weakTwoTest();
