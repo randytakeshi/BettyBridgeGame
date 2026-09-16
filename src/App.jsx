@@ -699,19 +699,26 @@ function App() {
               <p>With seven cards in one suit you can open <b>3 of that suit on just
                  6 points</b>. It is a defensive bid — the shape is worth more than the
                  points, and it takes away the opponents' room.</p>
-              <p>With <b>six</b> cards and 6 to 10 points, open <b>2 of that suit</b> —
-                 a weak two. Two Clubs is never weak; it is always the strong hand.</p>
+              {weakTwos ? (
+                <p>With <b>six</b> cards and 6 to 10 points, open <b>2 of that suit</b> —
+                   a weak two. It is defensive, like the three-bid. Two Clubs is never
+                   weak; it is always the strong hand.</p>
+              ) : (
+                <p>Weak twos are <b>switched off</b>. With six cards and fewer than 13
+                   points you pass — you still need 13 to open. The only two-bid is
+                   <b> Two Clubs</b>, and that is always the strong hand.</p>
+              )}
               <div className="rules-setting">
                 <span>
                   {weakTwos
-                    ? 'Some play all the two-bids as strong hands instead. Tap to switch.'
-                    : 'Two-bids are all strong at the moment. Tap to play weak twos.'}
+                    ? 'Turn them off and a six-card suit with less than an opening hand simply passes.'
+                    : 'Turn them on and six cards with 6 to 10 points opens two of the suit.'}
                 </span>
                 <button
                   className="header-btn btn-show"
                   onClick={() => setWeakTwosPref(!weakTwos)}
                 >
-                  Two-bids: {weakTwos ? 'weak' : 'strong'} — tap to change
+                  Weak twos: {weakTwos ? 'on' : 'off'} — tap to change
                 </button>
               </div>
 

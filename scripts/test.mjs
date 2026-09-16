@@ -8,7 +8,7 @@
  *   node scripts/test.mjs [boards]
  */
 import { GameEngine, PLAYERS, humanPlaysSeat } from '../src/GameEngine.js';
-import { chooseCall, classifyCall, classifyDouble } from '../src/bidding.js';
+import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
 
@@ -843,6 +843,94 @@ function noFreezeTest(boards = 120) {
   }
 }
 
+// --- Weak twos, switched off and on --------------------------------------
+// Betty: "I won't use weak two bid anymore after I found out it was a
+// defensive bid with 6 to 9 pts." Off is now the default, so it has to be
+// genuinely off — nothing but Two Clubs may open at the two level, and a
+// six-card suit too weak to open has to pass. Switching them back on has to
+// bring the weak two back, or the setting is a lie.
+function weakTwoTest(boards = 500) {
+  const deals = [];
+  for (let b = 1; b <= boards; b++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = b;
+    e.resetGame();
+    const real = e.checkAITurn.bind(e);
+    e.checkAITurn = () => {};
+    e.deal();
+    e.checkAITurn = real;
+    deals.push(JSON.parse(JSON.stringify(e.hands)));
+    e.clearTimers();
+  }
+  const lenOf = (hand, s) => hand.filter(c => c.suit === s).length;
+  const weakTwoShape = (hand) => {
+    const hcp = hcpOf(hand);
+    const six = ['S', 'H', 'D'].find(su => lenOf(hand, su) === 6);
+    const seven = ['S', 'H', 'D', 'C'].find(su => lenOf(hand, su) >= 7);
+    return (!six || seven || hcp < 6 || hcp > 10) ? null : { six, hcp };
+  };
+
+  // First, before anything touches the setting, check the game as it ships.
+  // Without this the rest of the test passes whichever way the default is
+  // set, because it turns the setting on and off for itself.
+  let shapesSeen = 0;
+  const shipped = [];
+  for (const hands of deals) {
+    for (const seat of PLAYERS) {
+      const shape = weakTwoShape(hands[seat]);
+      if (!shape) continue;
+      shapesSeen++;
+      const c = chooseCall(seat, hands[seat], []);
+      if (c.type !== 'pass') {
+        shipped.push(`${shape.hcp} pts with 6 ${shape.six} opened ${c.type === 'bid' ? c.level + c.suit : c.type}`);
+      }
+    }
+  }
+  check(shapesSeen > 0, `no hand in ${boards} deals had six cards and 6-10 points — nothing was tested`);
+  check(shipped.length === 0,
+    `as it ships the game still opens weak twos: ${shipped.length} of ${shapesSeen} such hands bid — ` +
+    `e.g. ${shipped.slice(0, 3).join('; ')}`);
+
+  const tally = {
+    off: { twoBids: 0, weakShapes: 0, passed: 0, opened: [] },
+    on: { twoBids: 0, weakShapes: 0, opened: 0 }
+  };
+
+  for (const mode of ['off', 'on']) {
+    setWeakTwos(mode === 'on');
+    for (const hands of deals) {
+      for (const seat of PLAYERS) {
+        const hand = hands[seat];
+        const c = chooseCall(seat, hand, []);          // first to speak
+        const twoSuit = c.type === 'bid' && c.level === 2 && ['S', 'H', 'D'].includes(c.suit);
+        if (twoSuit) tally[mode].twoBids++;
+        const shape = weakTwoShape(hand);
+        if (!shape) continue;
+        tally[mode].weakShapes++;
+        if (mode === 'off') {
+          if (c.type === 'pass') tally.off.passed++;
+          else tally.off.opened.push(`${shape.hcp} pts, 6 ${shape.six} → ${c.type === 'bid' ? c.level + c.suit : c.type}`);
+        } else if (twoSuit && c.suit === shape.six) {
+          tally.on.opened++;
+        }
+      }
+    }
+  }
+  setWeakTwos(DEFAULT_WEAK_TWOS);
+
+  check(tally.off.twoBids === 0,
+    `weak twos off: ${tally.off.twoBids} two-level suit openings were made anyway`);
+  check(tally.off.passed === tally.off.weakShapes,
+    `weak twos off: ${tally.off.weakShapes - tally.off.passed} hands with six cards and 6-10 points ` +
+    `opened instead of passing — e.g. ${tally.off.opened.slice(0, 3).join('; ')}`);
+  // Without this the first two checks would pass on a deal set that simply
+  // never produced the shape, and the test would prove nothing.
+  check(tally.off.weakShapes > 0,
+    `weak twos off: no hand in ${boards} deals had six cards and 6-10 points, so nothing was actually tested`);
+  check(tally.on.opened > 0,
+    'weak twos on: the weak two never came back, so the setting does nothing');
+}
+
 // --- Who plays which hand ------------------------------------------------
 // Betty: "The winner always plays his and his partner's hand." She sits
 // South, so the rule seen from her chair is fixed by who declares. This
@@ -882,6 +970,7 @@ for (let b = 1; b <= BOARDS; b++) {
   if (r && !r.passedOut) results.push(r);
 }
 bothHandsTest();
+weakTwoTest();
 undoTest();
 saveResumeTest();
 replayTest();

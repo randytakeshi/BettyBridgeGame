@@ -46,12 +46,24 @@ export function clearSavedGame() {
  */
 const PREFS_KEY = 'bettybridge.prefs.v1';
 
+// Bumped when a setting's default changes and a stored answer would quietly
+// go on overriding it. Betty decided she does not want weak twos, but her
+// iPad had already saved that they were on, so the new default would never
+// have reached her. Settings she actually chose are kept; only the ones
+// listed here fall back to the new default.
+const PREFS_GENERATION = 2;
+const RESET_ON_UPGRADE = ['weakTwos'];
+
 export function loadPrefs() {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (!raw) return {};
     const data = JSON.parse(raw);
-    return data && typeof data === 'object' ? data : {};
+    if (!data || typeof data !== 'object') return {};
+    if (data.gen === PREFS_GENERATION) return data;
+    const migrated = { ...data, gen: PREFS_GENERATION };
+    for (const key of RESET_ON_UPGRADE) delete migrated[key];
+    return migrated;
   } catch {
     return {};
   }
@@ -59,7 +71,7 @@ export function loadPrefs() {
 
 export function savePrefs(prefs) {
   try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...prefs, gen: PREFS_GENERATION }));
   } catch {
     // Play on without remembering
   }

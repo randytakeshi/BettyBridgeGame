@@ -40,8 +40,11 @@ export const DEFAULT_NT_RANGE = '16-18';
 // play strong twos then they're all strong hands. We play either one." Since
 // she reserves 2 Clubs for 22, the other two-bids are free to be weak — but
 // she named both systems, so it is a setting.
-const weakTwoConfig = { on: true };
-export const DEFAULT_WEAK_TWOS = true;
+// Betty: "I won't use weak two bid anymore after I found out it was a
+// defensive bid with 6 to 9 pts. I thought it meant you had less than
+// opening." So two-bids other than the strong Two Clubs are off by default.
+const weakTwoConfig = { on: false };
+export const DEFAULT_WEAK_TWOS = false;
 
 // Betty on 2 Diamonds over 1 No Trump: "Depending on the system, you have
 // diamonds and bid hearts; another system asks for a 4 card major." She has
