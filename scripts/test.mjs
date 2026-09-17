@@ -595,7 +595,15 @@ function houseRulesTest(boards = 600) {
         `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ${openerHcp} points ` +
         `— the defensive opening is six to twelve`);
     } else {
-      check(openerHcp >= 13,
+      // Betty: "open with a good five card major with 12 points." Good means
+      // two of the top three honours are in the suit. That is the only way
+      // below thirteen, and it has to be that suit she opens.
+      const topThree = (suit) => dealt[opener.player]
+        .filter(c => c.suit === suit && ['A', 'K', 'Q'].includes(c.rank)).length;
+      const goodMajorOpening = openerHcp === 12 && opener.level === 1 &&
+        ['H', 'S'].includes(opener.suit) &&
+        lenIn(opener.player, opener.suit) >= 5 && topThree(opener.suit) >= 2;
+      check(openerHcp >= 13 || goodMajorOpening,
         `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
         `${openerHcp} high cards`);
     }
@@ -875,7 +883,6 @@ function forcingResponseTest(boards = 900) {
     const openIdx = bids.findIndex(c => c.type === 'bid');
     if (openIdx < 0) continue;
     const opener = bids[openIdx];
-    if (opener.level !== 1 || opener.suit === 'NT') continue;   // a plain one-bid
     const lho = bids[openIdx + 1];
     const answer = bids[openIdx + 2];
     const rho = bids[openIdx + 3];
@@ -884,6 +891,13 @@ function forcingResponseTest(boards = 900) {
     if (!rho || rho.type !== 'pass') continue;
     if (!answer || answer.type !== 'bid') continue;
     if (answer.suit === opener.suit || answer.suit === 'NT') continue;  // must be a NEW suit
+
+    // Two shapes are forcing: a new suit over a plain one-bid, and a suit at
+    // the three level over a No Trump opening. (A suit at the TWO level over
+    // 1 No Trump is partner choosing where to play, and may be passed.)
+    const overOneBid = opener.level === 1 && opener.suit !== 'NT';
+    const overNoTrump = opener.suit === 'NT' && answer.level === 3;
+    if (!overOneBid && !overNoTrump) continue;
     seen++;
     if (!rebid || rebid.type === 'pass') {
       if (failures.length < 4) {
@@ -895,7 +909,7 @@ function forcingResponseTest(boards = 900) {
   }
   check(seen > 0, `no uncontested new-suit answer came up in ${boards} boards, so nothing was tested`);
   check(failures.length === 0,
-    `opener passed partner's new suit ${failures.length} time(s) — a new suit is forcing: ` +
+    `opener passed partner's forcing answer ${failures.length} time(s): ` +
     failures.join(' | '));
 }
 
@@ -998,13 +1012,35 @@ function distributionTest() {
 
   // "When opening bid is made, just high card points matter." A void must not
   // push a 12-point hand into opening.
-  const twelveWithVoid = handOf({ S: ['K', 'Q', '7', '5', '3'], H: [], D: ['A', '8', '6', '4'], C: ['K', '9', '7', '2'] });
+  // Deliberately no five-card major and no seven-card suit, so the only thing
+  // that could lift this hand to an opening is the void — which must not.
+  const twelveWithVoid = handOf({ S: ['K', '7', '3'], H: [], D: ['A', 'Q', '8', '6', '4', '2'], C: ['K', '9', '4', '3'] });
   check(twelveWithVoid.length === 13, 'opening fixture is not thirteen cards');
   check(analyzeHand(twelveWithVoid).hcp === 12, `opening fixture should be 12 high card points, it is ${analyzeHand(twelveWithVoid).hcp}`);
   const openCall = chooseCall('N', twelveWithVoid, []);
   check(openCall.type === 'pass',
     `12 points and a void opened ${openCall.type === 'bid' ? openCall.level + openCall.suit : openCall.type} — ` +
     'distribution must not count towards the 13 needed to open');
+
+  // "Open with a good five card major with 12 points" — but only when the
+  // honours really are in the suit.
+  const goodTwelve = handOf({ S: ['A', 'K', '8', '5', '3'], H: ['9', '4'], D: ['Q', '7', '6', '2'], C: ['K', '5'] });
+  check(goodTwelve.length === 13, 'good-major fixture is not thirteen cards');
+  check(analyzeHand(goodTwelve).hcp === 12, `good-major fixture should be 12 points, it is ${analyzeHand(goodTwelve).hcp}`);
+  const opened = chooseCall('N', goodTwelve, []);
+  check(opened.type === 'bid' && opened.level === 1 && opened.suit === 'S',
+    `12 points with A K to five Spades should open 1 Spade, the game said ` +
+    `${opened.type === 'bid' ? opened.level + opened.suit : opened.type}`);
+
+  // The same count with the honours scattered outside the suit is not "good",
+  // and passes.
+  const weakTwelve = handOf({ S: ['J', '8', '5', '3', '2'], H: ['K', 'Q'], D: ['Q', '7', '6', '2'], C: ['A', '5'] });
+  check(weakTwelve.length === 13, 'scattered-twelve fixture is not thirteen cards');
+  check(analyzeHand(weakTwelve).hcp === 12, `scattered-twelve fixture should be 12 points, it is ${analyzeHand(weakTwelve).hcp}`);
+  const passed = chooseCall('N', weakTwelve, []);
+  check(passed.type === 'pass',
+    `12 points with a ragged five-card Spade suit opened ` +
+    `${passed.type === 'bid' ? passed.level + passed.suit : passed.type} — the suit has to be good`);
 
   // Three of partner's major is support; two is not.
   const openedOneSpade = [

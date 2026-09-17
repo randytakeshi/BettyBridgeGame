@@ -681,6 +681,8 @@ function App() {
                  queens and jacks count — a long suit does not add anything yet.</p>
               <p>Once a fit is found, <b>then</b> you count your distribution.</p>
               <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
+              <p>With a <b>good</b> five-card major — two of the top three honours in
+                 the suit itself — <b>12 points is enough</b> to open it.</p>
               <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
               <p>Open <b>1 No Trump with {ntLabel}</b> and even distribution.</p>
               <div className="rules-setting">
@@ -721,6 +723,24 @@ function App() {
                   Weak twos: {weakTwos ? 'on' : 'off'} — tap to change
                 </button>
               </div>
+
+              <h3>Answering your partner</h3>
+              <p>You need <b>6 points</b> to answer at all. With fewer than that, pass.</p>
+              <p>With <b>three or more</b> of partner's major, raise it — and how high
+                 says how much you have. Count your short suits in too, since by now
+                 you have the fit:</p>
+              <ul className="rules-list">
+                <li><b>6 to 9</b> — raise to <b>2</b></li>
+                <li><b>10 to 12</b> — jump to <b>3</b>: more than a minimum, game is possible</li>
+                <li><b>13 or more</b> — straight to <b>4</b>, which is game</li>
+              </ul>
+              <p>With no fit for partner: if they opened a minor, show a <b>four-card
+                 major at the one level</b>. Otherwise an even hand says so — <b>1 No
+                 Trump</b> with 6 to 10, <b>2 No Trump</b> with 11 or 12, <b>3 No
+                 Trump</b> with 13 or more. With 10 or more and a{' '}
+                 <b>five-card suit</b> of your own, bid it.</p>
+              <p>Naming a <b>new suit</b> is forcing: partner is not allowed to pass it,
+                 so you can always show a suit without being left there.</p>
 
               <h3>Supporting your partner</h3>
               <p>To raise partner's suit you need <b>at least three</b> of it. You are

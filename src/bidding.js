@@ -527,7 +527,7 @@ function buildContext(seat, bids, a) {
 // --- OPENING THE BIDDING ----------------------------------------------
 
 function openingCall(a) {
-  const { hcp, len, balanced, longMajor } = a;
+  const { hcp, len, balanced, longMajor, bySuit } = a;
 
   if (hcp >= 22) {
     return convention(2, 'C', `${pts(hcp)} — 2 Clubs asks partner to answer; it says nothing about Clubs`);
@@ -557,6 +557,16 @@ function openingCall(a) {
       return call(2, sixCard,
         `Only ${pts(hcp)}, but 6 ${SUIT_WORDS[sixCard]} — a weak two to take away their room`);
     }
+  }
+
+  // Betty: "open with a good five card major with 12 points." Good means the
+  // honours are in the suit rather than scattered around the hand — two of
+  // the top three — so the hand is worth more than the count says.
+  const goodMajor = MAJORS.find(su =>
+    len[su] >= 5 && ['A', 'K', 'Q'].filter(r => bySuit[su].includes(r)).length >= 2);
+  if (hcp === 12 && goodMajor) {
+    return call(1, goodMajor,
+      `${pts(hcp)} and a good ${len[goodMajor]}-card ${SUIT_WORDS[goodMajor]} suit — worth opening on 12`);
   }
 
   if (hcp < 13) {
@@ -983,12 +993,23 @@ function openerRebid(a, ctx) {
     if (s2 === o.suit || s2 === r.suit) continue;
     if (len[s2] >= 4 && (!other || len[s2] > len[other])) other = s2;
   }
+  // A second suit while it is still cheap — over 1 Club - 1 Heart, four
+  // spades is worth 1 Spade.
+  if (other && ctx.cheapest(other) <= 2) {
+    const c = want(ctx.cheapest(other), other, `${pts(hcp)} and ${len[other]} ${SUIT_WORDS[other]} — my other suit`);
+    if (c) return c;
+  }
+  // Otherwise No Trump, which is always cheaper than a new suit at the four
+  // level. Naming a minor that high with no fit behind it gets struck out by
+  // the safety net below, and the answer came back as a pass — which is how
+  // 2 No Trump - 3 Spades - pass happened with thirty-two points and
+  // thirteen tricks in the hand.
+  const nt = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — no fit to show, so No Trump`);
+  if (nt) return nt;
   if (other) {
     const c = want(ctx.cheapest(other), other, `${pts(hcp)} and ${len[other]} ${SUIT_WORDS[other]} — my other suit`);
     if (c) return c;
   }
-  const nt = want(ctx.cheapest('NT'), 'NT', `${pts(hcp)} — no fit to show, so No Trump`);
-  if (nt) return nt;
   // Last resort. Repeating a five-card suit overstates it, but leaving partner
   // in a forcing bid is worse.
   if (o.suit !== 'NT' && len[o.suit] >= 5) {
