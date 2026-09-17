@@ -1052,6 +1052,10 @@ function distributionTest() {
   check(quacks.type === 'pass',
     `12 points of queens and jacks with one king opened ` +
     `${quacks.type === 'bid' ? quacks.level + quacks.suit : quacks.type} — there is no control in the hand`);
+  // She is judging these by eye now, so the Hint has to say which part is
+  // missing rather than quoting a 13 that is no longer the whole rule.
+  check(/control/i.test(quacks.explanation || ''),
+    `passing on 12 for want of a control said "${quacks.explanation}" — it has to name the reason`);
 
   // "If I have a strong suit, a void or singleton, and stoppers in the other
   // suits, I would bid one." Six good diamonds, a singleton club, the majors
@@ -1075,6 +1079,8 @@ function distributionTest() {
     `12 points with a long suit and no short suit opened ` +
     `${flat12.type === 'bid' ? flat12.level + flat12.suit : flat12.type} — ` +
     'the void or singleton is part of what makes it worth a bid');
+  check(/short/i.test(flat12.explanation || ''),
+    `passing on 12 for want of a short suit said "${flat12.explanation}" — it has to name the reason`);
 
   // The same count with the honours scattered outside the suit is not "good",
   // and passes.

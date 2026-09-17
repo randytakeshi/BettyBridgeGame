@@ -597,6 +597,21 @@ function openingCall(a) {
   }
 
   if (hcp < 13) {
+    // Twelve is a judgement call now, not a flat no, and she is making those
+    // judgements herself — "if hand looks good open 1". So say which part is
+    // missing rather than repeating a 13 that is no longer the whole rule.
+    if (hcp === 12) {
+      if (!hasControl) {
+        return pass(`${pts(hcp)}, but no ace and fewer than two kings — no control in the hand`);
+      }
+      if (!strongSuit) {
+        return pass(`${pts(hcp)}, but no suit strong enough to open on`);
+      }
+      if (!short) {
+        return pass(`${pts(hcp)} and a good suit, but nothing short to trump with`);
+      }
+      return pass(`${pts(hcp)} and a good suit, but the other suits are not stopped`);
+    }
     return pass(`Only ${pts(hcp)} in high cards — you need 13 to open`);
   }
 
