@@ -5,7 +5,7 @@ import BiddingBox from './components/BiddingBox';
 import { GameEngine, PLAYER_NAMES, bidName, humanPlaysSeat, SPEEDS, DEFAULT_SPEED } from './GameEngine';
 import { parsePBN } from './utils/pbnParser';
 import { loadSavedGame, saveGame, clearSavedGame, loadPrefs, savePrefs } from './saveGame';
-import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos, DEFAULT_TRANSFERS, setTransfers } from './bidding';
+import { NT_RANGES, DEFAULT_NT_RANGE, setNoTrumpRange, DEFAULT_WEAK_TWOS, setWeakTwos, DEFAULT_PREEMPTS, setPreempts, DEFAULT_TRANSFERS, setTransfers } from './bidding';
 
 const SUIT_SYMBOLS = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SUIT_WORDS = { C: 'Clubs', D: 'Diamonds', H: 'Hearts', S: 'Spades', NT: 'No Trump' };
@@ -120,14 +120,18 @@ function App() {
   const [weakTwos, setWeakTwosPref] = useState(
     () => (typeof prefsRef.current.weakTwos === 'boolean' ? prefsRef.current.weakTwos : DEFAULT_WEAK_TWOS)
   );
+  const [preempts, setPreemptsPref] = useState(
+    () => (typeof prefsRef.current.preempts === 'boolean' ? prefsRef.current.preempts : DEFAULT_PREEMPTS)
+  );
   const [transfers, setTransfersPref] = useState(
     () => (typeof prefsRef.current.transfers === 'boolean' ? prefsRef.current.transfers : DEFAULT_TRANSFERS)
   );
   // Apply them all before the engine ever evaluates a call
-  const settingsKey = `${ntRange}|${weakTwos}|${transfers}`;
+  const settingsKey = `${ntRange}|${weakTwos}|${preempts}|${transfers}`;
   if (prefsRef.current.__applied !== settingsKey) {
     setNoTrumpRange(ntRange);
     setWeakTwos(weakTwos);
+    setPreempts(preempts);
     setTransfers(transfers);
     prefsRef.current.__applied = settingsKey;
   }
@@ -143,14 +147,15 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    savePrefs({ sound: soundEnabled, speed, ntRange, weakTwos, transfers });
-  }, [soundEnabled, speed, ntRange, weakTwos, transfers]);
+    savePrefs({ sound: soundEnabled, speed, ntRange, weakTwos, preempts, transfers });
+  }, [soundEnabled, speed, ntRange, weakTwos, preempts, transfers]);
 
   useEffect(() => {
     setNoTrumpRange(ntRange);
     setWeakTwos(weakTwos);
+    setPreempts(preempts);
     setTransfers(transfers);
-  }, [ntRange, weakTwos, transfers]);
+  }, [ntRange, weakTwos, preempts, transfers]);
 
   // The engine paces the computer players; auto-play uses the same dial
   useEffect(() => {
@@ -704,9 +709,28 @@ function App() {
                   1 No Trump: {ntLabel} — tap to change
                 </button>
               </div>
-              <p>With seven cards in one suit you can open <b>3 of that suit on just
-                 6 points</b>. It is a defensive bid — the shape is worth more than the
-                 points, and it takes away the opponents' room.</p>
+              {preempts ? (
+                <p>With seven cards in one suit you can open <b>3 of that suit on just
+                   6 points</b>. It is a defensive bid — the shape is worth more than
+                   the points, and it takes away the opponents' room.</p>
+              ) : (
+                <p>The defensive <b>three-bid is switched off</b>. Seven cards in a suit
+                   with less than an opening hand simply passes, so a good hand across
+                   the table is never shut out of the bidding.</p>
+              )}
+              <div className="rules-setting">
+                <span>
+                  {preempts
+                    ? 'Turn it off and a long suit with less than an opening hand passes.'
+                    : 'Turn it on and seven cards with 6 to 12 points opens three of the suit.'}
+                </span>
+                <button
+                  className="header-btn btn-show"
+                  onClick={() => setPreemptsPref(!preempts)}
+                >
+                  Defensive three-bids: {preempts ? 'on' : 'off'} — tap to change
+                </button>
+              </div>
               {weakTwos ? (
                 <p>With <b>six</b> cards and 6 to 10 points, open <b>2 of that suit</b> —
                    a weak two. It is defensive, like the three-bid. Two Clubs is never

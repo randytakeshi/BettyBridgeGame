@@ -50,6 +50,18 @@ export const DEFAULT_WEAK_TWOS = false;
 // diamonds and bid hearts; another system asks for a 4 card major." She has
 // described both without saying which she plays, so it is a switch, and it
 // starts off — 2 Diamonds means diamonds until she says otherwise.
+// Betty first asked for the defensive three-bid — "if you have 7 cards of one
+// suit you can open 3 of that suit on just 6 pts" — and then, having watched
+// it: "I don't like defensive bids because it forces a good hand to not bid
+// or over bid, it's hard to open at the 3 level with just an opening hand."
+// That is the cost of a preempt to your own side, not the opponents', and she
+// has decided she would rather not pay it. Off by default, still a switch,
+// exactly as with the weak twos.
+const preemptConfig = { on: false };
+export const DEFAULT_PREEMPTS = false;
+export function setPreempts(on) { preemptConfig.on = !!on; }
+export const preemptsOn = () => preemptConfig.on;
+
 const transferConfig = { on: false };
 export const DEFAULT_TRANSFERS = false;
 export function setTransfers(on) { transferConfig.on = !!on; }
@@ -266,7 +278,7 @@ function rangeForCall(seat, c, prior) {
     if (c.suit === 'NT' && c.level === 1) return { min: noTrumpLow(), max: noTrumpHigh() };
     if (c.suit === 'NT' && c.level === 2) return { min: 20, max: 21 };
     if (c.suit === 'C' && c.level === 2) return { min: 22, max: 37 };
-    if (c.level === 3 && c.suit !== 'NT') return { min: 6, max: 12 }; // weak, seven cards
+    if (preemptsOn() && c.level === 3 && c.suit !== 'NT') return { min: 6, max: 12 }; // weak, seven cards
     if (weakTwosOn() && c.level === 2 && ['S', 'H', 'D'].includes(c.suit)) {
       return { min: 6, max: 10 }; // weak two, six cards
     }
@@ -545,7 +557,7 @@ function openingCall(a) {
   // just 6 pts. It's a defensive bid." Shape beating points — the object is
   // to take away the opponents' room, not to make the contract.
   const sevenCard = ['S', 'H', 'D', 'C'].find(su => len[su] >= 7);
-  if (sevenCard && hcp >= 6 && hcp <= 12) {
+  if (preemptsOn() && sevenCard && hcp >= 6 && hcp <= 12) {
     return call(3, sevenCard,
       `Only ${pts(hcp)}, but ${len[sevenCard]} ${SUIT_WORDS[sevenCard]} — opening 3 to take away their room`);
   }

@@ -8,7 +8,7 @@
  *   node scripts/test.mjs [boards]
  */
 import { GameEngine, PLAYERS, humanPlaysSeat, MAX_REDEALS } from '../src/GameEngine.js';
-import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS, analyzeHand } from '../src/bidding.js';
+import { chooseCall, classifyCall, classifyDouble, setWeakTwos, DEFAULT_WEAK_TWOS, setPreempts, DEFAULT_PREEMPTS, analyzeHand } from '../src/bidding.js';
 
 globalThis.TEST_MODE = true;
 
@@ -1131,6 +1131,68 @@ function distributionTest() {
     'two spades is not support, but the game raised partner anyway');
 }
 
+// --- The defensive three-bid, switched off and on -------------------------
+// Betty asked for it first — "if you have 7 cards of one suit you can open 3
+// of that suit on just 6 pts" — and then, having watched it: "I don't like
+// defensive bids because it forces a good hand to not bid or over bid, it's
+// hard to open at the 3 level with just an opening hand." Off by default,
+// still a switch.
+function preemptTest(boards = 500) {
+  const deals = [];
+  for (let b = 1; b <= boards; b++) {
+    const e = new GameEngine(() => {});
+    e.boardNumber = b;
+    e.resetGame();
+    const real = e.checkAITurn.bind(e);
+    e.checkAITurn = () => {};
+    e.deal();
+    e.checkAITurn = real;
+    deals.push(JSON.parse(JSON.stringify(e.hands)));
+    e.clearTimers();
+  }
+  const lenOf = (hand, su) => hand.filter(c => c.suit === su).length;
+  // Six to ten keeps clear of the twelve-point opening, so the three-bid is
+  // the only call this shape could possibly make.
+  const preemptShape = (hand) => {
+    const hcp = hcpOf(hand);
+    const seven = ['S', 'H', 'D', 'C'].find(su => lenOf(hand, su) >= 7);
+    return (!seven || hcp < 6 || hcp > 10) ? null : { seven, hcp };
+  };
+
+  // As it ships, before anything touches the setting.
+  let shapesSeen = 0;
+  const opened = [];
+  for (const hands of deals) {
+    for (const seat of PLAYERS) {
+      const shape = preemptShape(hands[seat]);
+      if (!shape) continue;
+      shapesSeen++;
+      const c = chooseCall(seat, hands[seat], []);
+      if (c.type !== 'pass') {
+        opened.push(`${shape.hcp} pts with 7+ ${shape.seven} bid ${c.type === 'bid' ? c.level + c.suit : c.type}`);
+      }
+    }
+  }
+  check(shapesSeen > 0, `no seven-card weak hand came up in ${boards} deals — nothing was tested`);
+  check(opened.length === 0,
+    `as it ships the game still opens the defensive three-bid: ${opened.length} of ${shapesSeen} ` +
+    `such hands bid — e.g. ${opened.slice(0, 3).join('; ')}`);
+
+  // Switched on, it has to come back, or the setting does nothing.
+  setPreempts(true);
+  let returned = 0;
+  for (const hands of deals) {
+    for (const seat of PLAYERS) {
+      const shape = preemptShape(hands[seat]);
+      if (!shape) continue;
+      const c = chooseCall(seat, hands[seat], []);
+      if (c.type === 'bid' && c.level === 3 && c.suit === shape.seven) returned++;
+    }
+  }
+  setPreempts(DEFAULT_PREEMPTS);
+  check(returned > 0, 'three-bids switched on: the defensive opening never came back');
+}
+
 // --- Weak twos, switched off and on --------------------------------------
 // Betty: "I won't use weak two bid anymore after I found out it was a
 // defensive bid with 6 to 9 pts." Off is now the default, so it has to be
@@ -1262,6 +1324,7 @@ redealTest();
 distributionTest();
 bothHandsTest();
 weakTwoTest();
+preemptTest();
 undoTest();
 saveResumeTest();
 replayTest();
