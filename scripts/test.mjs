@@ -595,17 +595,25 @@ function houseRulesTest(boards = 600) {
         `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ${openerHcp} points ` +
         `— the defensive opening is six to twelve`);
     } else {
-      // Betty: "open with a good five card major with 12 points." Good means
-      // two of the top three honours are in the suit. That is the only way
-      // below thirteen, and it has to be that suit she opens.
+      // Below thirteen there are only two ways in: the seven-card three-bid
+      // handled above, and twelve points with a suit strong enough to play in
+      // and a control to go with it. Betty: "if you have just queens and jacks
+      // you have no control of the game."
       const topThree = (suit) => dealt[opener.player]
         .filter(c => c.suit === suit && ['A', 'K', 'Q'].includes(c.rank)).length;
-      const goodMajorOpening = openerHcp === 12 && opener.level === 1 &&
-        ['H', 'S'].includes(opener.suit) &&
-        lenIn(opener.player, opener.suit) >= 5 && topThree(opener.suit) >= 2;
-      check(openerHcp >= 13 || goodMajorOpening,
+      const acesHeld = dealt[opener.player].filter(c => c.rank === 'A').length;
+      const kingsHeld = dealt[opener.player].filter(c => c.rank === 'K').length;
+      const controlled = acesHeld >= 1 || kingsHeld >= 2;
+      const openLen = lenIn(opener.player, opener.suit);
+      const strongEnough = (openLen >= 5 && topThree(opener.suit) >= 2) ||
+                           (openLen >= 6 && topThree(opener.suit) >= 1);
+      const twelveOpening = openerHcp === 12 && opener.level === 1 &&
+        opener.suit !== 'NT' && controlled && strongEnough;
+      check(openerHcp >= 13 || twelveOpening,
         `board ${board}: ${opener.player} opened ${opener.level}${opener.suit} on ` +
-        `${openerHcp} high cards`);
+        `${openerHcp} high cards` +
+        (openerHcp === 12 && !controlled ? ' with no ace and fewer than two kings' : '') +
+        (openerHcp === 12 && !strongEnough ? ` with only ${openLen} to the suit` : ''));
     }
 
     // The 2 Clubs opening means 22 or more, not clubs
@@ -1012,9 +1020,11 @@ function distributionTest() {
 
   // "When opening bid is made, just high card points matter." A void must not
   // push a 12-point hand into opening.
-  // Deliberately no five-card major and no seven-card suit, so the only thing
-  // that could lift this hand to an opening is the void — which must not.
-  const twelveWithVoid = handOf({ S: ['K', '7', '3'], H: [], D: ['A', 'Q', '8', '6', '4', '2'], C: ['K', '9', '4', '3'] });
+  // Deliberately nothing that could legitimately open on twelve: no five-card
+  // major, no seven-card suit, and no suit strong enough for the shape route
+  // (the five-card diamonds hold only one of the top three). The void is the
+  // only thing left that could lift it — and it must not.
+  const twelveWithVoid = handOf({ S: ['K', 'J', '5', '3'], H: [], D: ['Q', '9', '7', '6', '4'], C: ['A', 'Q', '8', '2'] });
   check(twelveWithVoid.length === 13, 'opening fixture is not thirteen cards');
   check(analyzeHand(twelveWithVoid).hcp === 12, `opening fixture should be 12 high card points, it is ${analyzeHand(twelveWithVoid).hcp}`);
   const openCall = chooseCall('N', twelveWithVoid, []);
@@ -1031,6 +1041,40 @@ function distributionTest() {
   check(opened.type === 'bid' && opened.level === 1 && opened.suit === 'S',
     `12 points with A K to five Spades should open 1 Spade, the game said ` +
     `${opened.type === 'bid' ? opened.level + opened.suit : opened.type}`);
+
+  // "If you have just queens and jacks you have no control of the game."
+  // A good five-card major is not enough on its own without an ace or two
+  // kings behind it.
+  const noControl = handOf({ S: ['K', 'Q', '8', '5', '3'], H: ['Q', 'J', '4'], D: ['Q', 'J', '2'], C: ['J', '6'] });
+  check(noControl.length === 13, 'no-control fixture is not thirteen cards');
+  check(analyzeHand(noControl).hcp === 12, `no-control fixture should be 12 points, it is ${analyzeHand(noControl).hcp}`);
+  const quacks = chooseCall('N', noControl, []);
+  check(quacks.type === 'pass',
+    `12 points of queens and jacks with one king opened ` +
+    `${quacks.type === 'bid' ? quacks.level + quacks.suit : quacks.type} — there is no control in the hand`);
+
+  // "If I have a strong suit, a void or singleton, and stoppers in the other
+  // suits, I would bid one." Six good diamonds, a singleton club, the majors
+  // stopped, and an ace to go with it.
+  const shapely = handOf({ S: ['Q', 'J', '5'], H: ['Q', '8', '7'], D: ['A', 'K', '9', '6', '4', '2'], C: ['2'] });
+  check(shapely.length === 13, 'shapely fixture is not thirteen cards');
+  check(analyzeHand(shapely).hcp === 12, `shapely fixture should be 12 points, it is ${analyzeHand(shapely).hcp}`);
+  const shaped = chooseCall('N', shapely, []);
+  check(shaped.type === 'bid' && shaped.level === 1 && shaped.suit === 'D',
+    `12 points with A K to six Diamonds, a singleton and the rest stopped should open 1 Diamond, ` +
+    `the game said ${shaped.type === 'bid' ? shaped.level + shaped.suit : shaped.type}`);
+
+  // Same strong suit and the rest stopped, but nothing short anywhere: the
+  // hand has no ruffing value, so twelve is not enough. Built so shortness is
+  // the only thing missing — every other suit does hold a stopper.
+  const noShortness = handOf({ S: ['Q', '5', '4'], H: ['K', '8'], D: ['A', '9', '6', '4', '3', '2'], C: ['K', '7'] });
+  check(noShortness.length === 13, 'no-shortness fixture is not thirteen cards');
+  check(analyzeHand(noShortness).hcp === 12, `no-shortness fixture should be 12 points, it is ${analyzeHand(noShortness).hcp}`);
+  const flat12 = chooseCall('N', noShortness, []);
+  check(flat12.type === 'pass',
+    `12 points with a long suit and no short suit opened ` +
+    `${flat12.type === 'bid' ? flat12.level + flat12.suit : flat12.type} — ` +
+    'the void or singleton is part of what makes it worth a bid');
 
   // The same count with the honours scattered outside the suit is not "good",
   // and passes.

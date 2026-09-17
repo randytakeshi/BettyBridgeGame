@@ -681,8 +681,14 @@ function App() {
                  queens and jacks count — a long suit does not add anything yet.</p>
               <p>Once a fit is found, <b>then</b> you count your distribution.</p>
               <p>Open 1 Spade or 1 Heart with <b>five cards</b> in that major.</p>
-              <p>With a <b>good</b> five-card major — two of the top three honours in
-                 the suit itself — <b>12 points is enough</b> to open it.</p>
+              <p><b>12 points is enough</b> to open when the hand has something to
+                 play with: a <b>good</b> five-card major — two of the top three
+                 honours in the suit itself — or a strong suit with a <b>void or
+                 singleton</b> and the other suits stopped.</p>
+              <p>But only with a <b>control</b> — an ace, or two kings. A hand of
+                 queens and jacks makes the points up without ever taking a trick
+                 early enough to matter, and those hands really do come home less
+                 often.</p>
               <p>Otherwise open a five-card minor, or three cards in Clubs or Diamonds.</p>
               <p>Open <b>1 No Trump with {ntLabel}</b> and even distribution.</p>
               <div className="rules-setting">
