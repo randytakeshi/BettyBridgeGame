@@ -1104,6 +1104,26 @@ function distributionTest() {
     `three spades opposite a 1 Spade opening should support partner, the game bid ` +
     `${raised.type === 'bid' ? raised.level + raised.suit : raised.type}`);
 
+  // How high to raise, confirmed by Betty: "if I have 13 pts I would go to
+  // game bid 4". These three hands are built with no short suit anywhere, so
+  // the count alone decides and the ladder is tested rather than the
+  // shortness. The Rules card prints these same three steps.
+  const ladder = [
+    { pts: 6, level: 2, spec: { S: ['Q', '7', '3'], H: ['K', '9', '4'], D: ['J', '6', '5', '2'], C: ['9', '4', '3'] } },
+    { pts: 10, level: 3, spec: { S: ['Q', '7', '3'], H: ['K', '9', '4'], D: ['K', 'Q', '6', '5'], C: ['9', '4', '3'] } },
+    { pts: 13, level: 4, spec: { S: ['K', '7', '3'], H: ['A', '9', '4'], D: ['K', 'Q', 'J', '5'], C: ['9', '4', '3'] } }
+  ];
+  for (const rung of ladder) {
+    const hand = handOf(rung.spec);
+    check(hand.length === 13, `raise fixture for ${rung.pts} points is not thirteen cards`);
+    check(analyzeHand(hand).hcp === rung.pts,
+      `raise fixture should be ${rung.pts} points, it is ${analyzeHand(hand).hcp}`);
+    const c = chooseCall('S', hand, openedOneSpade);
+    check(c.type === 'bid' && c.suit === 'S' && c.level === rung.level,
+      `${rung.pts} points with three of partner's Spades should raise to ${rung.level}, the game said ` +
+      `${c.type === 'bid' ? c.level + c.suit : c.type}`);
+  }
+
   const two = handOf({ S: ['K', '7'], H: ['A', '9', '4', '3'], D: ['Q', '8', '6', '5'], C: ['9', '4', '3'] });
   check(two.length === 13, 'two-card-support fixture is not thirteen cards');
   const notRaised = chooseCall('S', two, openedOneSpade);
